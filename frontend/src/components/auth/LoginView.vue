@@ -8,6 +8,16 @@
         </p>
       </div>
       <div class="p-6 pt-0">
+        <!-- Error Message -->
+        <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ errorMessage }}</p>
+        </div>
+
+        <!-- Success Message -->
+        <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <p class="text-sm text-green-600">{{ successMessage }}</p>
+        </div>
+
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="space-y-2">
             <label for="email" class="text-sm font-medium leading-none">Email</label>
@@ -17,6 +27,7 @@
               placeholder="Enter your email"
               v-model="email"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -28,6 +39,7 @@
               placeholder="Enter your password"
               v-model="password"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -54,8 +66,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../../service/authService'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
@@ -68,15 +83,19 @@ const handleLogin = async () => {
     errorMessage.value = ''
     successMessage.value = ''
 
-    // Call the API
-      const result = await login({
+    const result = await login({
       email: email.value,
       password: password.value
-    } as { email: string, password: string })
+    })
 
     successMessage.value = result.message
 
-    // Redirect to dashboard after a delay
+    // Store auth data if login includes token and user
+    if (result.token && result.user) {
+      authStore.setAuth(result.token, result.user)
+    }
+
+    // Redirect to dashboard after a short delay
     setTimeout(() => {
       router.push('/dashboard')
     }, 1000)
@@ -90,5 +109,4 @@ const handleLogin = async () => {
     isLoading.value = false
   }
 }
-
 </script>
