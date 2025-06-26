@@ -3,6 +3,10 @@ import LoginView from '@/components/auth/LoginView.vue'
 import RegisterView from '@/components/auth/RegisterView.vue'
 import DashboardView from '@/views/Dashboard.vue'
 import { useAuthStore } from '@/stores/auth'
+import Features from '../views/Features.vue'
+import CreateFeature from '@/views/CreateFeature.vue'
+import FeatureDetails from '@/views/FeatureDetails.vue'
+import EditFeature from '@/views/EditFeature.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +41,38 @@ const router = createRouter({
         requiresAuth: true,
       }
     },
+    {
+      path: '/features',
+      name: 'features',
+      component: Features,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/features/create',
+      name: 'create-feature',
+      component: CreateFeature,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/features/:id',
+      name: 'feature-details',
+      component: FeatureDetails,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/features/:id/edit',
+      name: 'edit-feature',
+      component: EditFeature,
+      meta: {
+        requiresAuth: true,
+      }
+    }
     // Add more protected routes here
     // {
     //   path: '/plans',
