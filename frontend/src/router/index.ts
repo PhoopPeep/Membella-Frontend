@@ -7,6 +7,10 @@ import Features from '../views/Features.vue'
 import CreateFeature from '@/views/CreateFeature.vue'
 import FeatureDetails from '@/views/FeatureDetails.vue'
 import EditFeature from '@/views/EditFeature.vue'
+import Plans from '../views/Plans.vue'
+import CreatePlan from '../views/CreatePlan.vue'
+import PlanDetails from '../views/PlanDetails.vue'
+import EditPlan from '../views/EditPlan.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -72,24 +76,40 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
       }
+    },
+    // Plans routes
+    {
+      path: '/plans',
+      name: 'plans',
+      component: Plans,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/plans/create',
+      name: 'create-plan',
+      component: CreatePlan,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/plans/:id',
+      name: 'plan-details',
+      component: PlanDetails,
+      meta: {
+        requiresAuth: true,
+      }
+    },
+    {
+      path: '/plans/:id/edit',
+      name: 'edit-plan',
+      component: EditPlan,
+      meta: {
+        requiresAuth: true,
+      }
     }
-    // Add more protected routes here
-    // {
-    //   path: '/plans',
-    //   name: 'plans',
-    //   component: () => import('@/views/Plans.vue'),
-    //   meta: {
-    //     requiresAuth: true,
-    //   }
-    // },
-    // {
-    //   path: '/features',
-    //   name: 'features',
-    //   component: () => import('@/views/Features.vue'),
-    //   meta: {
-    //     requiresAuth: true,
-    //   }
-    // },
     // {
     //   path: '/profile',
     //   name: 'profile',
