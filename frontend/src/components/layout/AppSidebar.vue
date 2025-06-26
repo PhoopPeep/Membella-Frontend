@@ -5,15 +5,15 @@
       <div class="flex items-center space-x-2">
         <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-sm">
-            <!-- TODO: Add organization name -->
+            {{ getInitials(authStore.user?.org_name || 'ORG') }}
           </span>
         </div>
         <div>
           <h2 class="font-semibold text-gray-900">
-            <!-- TODO: Add organization name -->
+            {{ authStore.user?.org_name || 'Organization' }}
           </h2>
           <p class="text-sm text-gray-500">
-            <!-- TODO: Add email -->
+            {{ authStore.user?.email || 'user@example.com' }}
           </p>
         </div>
       </div>
@@ -44,16 +44,18 @@
     <div class="p-4">
       <button
         @click="handleLogout"
-        class="w-full flex items-center justify-start px-2 py-2 text-sm font-medium text-red-600 rounded-md hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
+        :disabled="isLoggingOut"
+        class="w-full flex items-center justify-start px-2 py-2 text-sm font-medium text-red-600 rounded-md hover:text-red-700 hover:bg-red-50 transition-colors duration-200 disabled:opacity-50"
       >
         <LogOut class="w-4 h-4 mr-2" />
-        Logout
+        {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
       </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   LayoutDashboard,
@@ -62,10 +64,12 @@ import {
   User,
   LogOut
 } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
+const isLoggingOut = ref(false)
 
 const menuItems = [
   {
@@ -94,8 +98,31 @@ const isActive = (url: string) => {
   return route.path === url
 }
 
-const handleLogout = () => {
-  // TODO: Implement logout
-  router.push('/login')
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const handleLogout = async () => {
+  try {
+    isLoggingOut.value = true
+
+    // Clear authentication state
+    authStore.clearAuth()
+
+    // Add a small delay for UX
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Redirect to login
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout error:', error)
+  } finally {
+    isLoggingOut.value = false
+  }
 }
 </script>

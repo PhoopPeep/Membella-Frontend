@@ -8,6 +8,16 @@
         </p>
       </div>
       <div class="p-6 pt-0">
+        <!-- Error Message -->
+        <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ errorMessage }}</p>
+        </div>
+
+        <!-- Success Message -->
+        <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <p class="text-sm text-green-600">{{ successMessage }}</p>
+        </div>
+
         <form @submit.prevent="handleRegister" class="space-y-4">
           <div class="space-y-2">
             <label for="org_name" class="text-sm font-medium leading-none">Organization Name</label>
@@ -17,6 +27,7 @@
               placeholder="Enter your organization name"
               v-model="org_name"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -28,6 +39,7 @@
               placeholder="Enter your email"
               v-model="email"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -39,6 +51,7 @@
               placeholder="Enter your password"
               v-model="password"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -50,6 +63,7 @@
               placeholder="Confirm your password"
               v-model="confirmPassword"
               required
+              :disabled="isLoading"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -76,8 +90,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerUser } from '../../service/authService'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const isLoading = ref(false)
 const org_name = ref('')
 const email = ref('')
@@ -92,24 +109,39 @@ const handleRegister = async () => {
     errorMessage.value = ''
     successMessage.value = ''
 
-    // Validate passwords match
+    // Validate inputs
+    if (!org_name.value.trim()) {
+      throw new Error('Organization name is required')
+    }
+
+    if (password.value.length < 6) {
+      throw new Error('Password must be at least 6 characters long')
+    }
+
     if (password.value !== confirmPassword.value) {
       throw new Error('Passwords do not match')
     }
 
-    // Call the API
     const result = await registerUser({
-      org_name: org_name.value,
-      email: email.value,
+      org_name: org_name.value.trim(),
+      email: email.value.trim(),
       password: password.value,
-    } as { org_name: string, email: string, password: string })
+    })
 
     successMessage.value = result.message
 
-    // Redirect to login after a delay
-    setTimeout(() => {
-      router.push('/login')
-    }, 3000)
+    // If registration returns token and user, log them in automatically
+    if (result.token && result.user) {
+      authStore.setAuth(result.token, result.user)
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
+    } else {
+      // Otherwise redirect to login
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+    }
 
   } catch (error) {
     if (error instanceof Error) {
