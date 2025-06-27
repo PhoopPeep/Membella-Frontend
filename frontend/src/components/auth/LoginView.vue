@@ -18,6 +18,28 @@
           <p class="text-sm text-green-600">{{ successMessage }}</p>
         </div>
 
+        <!-- Email Verification Required -->
+        <div v-if="requiresVerification" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div class="flex items-center">
+            <Mail class="w-5 h-5 text-blue-600 mr-2" />
+            <div>
+              <h3 class="text-sm font-medium text-blue-800">Email Verification Required</h3>
+              <p class="text-sm text-blue-600 mt-1">
+                Please verify your email address before signing in. Check your inbox for a verification link.
+              </p>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button
+              @click="handleResendVerification"
+              :disabled="isResending"
+              class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50"
+            >
+              {{ isResending ? 'Sending...' : 'Resend verification email' }}
+            </button>
+          </div>
+        </div>
+
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="space-y-2">
             <label for="email" class="text-sm font-medium leading-none">Email</label>
@@ -65,7 +87,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login } from '../../service/authService'
+import { Mail } from 'lucide-vue-next'
+import { login, resendVerification } from '../../service/authService'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
@@ -74,39 +97,68 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
+const isResending = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const requiresVerification = ref(false)
 
 const handleLogin = async () => {
   try {
     isLoading.value = true
     errorMessage.value = ''
     successMessage.value = ''
+    requiresVerification.value = false
 
     const result = await login({
       email: email.value,
       password: password.value,
     })
 
-    successMessage.value = result.message
+    if (result.requiresVerification) {
+      requiresVerification.value = true
+      errorMessage.value = result.message
+    } else {
+      successMessage.value = result.message
 
-    // Store auth data if login includes token and user
-    if (result.token && result.user) {
-      authStore.setAuth(result.token, result.user)
+      // Store auth data if login includes token and user
+      if (result.token && result.user) {
+        authStore.setAuth(result.token, result.user)
+      }
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1000)
     }
-
-    // Redirect to dashboard after a short delay
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1000)
   } catch (error) {
     if (error instanceof Error) {
+      if (error.message.includes('verify') || error.message.includes('verification')) {
+        requiresVerification.value = true
+      }
       errorMessage.value = error.message
     } else {
       errorMessage.value = 'An unknown error occurred.'
     }
   } finally {
     isLoading.value = false
+  }
+}
+
+const handleResendVerification = async () => {
+  try {
+    isResending.value = true
+    errorMessage.value = ''
+
+    const result = await resendVerification(email.value)
+    successMessage.value = result.message
+  } catch (error) {
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Failed to resend verification email'
+    }
+  } finally {
+    isResending.value = false
   }
 }
 </script>

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/components/auth/LoginView.vue'
 import RegisterView from '@/components/auth/RegisterView.vue'
+import AuthCallback from '@/components/auth/AuthCallback.vue'
 import DashboardView from '@/views/Dashboard.vue'
 import { useAuthStore } from '@/stores/auth'
 import Features from '../views/Features.vue'
@@ -35,6 +36,14 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         redirectIfAuth: true, // Redirect to dashboard if already authenticated
+      },
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: AuthCallback,
+      meta: {
+        requiresAuth: false,
       },
     },
     {
@@ -110,14 +119,6 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
-    // {
-    //   path: '/profile',
-    //   name: 'profile',
-    //   component: () => import('@/views/Profile.vue'),
-    //   meta: {
-    //     requiresAuth: true,
-    //   }
-    // }
   ],
 })
 
