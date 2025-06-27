@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold tracking-tight">Profile</h1>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2">
+    <div class="grid gap-6 md:grid">
       <!-- Profile Image Section -->
       <div class="rounded-lg border bg-white shadow-sm">
         <div class="p-6 border-b border-gray-200">
@@ -58,39 +58,6 @@
           />
         </div>
       </div>
-
-      <!-- Account Actions -->
-      <div class="rounded-lg border bg-white shadow-sm">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold">Account Actions</h2>
-        </div>
-        <div class="p-6 space-y-4">
-          <button
-            @click="openEditProfile"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            <Edit class="w-4 h-4 mr-2" />
-            Edit Profile
-          </button>
-
-          <button
-            @click="openChangePassword"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            <Lock class="w-4 h-4 mr-2" />
-            Change Password
-          </button>
-
-          <button
-            @click="handleLogout"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-          >
-            <LogOut class="w-4 h-4 mr-2" />
-            Logout
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- Profile Information Display -->
     <div class="rounded-lg border bg-white shadow-sm">
@@ -147,6 +114,39 @@
         <div v-if="authStore.user?.description" class="mt-6 pt-6 border-t">
           <p class="text-sm text-gray-500 mb-2">Description</p>
           <p class="text-gray-700">{{ authStore.user.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Actions -->
+    <div class="rounded-lg border bg-white shadow-sm">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold">Account Actions</h2>
+        </div>
+        <div class="p-6 space-y-4">
+          <button
+            @click="openEditProfile"
+            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            <Edit class="w-4 h-4 mr-2" />
+            Edit Profile
+          </button>
+
+          <button
+            @click="openChangePassword"
+            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            <Lock class="w-4 h-4 mr-2" />
+            Change Password
+          </button>
+
+          <button
+            @click="handleLogout"
+            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          >
+            <LogOut class="w-4 h-4 mr-2" />
+            Logout
+          </button>
         </div>
       </div>
     </div>
