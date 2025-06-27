@@ -26,85 +26,109 @@
       </button>
     </div>
 
-    <!-- Plans Grid -->
-    <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div
-        v-for="plan in plans"
-        :key="plan.id"
-        class="relative rounded-lg border bg-white shadow-sm"
-      >
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-semibold">{{ plan.name }}</h3>
-            <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded">
-              ${{ plan.price }}
-            </span>
-          </div>
-          <p class="text-gray-600 mb-4 line-clamp-2">
-            {{ plan.description }}
-          </p>
-
-          <div class="mb-3">
-            <p class="text-sm text-gray-600">Duration: {{ plan.duration }} days</p>
-          </div>
-
-          <div class="mb-4">
-            <p class="text-sm font-medium text-gray-700 mb-1">Features:</p>
-            <div class="flex flex-wrap gap-1">
-              <span
-                v-for="featureName in getFeatureNames(plan.features)"
-                :key="featureName"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+    <!-- Plans Table -->
+    <div v-else-if="plans.length > 0" class="rounded-lg border bg-white shadow-sm">
+      <div class="p-6">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Plan Name</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Description</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Price</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Duration</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Features</th>
+                <th class="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="plan in plans"
+                :key="plan.id"
+                class="border-b border-gray-100 hover:bg-gray-50"
               >
-                {{ featureName }}
-              </span>
-              <span v-if="plan.features.length === 0" class="text-xs text-gray-500">
-                No features assigned
-              </span>
-            </div>
-          </div>
-
-          <div class="flex space-x-2 pt-2">
-            <button
-              @click="navigateToDetails(plan.id)"
-              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
-            >
-              <Eye class="w-3 h-3 mr-1" />
-              View
-            </button>
-            <button
-              @click="navigateToEdit(plan.id)"
-              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
-            >
-              <Edit class="w-3 h-3 mr-1" />
-              Edit
-            </button>
-            <button
-              @click="handleDeletePlan(plan.id, plan.name)"
-              :disabled="deleting === plan.id"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 h-9 px-3"
-            >
-              <Trash2 class="w-3 h-3" />
-            </button>
-          </div>
+                <td class="py-4 px-4">
+                  <div class="font-medium text-gray-900">{{ plan.name }}</div>
+                </td>
+                <td class="py-4 px-4">
+                  <div class="max-w-xs truncate text-gray-600">{{ plan.description }}</div>
+                </td>
+                <td class="py-4 px-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    ${{ plan.price }}
+                  </span>
+                </td>
+                <td class="py-4 px-4">
+                  <span class="text-gray-900">{{ plan.duration }} days</span>
+                </td>
+                <td class="py-4 px-4">
+                  <div class="flex flex-wrap gap-1">
+                    <span
+                      v-for="featureName in getFeatureNames(plan.features).slice(0, 3)"
+                      :key="featureName"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                    >
+                      {{ featureName }}
+                    </span>
+                    <span
+                      v-if="plan.features.length > 3"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                    >
+                      +{{ plan.features.length - 3 }} more
+                    </span>
+                    <span v-if="plan.features.length === 0" class="text-xs text-gray-500">
+                      No features
+                    </span>
+                  </div>
+                </td>
+                <td class="py-4 px-4">
+                  <div class="flex space-x-2 justify-end">
+                    <button
+                      @click="navigateToDetails(plan.id)"
+                      class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-8 px-3"
+                    >
+                      <Eye class="w-3 h-3 mr-1" />
+                      View
+                    </button>
+                    <button
+                      @click="navigateToEdit(plan.id)"
+                      class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-8 px-3"
+                    >
+                      <Edit class="w-3 h-3 mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      @click="handleDeletePlan(plan.id, plan.name)"
+                      :disabled="deleting === plan.id"
+                      class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-3"
+                    >
+                      <Trash2 class="w-3 h-3" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-if="!loading && !error && plans.length === 0" class="text-center py-12">
-      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-        <CreditCard class="w-6 h-6 text-gray-400" />
+    <div v-else class="rounded-lg border bg-white shadow-sm">
+      <div class="text-center py-12">
+        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <Plus class="w-6 h-6 text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No plans yet</h3>
+        <p class="text-gray-500 mb-4">Create your first subscription plan to get started.</p>
+        <button
+          @click="navigateToCreate"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+        >
+          <Plus class="w-4 h-4 mr-2" />
+          Create Plan
+        </button>
       </div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">No plans yet</h3>
-      <p class="text-gray-500 mb-4">Create your first subscription plan to get started.</p>
-      <button
-        @click="navigateToCreate"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
-      >
-        <Plus class="w-4 h-4 mr-2" />
-        Create Plan
-      </button>
     </div>
   </div>
 </template>
@@ -112,7 +136,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Eye, Edit, Trash2, CreditCard } from 'lucide-vue-next'
+import { Plus, Eye, Edit, Trash2 } from 'lucide-vue-next'
 import { plansService, type Plan } from '../service/plansService'
 import { featuresService, type Feature } from '../service/featuresService'
 
@@ -183,12 +207,3 @@ onMounted(() => {
   loadPlans()
 })
 </script>
-
-<style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>

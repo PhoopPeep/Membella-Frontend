@@ -96,7 +96,7 @@
       <!-- Features Card -->
       <div class="rounded-lg border bg-white shadow-sm">
         <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold">Features Included</h2>
+          <h2 class="text-xl font-semibold">Features Unlocked</h2>
         </div>
         <div class="p-6">
           <div v-if="getPlanFeatures().length > 0" class="space-y-3">
