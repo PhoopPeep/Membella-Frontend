@@ -133,9 +133,9 @@ const activePlans = computed(() => {
   return dashboardStats.value?.totalPlans || 0
 })
 
-const totalFeatures = computed(() => {
-  return dashboardStats.value?.totalFeatures || 0
-})
+// const totalFeatures = computed(() => {
+//   return dashboardStats.value?.totalFeatures || 0
+// })
 
 const growthPercentage = computed(() => {
   return dashboardStats.value?.growthPercentage || 0

@@ -12,6 +12,7 @@ import Plans from '../views/Plans.vue'
 import CreatePlan from '../views/CreatePlan.vue'
 import PlanDetails from '../views/PlanDetails.vue'
 import EditPlan from '../views/EditPlan.vue'
+import Profile from '../views/Profile.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -115,6 +116,14 @@ const router = createRouter({
       path: '/plans/:id/edit',
       name: 'edit-plan',
       component: EditPlan,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: Profile,
       meta: {
         requiresAuth: true,
       },
