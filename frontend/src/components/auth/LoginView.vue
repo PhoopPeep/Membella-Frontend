@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+  >
     <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
       <div class="p-6 space-y-1">
         <h2 class="text-2xl font-bold text-center">Welcome Back</h2>
-        <p class="text-center text-gray-600">
-          Enter your credentials to access your account
-        </p>
+        <p class="text-center text-gray-600">Enter your credentials to access your account</p>
       </div>
       <div class="p-6 pt-0">
         <!-- Error Message -->
@@ -85,7 +85,7 @@ const handleLogin = async () => {
 
     const result = await login({
       email: email.value,
-      password: password.value
+      password: password.value,
     })
 
     successMessage.value = result.message

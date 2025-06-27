@@ -64,7 +64,9 @@
             </div>
 
             <div class="space-y-2">
-              <label for="duration" class="text-sm font-medium leading-none">Duration (days) *</label>
+              <label for="duration" class="text-sm font-medium leading-none"
+                >Duration (days) *</label
+              >
               <input
                 id="duration"
                 v-model.number="formData.duration"
@@ -79,7 +81,10 @@
 
           <div class="space-y-4">
             <label class="text-sm font-medium leading-none">Features</label>
-            <div v-if="features.length > 0" class="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+            <div
+              v-if="features.length > 0"
+              class="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
+            >
               <div
                 v-for="feature in features"
                 :key="feature.feature_id"
@@ -108,7 +113,8 @@
                 class="text-blue-600 hover:text-blue-700 underline"
               >
                 Create features first
-              </button> to assign them to plans.
+              </button>
+              to assign them to plans.
             </div>
           </div>
 
@@ -149,7 +155,7 @@ const formData = ref<CreatePlanData>({
   description: '',
   price: 0,
   duration: 30,
-  features: []
+  features: [],
 })
 
 const features = ref<Feature[]>([])
@@ -170,7 +176,12 @@ const handleSubmit = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
-    if (!formData.value.name || !formData.value.description || !formData.value.price || !formData.value.duration) {
+    if (
+      !formData.value.name ||
+      !formData.value.description ||
+      !formData.value.price ||
+      !formData.value.duration
+    ) {
       throw new Error('Please fill in all required fields')
     }
 
@@ -179,7 +190,7 @@ const handleSubmit = async () => {
       description: formData.value.description.trim(),
       price: formData.value.price,
       duration: formData.value.duration,
-      features: selectedFeatures.value
+      features: selectedFeatures.value,
     })
 
     router.push('/plans')

@@ -18,7 +18,10 @@
     </div>
 
     <!-- Feature Not Found -->
-    <div v-else-if="!feature && !isLoadingFeature" class="bg-white rounded-lg border border-gray-200 shadow-sm max-w-2xl">
+    <div
+      v-else-if="!feature && !isLoadingFeature"
+      class="bg-white rounded-lg border border-gray-200 shadow-sm max-w-2xl"
+    >
       <div class="text-center py-12">
         <p class="text-gray-500">Feature not found</p>
       </div>
@@ -158,7 +161,7 @@ const handleSubmit = async () => {
 
     await featuresService.updateFeature(featureId, {
       name: name.value.trim(),
-      description: description.value.trim()
+      description: description.value.trim(),
     })
 
     successMessage.value = 'Feature updated successfully!'

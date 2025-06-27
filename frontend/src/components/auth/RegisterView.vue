@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+  >
     <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
       <div class="p-6 space-y-1">
         <h2 class="text-2xl font-bold text-center">Create Account</h2>
@@ -56,7 +58,9 @@
             />
           </div>
           <div class="space-y-2">
-            <label for="confirmPassword" class="text-sm font-medium leading-none">Confirm Password</label>
+            <label for="confirmPassword" class="text-sm font-medium leading-none"
+              >Confirm Password</label
+            >
             <input
               id="confirmPassword"
               type="password"
@@ -142,7 +146,6 @@ const handleRegister = async () => {
         router.push('/login')
       }, 2000)
     }
-
   } catch (error) {
     if (error instanceof Error) {
       errorMessage.value = error.message

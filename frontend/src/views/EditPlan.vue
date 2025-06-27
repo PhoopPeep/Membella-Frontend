@@ -18,7 +18,10 @@
     </div>
 
     <!-- Plan Not Found -->
-    <div v-else-if="!plan && !isLoadingPlan" class="bg-white rounded-lg border border-gray-200 shadow-sm max-w-2xl">
+    <div
+      v-else-if="!plan && !isLoadingPlan"
+      class="bg-white rounded-lg border border-gray-200 shadow-sm max-w-2xl"
+    >
       <div class="text-center py-12">
         <p class="text-gray-500">Plan not found</p>
       </div>
@@ -78,7 +81,9 @@
             </div>
 
             <div class="space-y-2">
-              <label for="duration" class="text-sm font-medium leading-none">Duration (days) *</label>
+              <label for="duration" class="text-sm font-medium leading-none"
+                >Duration (days) *</label
+              >
               <input
                 id="duration"
                 v-model.number="formData.duration"
@@ -93,7 +98,10 @@
 
           <div class="space-y-4">
             <label class="text-sm font-medium leading-none">Features</label>
-            <div v-if="features.length > 0" class="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+            <div
+              v-if="features.length > 0"
+              class="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
+            >
               <div
                 v-for="feature in features"
                 :key="feature.feature_id"
@@ -163,7 +171,7 @@ const formData = ref<UpdatePlanData>({
   description: '',
   price: 0,
   duration: 30,
-  features: []
+  features: [],
 })
 
 const selectedFeatures = ref<string[]>([])
@@ -176,7 +184,7 @@ const loadPlan = async () => {
     isLoadingPlan.value = true
     const [planData, featuresData] = await Promise.all([
       plansService.getPlanById(planId),
-      featuresService.getFeatures()
+      featuresService.getFeatures(),
     ])
 
     plan.value = planData
@@ -188,7 +196,7 @@ const loadPlan = async () => {
       description: planData.description,
       price: planData.price,
       duration: planData.duration,
-      features: planData.features
+      features: planData.features,
     }
     selectedFeatures.value = [...planData.features]
   } catch (error) {
@@ -204,7 +212,12 @@ const handleSubmit = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
-    if (!formData.value.name || !formData.value.description || !formData.value.price || !formData.value.duration) {
+    if (
+      !formData.value.name ||
+      !formData.value.description ||
+      !formData.value.price ||
+      !formData.value.duration
+    ) {
       throw new Error('Please fill in all required fields')
     }
 
@@ -213,7 +226,7 @@ const handleSubmit = async () => {
       description: formData.value.description.trim(),
       price: formData.value.price,
       duration: formData.value.duration,
-      features: selectedFeatures.value
+      features: selectedFeatures.value,
     })
 
     router.push(`/plans/${planId}`)

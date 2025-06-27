@@ -88,5 +88,5 @@ export const featuresService = {
       }
       throw new Error('Failed to delete feature')
     }
-  }
+  },
 }
