@@ -22,10 +22,7 @@
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4">
       <p class="text-red-600">{{ error }}</p>
-      <button
-        @click="loadFeatures"
-        class="mt-2 text-sm text-red-700 hover:text-red-900 underline"
-      >
+      <button @click="loadFeatures" class="mt-2 text-sm text-red-700 hover:text-red-900 underline">
         Try again
       </button>
     </div>
@@ -45,9 +42,7 @@
           <p class="text-gray-600 mb-4 line-clamp-3">
             {{ feature.description }}
           </p>
-          <div class="text-sm text-gray-500 mb-4">
-            Created: {{ formatDate(feature.create_at) }}
-          </div>
+          <div class="text-sm text-gray-500 mb-4">Created: {{ formatDate(feature.create_at) }}</div>
           <div class="flex space-x-2">
             <button
               @click="navigateToDetails(feature.feature_id)"
@@ -128,7 +123,7 @@ const handleDeleteFeature = async (featureId: string, featureName: string) => {
     await featuresService.deleteFeature(featureId)
 
     // Remove from local state
-    features.value = features.value.filter(f => f.feature_id !== featureId)
+    features.value = features.value.filter((f) => f.feature_id !== featureId)
 
     // You could add a toast notification here
     console.log('Feature deleted successfully')

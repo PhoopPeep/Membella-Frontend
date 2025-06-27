@@ -96,5 +96,5 @@ export const plansService = {
       }
       throw new Error('Failed to delete plan')
     }
-  }
+  },
 }

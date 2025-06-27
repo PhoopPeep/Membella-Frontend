@@ -51,6 +51,6 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     setAuth,
     clearAuth,
-    initAuth
+    initAuth,
   }
 })

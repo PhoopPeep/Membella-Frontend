@@ -23,9 +23,7 @@
 
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <div class="space-y-2">
-            <label for="name" class="text-sm font-medium leading-none">
-              Feature Name *
-            </label>
+            <label for="name" class="text-sm font-medium leading-none"> Feature Name * </label>
             <input
               id="name"
               v-model="formData.name"
@@ -85,7 +83,7 @@ const router = useRouter()
 
 const formData = ref<CreateFeatureData>({
   name: '',
-  description: ''
+  description: '',
 })
 
 const loading = ref(false)
@@ -102,7 +100,7 @@ const handleSubmit = async () => {
 
     await featuresService.createFeature({
       name: formData.value.name.trim(),
-      description: formData.value.description.trim()
+      description: formData.value.description.trim(),
     })
 
     // Navigate back to features list

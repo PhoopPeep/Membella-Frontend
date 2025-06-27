@@ -3,7 +3,9 @@
     <!-- Show loading state while initializing auth -->
     <div v-if="isInitializing" class="min-h-screen flex items-center justify-center">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
+        ></div>
         <p class="text-gray-600">Loading...</p>
       </div>
     </div>
@@ -40,7 +42,7 @@ onMounted(async () => {
     authStore.initAuth()
 
     // Add a small delay to prevent flash of content
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
   } catch (error) {
     console.error('Error initializing auth:', error)
   } finally {
@@ -51,7 +53,13 @@ onMounted(async () => {
 
 <style>
 #app {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -21,10 +21,7 @@
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4">
       <p class="text-red-600">{{ error }}</p>
-      <button
-        @click="loadPlans"
-        class="mt-2 text-sm text-red-700 hover:text-red-900 underline"
-      >
+      <button @click="loadPlans" class="mt-2 text-sm text-red-700 hover:text-red-900 underline">
         Try again
       </button>
     </div>
@@ -61,10 +58,7 @@
               >
                 {{ featureName }}
               </span>
-              <span
-                v-if="plan.features.length === 0"
-                class="text-xs text-gray-500"
-              >
+              <span v-if="plan.features.length === 0" class="text-xs text-gray-500">
                 No features assigned
               </span>
             </div>
@@ -136,7 +130,7 @@ const loadPlans = async () => {
     error.value = ''
     const [plansData, featuresData] = await Promise.all([
       plansService.getPlans(),
-      featuresService.getFeatures()
+      featuresService.getFeatures(),
     ])
     plans.value = plansData
     features.value = featuresData
@@ -149,8 +143,8 @@ const loadPlans = async () => {
 
 const getFeatureNames = (featureIds: string[]) => {
   return features.value
-    .filter(feature => featureIds.includes(feature.feature_id))
-    .map(feature => feature.name)
+    .filter((feature) => featureIds.includes(feature.feature_id))
+    .map((feature) => feature.name)
 }
 
 const handleDeletePlan = async (planId: string, planName: string) => {
@@ -163,7 +157,7 @@ const handleDeletePlan = async (planId: string, planName: string) => {
     await plansService.deletePlan(planId)
 
     // Remove from local state
-    plans.value = plans.value.filter(p => p.id !== planId)
+    plans.value = plans.value.filter((p) => p.id !== planId)
 
     console.log('Plan deleted successfully')
   } catch (err) {

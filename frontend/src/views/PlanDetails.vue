@@ -36,7 +36,10 @@
     </div>
 
     <!-- Plan Not Found -->
-    <div v-else-if="!plan && !isLoading" class="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div
+      v-else-if="!plan && !isLoading"
+      class="bg-white rounded-lg border border-gray-200 shadow-sm"
+    >
       <div class="text-center py-12">
         <p class="text-gray-500">Plan not found</p>
       </div>
@@ -149,7 +152,7 @@ const loadPlan = async () => {
     isLoading.value = true
     const [planData, featuresData] = await Promise.all([
       plansService.getPlanById(planId),
-      featuresService.getFeatures()
+      featuresService.getFeatures(),
     ])
 
     plan.value = planData
@@ -163,9 +166,7 @@ const loadPlan = async () => {
 
 const getPlanFeatures = () => {
   if (!plan.value) return []
-  return features.value.filter(feature =>
-    plan.value!.features.includes(feature.feature_id)
-  )
+  return features.value.filter((feature) => plan.value!.features.includes(feature.feature_id))
 }
 
 const formatDate = (dateString: string) => {

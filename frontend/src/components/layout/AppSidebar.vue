@@ -29,9 +29,11 @@
             :key="item.title"
             :to="item.url"
             class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200"
-            :class="isActive(item.url)
-              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+            :class="
+              isActive(item.url)
+                ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            "
           >
             <component :is="item.icon" class="w-4 h-4 mr-3" />
             <span>{{ item.title }}</span>
@@ -57,13 +59,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import {
-  LayoutDashboard,
-  CreditCard,
-  Settings,
-  User,
-  LogOut
-} from 'lucide-vue-next'
+import { LayoutDashboard, CreditCard, Settings, User, LogOut } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
@@ -73,23 +69,23 @@ const isLoggingOut = ref(false)
 
 const menuItems = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
+    title: 'Dashboard',
+    url: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    title: "Plan Management",
-    url: "/plans",
+    title: 'Plan Management',
+    url: '/plans',
     icon: CreditCard,
   },
   {
-    title: "Features",
-    url: "/features",
+    title: 'Features',
+    url: '/features',
     icon: Settings,
   },
   {
-    title: "Profile",
-    url: "/profile",
+    title: 'Profile',
+    url: '/profile',
     icon: User,
   },
 ]
@@ -101,7 +97,7 @@ const isActive = (url: string) => {
 const getInitials = (name: string) => {
   return name
     .split(' ')
-    .map(word => word.charAt(0))
+    .map((word) => word.charAt(0))
     .join('')
     .toUpperCase()
     .slice(0, 2)
@@ -115,7 +111,7 @@ const handleLogout = async () => {
     authStore.clearAuth()
 
     // Add a small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     // Redirect to login
     router.push('/login')

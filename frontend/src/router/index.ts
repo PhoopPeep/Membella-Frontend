@@ -17,7 +17,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard'
+      redirect: '/dashboard',
     },
     {
       path: '/login',
@@ -25,8 +25,8 @@ const router = createRouter({
       component: LoginView,
       meta: {
         requiresAuth: false,
-        redirectIfAuth: true // Redirect to dashboard if already authenticated
-      }
+        redirectIfAuth: true, // Redirect to dashboard if already authenticated
+      },
     },
     {
       path: '/register',
@@ -34,8 +34,8 @@ const router = createRouter({
       component: RegisterView,
       meta: {
         requiresAuth: false,
-        redirectIfAuth: true // Redirect to dashboard if already authenticated
-      }
+        redirectIfAuth: true, // Redirect to dashboard if already authenticated
+      },
     },
     {
       path: '/dashboard',
@@ -43,7 +43,7 @@ const router = createRouter({
       component: DashboardView,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/features',
@@ -51,7 +51,7 @@ const router = createRouter({
       component: Features,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/features/create',
@@ -59,7 +59,7 @@ const router = createRouter({
       component: CreateFeature,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/features/:id',
@@ -67,7 +67,7 @@ const router = createRouter({
       component: FeatureDetails,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/features/:id/edit',
@@ -75,7 +75,7 @@ const router = createRouter({
       component: EditFeature,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     // Plans routes
     {
@@ -84,7 +84,7 @@ const router = createRouter({
       component: Plans,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/plans/create',
@@ -92,7 +92,7 @@ const router = createRouter({
       component: CreatePlan,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/plans/:id',
@@ -100,7 +100,7 @@ const router = createRouter({
       component: PlanDetails,
       meta: {
         requiresAuth: true,
-      }
+      },
     },
     {
       path: '/plans/:id/edit',
@@ -108,8 +108,8 @@ const router = createRouter({
       component: EditPlan,
       meta: {
         requiresAuth: true,
-      }
-    }
+      },
+    },
     // {
     //   path: '/profile',
     //   name: 'profile',
