@@ -32,18 +32,20 @@
           <div class="flex justify-center space-x-2">
             <button
               @click="triggerFileInput"
+              :disabled="isUploading"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
             >
               <Camera class="w-4 h-4 mr-2" />
-              Upload
+              {{ isUploading ? 'Uploading...' : 'Upload' }}
             </button>
 
             <button
               v-if="authStore.user?.logo"
               @click="handleRemoveImage"
+              :disabled="isRemoving"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
             >
-              Remove
+              {{ isRemoving ? 'Removing...' : 'Remove' }}
             </button>
           </div>
 
@@ -64,7 +66,7 @@
         </div>
         <div class="p-6 space-y-4">
           <button
-            @click="isEditingProfile = true"
+            @click="openEditProfile"
             class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
             <Edit class="w-4 h-4 mr-2" />
@@ -72,7 +74,7 @@
           </button>
 
           <button
-            @click="isChangingPassword = true"
+            @click="openChangePassword"
             class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
             <Lock class="w-4 h-4 mr-2" />
@@ -169,7 +171,8 @@
                   id="orgName"
                   v-model="profileForm.organizationName"
                   type="text"
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :disabled="isUpdatingProfile"
+                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div class="space-y-2">
@@ -178,7 +181,8 @@
                   id="email"
                   v-model="profileForm.email"
                   type="email"
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :disabled="isUpdatingProfile"
+                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
@@ -190,7 +194,8 @@
                 v-model="profileForm.description"
                 placeholder="Tell us about your organization"
                 rows="3"
-                class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :disabled="isUpdatingProfile"
+                class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
@@ -202,7 +207,8 @@
                   v-model="profileForm.phone"
                   type="text"
                   placeholder="+1 (555) 123-4567"
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :disabled="isUpdatingProfile"
+                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div class="space-y-2">
@@ -212,7 +218,8 @@
                   v-model="profileForm.website"
                   type="text"
                   placeholder="https://example.com"
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :disabled="isUpdatingProfile"
+                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
@@ -224,7 +231,8 @@
                 v-model="profileForm.address"
                 placeholder="Your business address"
                 rows="2"
-                class="flex min-h-16 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :disabled="isUpdatingProfile"
+                class="flex min-h-16 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
@@ -232,7 +240,8 @@
               <button
                 type="button"
                 @click="cancelProfileEdit"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                :disabled="isUpdatingProfile"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -269,7 +278,8 @@
                 v-model="passwordForm.currentPassword"
                 type="password"
                 required
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :disabled="isChangingPasswordLoading"
+                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <div class="space-y-2">
@@ -279,7 +289,8 @@
                 v-model="passwordForm.newPassword"
                 type="password"
                 required
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :disabled="isChangingPasswordLoading"
+                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <div class="space-y-2">
@@ -289,14 +300,16 @@
                 v-model="passwordForm.confirmPassword"
                 type="password"
                 required
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                :disabled="isChangingPasswordLoading"
+                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <div class="flex justify-end space-x-2 pt-4">
               <button
                 type="button"
                 @click="cancelPasswordChange"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                :disabled="isChangingPasswordLoading"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -361,6 +374,8 @@ const isChangingPassword = ref(false)
 // Loading states
 const isUpdatingProfile = ref(false)
 const isChangingPasswordLoading = ref(false)
+const isUploading = ref(false)
+const isRemoving = ref(false)
 
 // Error states
 const profileError = ref('')
@@ -412,29 +427,46 @@ const triggerFileInput = () => {
 
 const handleImageUpload = async (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onloadend = async () => {
-      const base64String = reader.result as string
-      try {
-        await profileService.updateProfile({ logo: base64String })
-        authStore.user!.logo = base64String
-        showSuccessToast('Profile image updated successfully')
-      } catch (error) {
-        console.error('Error updating profile image:', error)
-      }
+  if (!file) return
+
+  try {
+    isUploading.value = true
+    const response = await profileService.uploadProfileImage(file)
+
+    // Update auth store with new user data
+    if (response.user) {
+      Object.assign(authStore.user!, response.user)
     }
-    reader.readAsDataURL(file)
+
+    showSuccessToast('Profile image updated successfully')
+  } catch (error: any) {
+    console.error('Error updating profile image:', error)
+    showErrorToast(error.message || 'Failed to upload profile image')
+  } finally {
+    isUploading.value = false
+    // Clear the file input
+    if (fileInputRef.value) {
+      fileInputRef.value.value = ''
+    }
   }
 }
 
 const handleRemoveImage = async () => {
   try {
-    await profileService.updateProfile({ logo: null })
-    authStore.user!.logo = undefined
+    isRemoving.value = true
+    const response = await profileService.removeProfileImage()
+
+    // Update auth store with new user data
+    if (response.user) {
+      Object.assign(authStore.user!, response.user)
+    }
+
     showSuccessToast('Profile image removed successfully')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error removing profile image:', error)
+    showErrorToast(error.message || 'Failed to remove profile image')
+  } finally {
+    isRemoving.value = false
   }
 }
 
@@ -452,30 +484,47 @@ const initializeProfileForm = () => {
   }
 }
 
+const openEditProfile = () => {
+  initializeProfileForm()
+  isEditingProfile.value = true
+  profileError.value = ''
+}
+
+const openChangePassword = () => {
+  resetPasswordForm()
+  isChangingPassword.value = true
+  passwordError.value = ''
+}
+
 const handleUpdateProfile = async () => {
   try {
     isUpdatingProfile.value = true
     profileError.value = ''
 
     const updateData = {
-      org_name: profileForm.value.organizationName,
-      email: profileForm.value.email,
-      description: profileForm.value.description,
+      org_name: profileForm.value.organizationName.trim(),
+      email: profileForm.value.email.trim(),
+      description: profileForm.value.description.trim() || undefined,
       contact_info: JSON.stringify({
-        phone: profileForm.value.phone,
-        address: profileForm.value.address,
-        website: profileForm.value.website
+        phone: profileForm.value.phone.trim(),
+        address: profileForm.value.address.trim(),
+        website: profileForm.value.website.trim()
       })
     }
+
+    console.log('🔄 Submitting profile update:', updateData)
 
     const response = await profileService.updateProfile(updateData)
 
     // Update auth store with new data
-    Object.assign(authStore.user!, response.user)
+    if (response.user) {
+      Object.assign(authStore.user!, response.user)
+    }
 
     isEditingProfile.value = false
     showSuccessToast('Profile updated successfully')
   } catch (error: any) {
+    console.error('❌ Profile update error:', error)
     profileError.value = error.message || 'Failed to update profile'
   } finally {
     isUpdatingProfile.value = false
@@ -497,6 +546,8 @@ const handleChangePassword = async () => {
       return
     }
 
+    console.log('🔐 Submitting password change...')
+
     await profileService.changePassword({
       currentPassword: passwordForm.value.currentPassword,
       newPassword: passwordForm.value.newPassword
@@ -506,6 +557,7 @@ const handleChangePassword = async () => {
     resetPasswordForm()
     showSuccessToast('Password changed successfully')
   } catch (error: any) {
+    console.error('❌ Password change error:', error)
     passwordError.value = error.message || 'Failed to change password'
   } finally {
     isChangingPasswordLoading.value = false
@@ -549,8 +601,20 @@ const showSuccessToast = (message: string) => {
   }, 3000)
 }
 
+const showErrorToast = (message: string) => {
+  // For now, we'll use the same toast styling
+  // You could create a separate error toast component
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 5000)
+}
+
 // Lifecycle
 onMounted(() => {
+  console.log('📋 Profile component mounted')
+  console.log('👤 Current user:', authStore.user)
   initializeProfileForm()
 })
 </script>
