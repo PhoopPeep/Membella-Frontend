@@ -1,4 +1,5 @@
 import api from '../router/api'
+import { supabase } from '../lib/supabase'
 
 export interface RegisterData {
   org_name: string
@@ -25,6 +26,8 @@ export interface AuthResponse {
     contact_info?: string
     logo?: string
   }
+  requiresVerification?: boolean
+  supabaseSession?: any
 }
 
 export const registerUser = async (userData: RegisterData): Promise<AuthResponse> => {
@@ -57,4 +60,44 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
       throw new Error('Login failed - network error')
     }
   }
+}
+
+export const resendVerification = async (email: string): Promise<{ message: string }> => {
+  try {
+    const response = await api.post('/api/auth/resend-verification', { email })
+    return response.data
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message)
+    } else if (error.message) {
+      throw new Error(error.message)
+    } else {
+      throw new Error('Failed to resend verification email')
+    }
+  }
+}
+
+export const handleAuthCallback = async (accessToken: string, refreshToken: string): Promise<AuthResponse> => {
+  try {
+    const response = await api.post('/api/auth/callback', {
+      access_token: accessToken,
+      refresh_token: refreshToken
+    })
+    return response.data
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message)
+    } else if (error.message) {
+      throw new Error(error.message)
+    } else {
+      throw new Error('Authentication callback failed')
+    }
+  }
+}
+
+// Initialize Supabase auth state listener
+export const initSupabaseAuth = (onAuthStateChange: (session: any) => void) => {
+  return supabase.auth.onAuthStateChange((event, session) => {
+    onAuthStateChange(session)
+  })
 }
