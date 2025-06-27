@@ -20,6 +20,19 @@
           <p class="text-sm text-green-600">{{ successMessage }}</p>
         </div>
 
+        <!-- Rate Limited Message -->
+        <div v-if="rateLimited" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <div class="flex items-center">
+            <Clock class="w-5 h-5 text-yellow-600 mr-2" />
+            <div>
+              <h3 class="text-sm font-medium text-yellow-800">Rate Limited</h3>
+              <p class="text-sm text-yellow-600 mt-1">
+                You've reached the email sending limit. Please wait before trying again.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Email Verification Required -->
         <div v-if="requiresVerification" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
           <div class="flex items-start">
@@ -33,6 +46,7 @@
                 <p>• Check your <strong>spam/junk folder</strong> if you don't see it in your inbox</p>
                 <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
                 <p>• The email may take a few minutes to arrive</p>
+                <p>• Click the verification link to activate your account</p>
               </div>
             </div>
           </div>
@@ -103,6 +117,7 @@
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
+
           <button
             type="submit"
             class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -126,7 +141,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Mail } from 'lucide-vue-next'
+import { Mail, Clock } from 'lucide-vue-next'
 import { registerUser, resendVerification } from '../../service/authService'
 
 const router = useRouter()
@@ -137,9 +152,12 @@ const org_name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const description = ref('')
+const contact_info = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
 const requiresVerification = ref(false)
+const rateLimited = ref(false)
 const userEmail = ref('')
 const resendCooldown = ref(0)
 
@@ -150,6 +168,7 @@ const handleRegister = async () => {
     isLoading.value = true
     errorMessage.value = ''
     successMessage.value = ''
+    rateLimited.value = false
 
     // Validate inputs
     if (!org_name.value.trim()) {
@@ -176,11 +195,16 @@ const handleRegister = async () => {
       org_name: org_name.value.trim(),
       email: email.value.trim().toLowerCase(),
       password: password.value,
+      description: description.value.trim() || undefined,
+      contact_info: contact_info.value.trim() || undefined,
     })
 
     console.log('✅ Registration response:', result)
 
-    if (result.requiresVerification) {
+    if (result.rateLimited) {
+      rateLimited.value = true
+      errorMessage.value = result.message
+    } else if (result.requiresVerification) {
       requiresVerification.value = true
       userEmail.value = email.value.trim().toLowerCase()
       successMessage.value = result.message
@@ -195,6 +219,9 @@ const handleRegister = async () => {
   } catch (error) {
     console.error('❌ Registration error:', error)
     if (error instanceof Error) {
+      if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+        rateLimited.value = true
+      }
       errorMessage.value = error.message
     } else if (typeof error === 'string') {
       errorMessage.value = error
@@ -210,15 +237,25 @@ const handleResendVerification = async () => {
   try {
     isResending.value = true
     errorMessage.value = ''
+    rateLimited.value = false
 
     console.log('📧 Resending verification to:', userEmail.value)
 
     const result = await resendVerification(userEmail.value)
-    successMessage.value = result.message
-    startResendCooldown()
+
+    if (result.rateLimited) {
+      rateLimited.value = true
+      errorMessage.value = result.message
+    } else {
+      successMessage.value = result.message
+      startResendCooldown()
+    }
   } catch (error) {
     console.error('❌ Resend error:', error)
     if (error instanceof Error) {
+      if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+        rateLimited.value = true
+      }
       errorMessage.value = error.message
     } else {
       errorMessage.value = 'Failed to resend verification email'
@@ -243,6 +280,7 @@ const tryDifferentEmail = () => {
   requiresVerification.value = false
   successMessage.value = ''
   errorMessage.value = ''
+  rateLimited.value = false
   email.value = ''
   userEmail.value = ''
   if (resendTimer) {

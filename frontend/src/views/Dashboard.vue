@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 space-y-4 p-4 md:p-8 pt-6">
+  <div class="flex-1 gap-4 space-y-4 p-4 md:p-8 pt-6">
     <div class="flex items-center justify-between space-y-2">
       <div class="flex items-center space-x-2">
         <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -26,7 +26,7 @@
     <!-- Dashboard Content -->
     <div v-else>
       <!-- Stats Cards -->
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-lg border bg-white shadow-sm">
           <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
             <h3 class="tracking-tight text-sm font-medium">Total Revenue</h3>
@@ -59,21 +59,10 @@
             <p class="text-xs text-gray-500">Available plans</p>
           </div>
         </div>
-
-        <div class="rounded-lg border bg-white shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Growth</h3>
-            <TrendingUp class="h-4 w-4 text-gray-500" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">+{{ growthPercentage }}%</div>
-            <p class="text-xs text-gray-500">From last month</p>
-          </div>
-        </div>
       </div>
 
       <!-- Charts -->
-      <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7">
+      <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7 mt-4">
         <div class="col-span-4 rounded-lg border bg-white shadow-sm">
           <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold">Revenue Overview</h3>
