@@ -2,12 +2,12 @@
   <div class="flex-1 space-y-4 p-4 md:p-8 pt-6">
     <div class="flex items-center space-x-2">
       <button
-        @click="goBack"
-        class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-      >
-        <ArrowLeft class="w-4 h-4 mr-1" />
-        Back
-      </button>
+          @click="goBack"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
+        >
+          <ArrowLeft class="w-4 h-4 mr-1" />
+          Back
+        </button>
       <h1 class="text-3xl font-bold tracking-tight">Edit Feature</h1>
     </div>
 
@@ -145,7 +145,8 @@ const loadFeature = async () => {
 }
 
 const goBack = () => {
-  router.push(`/features/${featureId}`)
+  // Navigate back to features list, not feature details
+  router.push('/features')
 }
 
 const handleSubmit = async () => {
@@ -166,9 +167,9 @@ const handleSubmit = async () => {
 
     successMessage.value = 'Feature updated successfully!'
 
-    // Redirect to feature details after a short delay
+    // Redirect to features list after a short delay
     setTimeout(() => {
-      router.push(`/features/${featureId}`)
+      router.push('/features')
     }, 1000)
   } catch (error: any) {
     if (error.response?.data?.message) {

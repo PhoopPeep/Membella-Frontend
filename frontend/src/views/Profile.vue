@@ -59,67 +59,67 @@
         </div>
       </div>
 
-    <!-- Profile Information Display -->
-    <div class="rounded-lg border bg-white shadow-sm">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-xl font-semibold">Organization Information</h2>
-      </div>
-      <div class="p-6">
-        <div class="grid gap-4 md:grid-cols-2">
-          <div class="space-y-4">
-            <div class="flex items-center space-x-3">
-              <Building class="w-5 h-5 text-gray-500" />
-              <div>
-                <p class="text-sm text-gray-500">Organization</p>
-                <p class="font-medium">{{ authStore.user?.org_name || 'Not specified' }}</p>
+      <!-- Profile Information Display -->
+      <div class="rounded-lg border bg-white shadow-sm">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold">Organization Information</h2>
+        </div>
+        <div class="p-6">
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-4">
+              <div class="flex items-center space-x-3">
+                <Building class="w-5 h-5 text-gray-500" />
+                <div>
+                  <p class="text-sm text-gray-500">Organization</p>
+                  <p class="font-medium">{{ authStore.user?.org_name || 'Not specified' }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-3">
+                <Mail class="w-5 h-5 text-gray-500" />
+                <div>
+                  <p class="text-sm text-gray-500">Email</p>
+                  <p class="font-medium">{{ authStore.user?.email || 'Not specified' }}</p>
+                </div>
+              </div>
+
+              <div v-if="contactInfo?.phone" class="flex items-center space-x-3">
+                <Phone class="w-5 h-5 text-gray-500" />
+                <div>
+                  <p class="text-sm text-gray-500">Phone</p>
+                  <p class="font-medium">{{ contactInfo.phone }}</p>
+                </div>
               </div>
             </div>
 
-            <div class="flex items-center space-x-3">
-              <Mail class="w-5 h-5 text-gray-500" />
-              <div>
-                <p class="text-sm text-gray-500">Email</p>
-                <p class="font-medium">{{ authStore.user?.email || 'Not specified' }}</p>
+            <div class="space-y-4">
+              <div v-if="contactInfo?.website" class="flex items-center space-x-3">
+                <Globe class="w-5 h-5 text-gray-500" />
+                <div>
+                  <p class="text-sm text-gray-500">Website</p>
+                  <p class="font-medium">{{ contactInfo.website }}</p>
+                </div>
               </div>
-            </div>
 
-            <div v-if="contactInfo?.phone" class="flex items-center space-x-3">
-              <Phone class="w-5 h-5 text-gray-500" />
-              <div>
-                <p class="text-sm text-gray-500">Phone</p>
-                <p class="font-medium">{{ contactInfo.phone }}</p>
+              <div v-if="contactInfo?.address" class="flex items-start space-x-3">
+                <MapPin class="w-5 h-5 text-gray-500 mt-0.5" />
+                <div>
+                  <p class="text-sm text-gray-500">Address</p>
+                  <p class="font-medium">{{ contactInfo.address }}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="space-y-4">
-            <div v-if="contactInfo?.website" class="flex items-center space-x-3">
-              <Globe class="w-5 h-5 text-gray-500" />
-              <div>
-                <p class="text-sm text-gray-500">Website</p>
-                <p class="font-medium">{{ contactInfo.website }}</p>
-              </div>
-            </div>
-
-            <div v-if="contactInfo?.address" class="flex items-start space-x-3">
-              <MapPin class="w-5 h-5 text-gray-500 mt-0.5" />
-              <div>
-                <p class="text-sm text-gray-500">Address</p>
-                <p class="font-medium">{{ contactInfo.address }}</p>
-              </div>
-            </div>
+          <div v-if="authStore.user?.description" class="mt-6 pt-6 border-t">
+            <p class="text-sm text-gray-500 mb-2">Description</p>
+            <p class="text-gray-700">{{ authStore.user.description }}</p>
           </div>
         </div>
-
-        <div v-if="authStore.user?.description" class="mt-6 pt-6 border-t">
-          <p class="text-sm text-gray-500 mb-2">Description</p>
-          <p class="text-gray-700">{{ authStore.user.description }}</p>
-        </div>
       </div>
-    </div>
 
-    <!-- Account Actions -->
-    <div class="rounded-lg border bg-white shadow-sm">
+      <!-- Account Actions -->
+      <div class="rounded-lg border bg-white shadow-sm">
         <div class="p-6 border-b border-gray-200">
           <h2 class="text-xl font-semibold">Account Actions</h2>
         </div>
@@ -141,11 +141,12 @@
           </button>
 
           <button
-            @click="handleLogout"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+            @click="confirmLogout"
+            :disabled="isLoggingOut"
+            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <LogOut class="w-4 h-4 mr-2" />
-            Logout
+            {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
           </button>
         </div>
       </div>
@@ -326,6 +327,20 @@
       </div>
     </div>
 
+    <!-- Logout Confirmation Modal -->
+    <ConfirmationModal
+      :show="showLogoutModal"
+      type="warning"
+      title="Confirm Logout"
+      message="Are you sure you want to logout? You will need to sign in again to access your account."
+      confirm-text="Logout"
+      cancel-text="Stay Logged In"
+      loading-text="Logging out..."
+      :loading="isLoggingOut"
+      @confirm="handleLogout"
+      @cancel="cancelLogout"
+    />
+
     <!-- Success Toast -->
     <div
       v-if="showToast"
@@ -362,6 +377,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
 import { profileService } from '../service/profileService'
+import ConfirmationModal from '../components/ConfirmationModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -376,6 +392,7 @@ const isUpdatingProfile = ref(false)
 const isChangingPasswordLoading = ref(false)
 const isUploading = ref(false)
 const isRemoving = ref(false)
+const isLoggingOut = ref(false)
 
 // Error states
 const profileError = ref('')
@@ -384,6 +401,9 @@ const passwordError = ref('')
 // Toast state
 const showToast = ref(false)
 const toastMessage = ref('')
+
+// Logout confirmation state
+const showLogoutModal = ref(false)
 
 // Profile form data
 const profileForm = ref({
@@ -584,13 +604,33 @@ const resetPasswordForm = () => {
   }
 }
 
+const confirmLogout = () => {
+  showLogoutModal.value = true
+}
+
 const handleLogout = async () => {
   try {
+    isLoggingOut.value = true
+
+    // Clear auth state
     authStore.clearAuth()
-    router.push('/login')
+
+    // Close modal
+    showLogoutModal.value = false
+
+    // Small delay for better UX
+    setTimeout(() => {
+      router.push('/login')
+    }, 500)
   } catch (error) {
     console.error('Logout error:', error)
+  } finally {
+    isLoggingOut.value = false
   }
+}
+
+const cancelLogout = () => {
+  showLogoutModal.value = false
 }
 
 const showSuccessToast = (message: string) => {

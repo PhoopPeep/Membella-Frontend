@@ -20,7 +20,8 @@
           Edit Plan
         </button>
         <button
-          @click="handleDeletePlan"
+          @click="confirmDeletePlan"
+          :disabled="isDeleting"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-10 px-4 py-2"
         >
           <Trash2 class="w-4 h-4 mr-2" />
@@ -41,7 +42,17 @@
       class="bg-white rounded-lg border border-gray-200 shadow-sm"
     >
       <div class="text-center py-12">
-        <p class="text-gray-500">Plan not found</p>
+        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle class="w-6 h-6 text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Plan not found</h3>
+        <p class="text-gray-500 mb-4">The plan you're looking for doesn't exist or has been deleted.</p>
+        <button
+          @click="goBack"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+        >
+          Back to Plans
+        </button>
       </div>
     </div>
 
@@ -115,6 +126,9 @@
             </div>
           </div>
           <div v-else class="text-center py-8">
+            <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Settings class="w-6 h-6 text-gray-400" />
+            </div>
             <p class="text-gray-500 mb-2">No features assigned</p>
             <button
               @click="navigateToEdit"
@@ -126,15 +140,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :show="showDeleteModal"
+      type="danger"
+      title="Delete Plan"
+      message="Are you sure you want to delete this plan? This action cannot be undone and will affect all subscribers currently using this plan."
+      :item-name="plan?.name"
+      confirm-text="Delete Plan"
+      cancel-text="Cancel"
+      loading-text="Deleting..."
+      :loading="isDeleting"
+      @confirm="handleDeletePlan"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Edit, Trash2, Calendar, DollarSign, Clock } from 'lucide-vue-next'
+import { ArrowLeft, Edit, Trash2, Calendar, DollarSign, Clock, AlertCircle, Settings } from 'lucide-vue-next'
 import { plansService, type Plan } from '../service/plansService'
 import { featuresService, type Feature } from '../service/featuresService'
+import ConfirmationModal from '../components/ConfirmationModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -142,6 +172,10 @@ const route = useRoute()
 const plan = ref<Plan | null>(null)
 const features = ref<Feature[]>([])
 const isLoading = ref(false)
+const isDeleting = ref(false)
+
+// Modal state
+const showDeleteModal = ref(false)
 
 const planId = route.params.id as string
 
@@ -173,17 +207,30 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString()
 }
 
+const confirmDeletePlan = () => {
+  showDeleteModal.value = true
+}
+
 const handleDeletePlan = async () => {
   if (!plan.value) return
 
-  if (confirm('Are you sure you want to delete this plan?')) {
-    try {
-      await plansService.deletePlan(plan.value.id)
-      router.push('/plans')
-    } catch (error) {
-      console.error('Error deleting plan:', error)
-    }
+  try {
+    isDeleting.value = true
+    await plansService.deletePlan(plan.value.id)
+
+    // Close modal and navigate back
+    showDeleteModal.value = false
+    router.push('/plans')
+  } catch (error) {
+    console.error('Error deleting plan:', error)
+    // You could show an error message here
+  } finally {
+    isDeleting.value = false
   }
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
 }
 
 const goBack = () => {

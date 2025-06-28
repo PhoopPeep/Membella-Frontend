@@ -76,7 +76,7 @@
                       Edit
                     </button>
                     <button
-                      @click="handleDeleteFeature(feature.feature_id, feature.name)"
+                      @click="confirmDeleteFeature(feature)"
                       :disabled="deleting === feature.feature_id"
                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-3"
                     >
@@ -108,6 +108,21 @@
         </button>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :show="showDeleteModal"
+      type="danger"
+      title="Delete Feature"
+      message="Are you sure you want to delete this feature? This action cannot be undone and will remove the feature from all plans that currently include it."
+      :item-name="featureToDelete?.name"
+      confirm-text="Delete Feature"
+      cancel-text="Cancel"
+      loading-text="Deleting..."
+      :loading="deleting !== null"
+      @confirm="handleDeleteFeature"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
@@ -116,6 +131,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Eye, Edit, Trash2, Settings } from 'lucide-vue-next'
 import { featuresService, type Feature } from '../service/featuresService'
+import ConfirmationModal from '../components/ConfirmationModal.vue'
 
 const router = useRouter()
 
@@ -123,6 +139,10 @@ const features = ref<Feature[]>([])
 const loading = ref(false)
 const error = ref('')
 const deleting = ref<string | null>(null)
+
+// Modal state
+const showDeleteModal = ref(false)
+const featureToDelete = ref<Feature | null>(null)
 
 const loadFeatures = async () => {
   try {
@@ -136,25 +156,36 @@ const loadFeatures = async () => {
   }
 }
 
-const handleDeleteFeature = async (featureId: string, featureName: string) => {
-  if (!confirm(`Are you sure you want to delete "${featureName}"?`)) {
-    return
-  }
+const confirmDeleteFeature = (feature: Feature) => {
+  featureToDelete.value = feature
+  showDeleteModal.value = true
+}
+
+const handleDeleteFeature = async () => {
+  if (!featureToDelete.value) return
 
   try {
-    deleting.value = featureId
-    await featuresService.deleteFeature(featureId)
+    deleting.value = featureToDelete.value.feature_id
+    await featuresService.deleteFeature(featureToDelete.value.feature_id)
 
     // Remove from local state
-    features.value = features.value.filter((f) => f.feature_id !== featureId)
+    features.value = features.value.filter((f) => f.feature_id !== featureToDelete.value!.feature_id)
 
-    // You could add a toast notification here
+    // Close modal and reset state
+    showDeleteModal.value = false
+    featureToDelete.value = null
+
     console.log('Feature deleted successfully')
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete feature'
   } finally {
     deleting.value = null
   }
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  featureToDelete.value = null
 }
 
 const formatDate = (dateString: string) => {

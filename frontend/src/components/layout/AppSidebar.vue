@@ -158,7 +158,7 @@ const menuItems = [
     icon: CreditCard,
   },
   {
-    title: 'Features',
+    title: 'Features Management',
     url: '/features',
     icon: Settings,
   },

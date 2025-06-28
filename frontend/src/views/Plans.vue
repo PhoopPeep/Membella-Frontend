@@ -98,7 +98,7 @@
                       Edit
                     </button>
                     <button
-                      @click="handleDeletePlan(plan.id, plan.name)"
+                      @click="confirmDeletePlan(plan)"
                       :disabled="deleting === plan.id"
                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-3"
                     >
@@ -130,6 +130,21 @@
         </button>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :show="showDeleteModal"
+      type="danger"
+      title="Delete Plan"
+      message="Are you sure you want to delete this plan? This action cannot be undone and will affect all subscribers currently using this plan."
+      :item-name="planToDelete?.name"
+      confirm-text="Delete Plan"
+      cancel-text="Cancel"
+      loading-text="Deleting..."
+      :loading="deleting !== null"
+      @confirm="handleDeletePlan"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
@@ -139,6 +154,7 @@ import { useRouter } from 'vue-router'
 import { Plus, Eye, Edit, Trash2 } from 'lucide-vue-next'
 import { plansService, type Plan } from '../service/plansService'
 import { featuresService, type Feature } from '../service/featuresService'
+import ConfirmationModal from '../components/ConfirmationModal.vue'
 
 const router = useRouter()
 
@@ -147,6 +163,10 @@ const features = ref<Feature[]>([])
 const loading = ref(false)
 const error = ref('')
 const deleting = ref<string | null>(null)
+
+// Modal state
+const showDeleteModal = ref(false)
+const planToDelete = ref<Plan | null>(null)
 
 const loadPlans = async () => {
   try {
@@ -171,17 +191,24 @@ const getFeatureNames = (featureIds: string[]) => {
     .map((feature) => feature.name)
 }
 
-const handleDeletePlan = async (planId: string, planName: string) => {
-  if (!confirm(`Are you sure you want to delete "${planName}"?`)) {
-    return
-  }
+const confirmDeletePlan = (plan: Plan) => {
+  planToDelete.value = plan
+  showDeleteModal.value = true
+}
+
+const handleDeletePlan = async () => {
+  if (!planToDelete.value) return
 
   try {
-    deleting.value = planId
-    await plansService.deletePlan(planId)
+    deleting.value = planToDelete.value.id
+    await plansService.deletePlan(planToDelete.value.id)
 
     // Remove from local state
-    plans.value = plans.value.filter((p) => p.id !== planId)
+    plans.value = plans.value.filter((p) => p.id !== planToDelete.value!.id)
+
+    // Close modal and reset state
+    showDeleteModal.value = false
+    planToDelete.value = null
 
     console.log('Plan deleted successfully')
   } catch (err) {
@@ -189,6 +216,11 @@ const handleDeletePlan = async (planId: string, planName: string) => {
   } finally {
     deleting.value = null
   }
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  planToDelete.value = null
 }
 
 const navigateToCreate = () => {
