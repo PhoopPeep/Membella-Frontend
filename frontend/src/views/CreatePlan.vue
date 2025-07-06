@@ -50,7 +50,7 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
-              <label for="price" class="text-sm font-medium leading-none">Price ($) *</label>
+              <label for="price" class="text-sm font-medium leading-none">Price *</label>
               <input
                 id="price"
                 v-model.number="formData.price"
@@ -68,7 +68,9 @@
             </div>
 
             <div class="space-y-2">
-              <label for="duration" class="text-sm font-medium leading-none">Duration (days) *</label>
+              <label for="duration" class="text-sm font-medium leading-none"
+                >Duration (days) *</label
+              >
               <input
                 id="duration"
                 v-model.number="formData.duration"

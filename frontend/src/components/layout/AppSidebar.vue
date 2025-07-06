@@ -2,7 +2,7 @@
   <aside
     :class="[
       'border-r border-gray-200 bg-white flex flex-col h-full transition-all duration-300 ease-in-out',
-      isCollapsed ? 'w-16' : 'w-64'
+      isCollapsed ? 'w-16' : 'w-64',
     ]"
   >
     <!-- Sidebar Header -->
@@ -53,7 +53,7 @@
               isActive(item.url)
                 ? 'bg-blue-50 text-blue-700'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-              isCollapsed ? 'justify-center' : 'justify-start'
+              isCollapsed ? 'justify-center' : 'justify-start',
             ]"
             active-class="bg-blue-50 text-blue-700"
           >
@@ -68,14 +68,11 @@
               :class="[
                 'flex-shrink-0 transition-colors',
                 isActive(item.url) ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500',
-                isCollapsed ? 'w-5 h-5' : 'w-4 h-4'
+                isCollapsed ? 'w-5 h-5' : 'w-4 h-4',
               ]"
             />
             <Transition name="fade">
-              <span
-                v-show="!isCollapsed"
-                class="ml-3"
-              >
+              <span v-show="!isCollapsed" class="ml-3">
                 {{ item.title }}
               </span>
             </Transition>
@@ -87,7 +84,9 @@
                 class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
               >
                 {{ item.title }}
-                <div class="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-0 h-0 border-t-2 border-b-2 border-r-2 border-transparent border-r-gray-900"></div>
+                <div
+                  class="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-0 h-0 border-t-2 border-b-2 border-r-2 border-transparent border-r-gray-900"
+                ></div>
               </div>
             </Transition>
           </router-link>
@@ -104,7 +103,9 @@
           @click="handleProfileClick"
           class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors mb-3 group"
         >
-          <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+          >
             <img
               v-if="authStore.user?.logo"
               :src="authStore.user.logo"
@@ -114,7 +115,11 @@
             <User v-else class="w-4 h-4 text-gray-500" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">Profile</p>
+            <p
+              class="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors"
+            >
+              Profile
+            </p>
             <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
           </div>
           <ChevronRight class="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
@@ -127,14 +132,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import {
-  LayoutDashboard,
-  CreditCard,
-  Settings,
-  User,
-  Menu,
-  ChevronRight
-} from 'lucide-vue-next'
+import { LayoutDashboard, CreditCard, Settings, User, Menu, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
@@ -210,7 +208,7 @@ const handleMouseLeave = () => {
 
 // Add mouse event listeners to menu items
 const addTooltipListeners = () => {
-  menuItems.forEach(item => {
+  menuItems.forEach((item) => {
     // These will be handled in template with @mouseenter/@mouseleave
   })
 }

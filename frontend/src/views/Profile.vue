@@ -14,17 +14,16 @@
           </h2>
         </div>
         <div class="p-6 text-center space-y-4">
-          <div class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+          <div
+            class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden"
+          >
             <img
               v-if="authStore.user?.logo"
               :src="authStore.user.logo"
               :alt="authStore.user.org_name"
               class="w-full h-full object-cover"
             />
-            <span
-              v-else
-              class="text-xl font-medium text-gray-600"
-            >
+            <span v-else class="text-xl font-medium text-gray-600">
               {{ getInitials(authStore.user?.org_name || 'ORG') }}
             </span>
           </div>
@@ -153,11 +152,18 @@
     </div>
 
     <!-- Edit Profile Modal -->
-    <div v-if="isEditingProfile" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+    <div
+      v-if="isEditingProfile"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    >
+      <div
+        class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white"
+      >
         <div class="mt-3">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Profile</h3>
-          <p class="text-sm text-gray-500 mb-6">Update your organization information and contact details.</p>
+          <p class="text-sm text-gray-500 mb-6">
+            Update your organization information and contact details.
+          </p>
 
           <!-- Error Message -->
           <div v-if="profileError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -167,7 +173,9 @@
           <form @submit.prevent="handleUpdateProfile" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
-                <label for="orgName" class="text-sm font-medium leading-none">Organization Name</label>
+                <label for="orgName" class="text-sm font-medium leading-none"
+                  >Organization Name</label
+                >
                 <input
                   id="orgName"
                   v-model="profileForm.organizationName"
@@ -260,11 +268,18 @@
     </div>
 
     <!-- Change Password Modal -->
-    <div v-if="isChangingPassword" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white">
+    <div
+      v-if="isChangingPassword"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    >
+      <div
+        class="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white"
+      >
         <div class="mt-3">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-          <p class="text-sm text-gray-500 mb-6">Enter your current password and choose a new one.</p>
+          <p class="text-sm text-gray-500 mb-6">
+            Enter your current password and choose a new one.
+          </p>
 
           <!-- Error Message -->
           <div v-if="passwordError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -273,7 +288,9 @@
 
           <form @submit.prevent="handleChangePassword" class="space-y-4">
             <div class="space-y-2">
-              <label for="currentPassword" class="text-sm font-medium leading-none">Current Password</label>
+              <label for="currentPassword" class="text-sm font-medium leading-none"
+                >Current Password</label
+              >
               <input
                 id="currentPassword"
                 v-model="passwordForm.currentPassword"
@@ -295,7 +312,9 @@
               />
             </div>
             <div class="space-y-2">
-              <label for="confirmPassword" class="text-sm font-medium leading-none">Confirm New Password</label>
+              <label for="confirmPassword" class="text-sm font-medium leading-none"
+                >Confirm New Password</label
+              >
               <input
                 id="confirmPassword"
                 v-model="passwordForm.confirmPassword"
@@ -349,7 +368,11 @@
       <div class="flex">
         <div class="flex-shrink-0">
           <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
           </svg>
         </div>
         <div class="ml-3">
@@ -373,7 +396,7 @@ import {
   MapPin,
   Globe,
   Lock,
-  LogOut
+  LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
 import { profileService } from '../service/profileService'
@@ -412,14 +435,14 @@ const profileForm = ref({
   description: '',
   phone: '',
   address: '',
-  website: ''
+  website: '',
 })
 
 // Password form data
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 // Computed properties
@@ -500,7 +523,7 @@ const initializeProfileForm = () => {
     description: user?.description || '',
     phone: contact?.phone || '',
     address: contact?.address || '',
-    website: contact?.website || ''
+    website: contact?.website || '',
   }
 }
 
@@ -528,8 +551,8 @@ const handleUpdateProfile = async () => {
       contact_info: JSON.stringify({
         phone: profileForm.value.phone.trim(),
         address: profileForm.value.address.trim(),
-        website: profileForm.value.website.trim()
-      })
+        website: profileForm.value.website.trim(),
+      }),
     }
 
     console.log('🔄 Submitting profile update:', updateData)
@@ -570,7 +593,7 @@ const handleChangePassword = async () => {
 
     await profileService.changePassword({
       currentPassword: passwordForm.value.currentPassword,
-      newPassword: passwordForm.value.newPassword
+      newPassword: passwordForm.value.newPassword,
     })
 
     isChangingPassword.value = false
@@ -600,7 +623,7 @@ const resetPasswordForm = () => {
   passwordForm.value = {
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   }
 }
 

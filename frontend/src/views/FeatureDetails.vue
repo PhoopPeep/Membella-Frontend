@@ -42,11 +42,15 @@
       class="bg-white rounded-lg border border-gray-200 shadow-sm"
     >
       <div class="text-center py-12">
-        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <div
+          class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+        >
           <AlertCircle class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Feature not found</h3>
-        <p class="text-gray-500 mb-4">The feature you're looking for doesn't exist or has been deleted.</p>
+        <p class="text-gray-500 mb-4">
+          The feature you're looking for doesn't exist or has been deleted.
+        </p>
         <button
           @click="goBack"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"

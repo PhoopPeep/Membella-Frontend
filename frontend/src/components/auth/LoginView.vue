@@ -8,18 +8,23 @@
         <p class="text-center text-gray-600">Enter your credentials to access your account</p>
       </div>
       <div class="p-6 pt-0">
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ errorMessage }}</p>
+        <!-- Error Message - Will stay for exactly 15 seconds -->
+        <div v-if="showErrorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ currentErrorMessage }}</p>
+          <div class="mt-2">
+            <small class="text-xs text-red-500">
+              This message will disappear in {{ errorCountdown }} seconds
+            </small>
+          </div>
         </div>
 
         <!-- Success Message -->
-        <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600">{{ successMessage }}</p>
+        <div v-if="showSuccessMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <p class="text-sm text-green-600">{{ currentSuccessMessage }}</p>
         </div>
 
         <!-- Rate Limited Message -->
-        <div v-if="rateLimited" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+        <div v-if="showRateLimited" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <div class="flex items-center">
             <Clock class="w-5 h-5 text-yellow-600 mr-2" />
             <div>
@@ -32,7 +37,7 @@
         </div>
 
         <!-- Email Verification Required -->
-        <div v-if="requiresVerification" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div v-if="showVerificationRequired" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
           <div class="flex items-center">
             <Mail class="w-5 h-5 text-blue-600 mr-2" />
             <div>
@@ -103,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Mail, Clock } from 'lucide-vue-next'
 import { login, resendVerification } from '../../service/authService'
@@ -112,28 +117,111 @@ import { useAuthStore } from '../../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// Form state
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const isResending = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
-const requiresVerification = ref(false)
-const rateLimited = ref(false)
 const resendCooldown = ref(0)
 
+// Message display state
+const showErrorMessage = ref(false)
+const showSuccessMessage = ref(false)
+const showRateLimited = ref(false)
+const showVerificationRequired = ref(false)
+
+// Message content
+const currentErrorMessage = ref('')
+const currentSuccessMessage = ref('')
+
+// Timer state
+const errorCountdown = ref(15)
+let errorTimer: NodeJS.Timeout | null = null
+let errorCountdownTimer: NodeJS.Timeout | null = null
+let successTimer: NodeJS.Timeout | null = null
 let resendTimer: NodeJS.Timeout | null = null
+
+// Robust error display function that GUARANTEES 15 seconds
+const displayError = (message: string) => {
+  console.log('🚨 Displaying error for 15 seconds:', message)
+
+  // Clear any existing error timers first
+  clearErrorTimers()
+
+  // Set error message and show it
+  currentErrorMessage.value = message
+  showErrorMessage.value = true
+  errorCountdown.value = 15
+
+  // Start countdown timer (updates every second)
+  errorCountdownTimer = setInterval(() => {
+    errorCountdown.value--
+    console.log('⏰ Error countdown:', errorCountdown.value)
+
+    if (errorCountdown.value <= 0) {
+      clearErrorTimers()
+    }
+  }, 1000)
+
+  // Main timer to clear error after exactly 15 seconds
+  errorTimer = setTimeout(() => {
+    console.log('✅ Clearing error after 15 seconds')
+    clearErrorTimers()
+  }, 15000)
+
+  // Force Vue to update the DOM
+  nextTick(() => {
+    console.log('🔄 DOM updated with error message')
+  })
+}
+
+// Clear all error timers and reset error state
+const clearErrorTimers = () => {
+  if (errorTimer) {
+    clearTimeout(errorTimer)
+    errorTimer = null
+  }
+  if (errorCountdownTimer) {
+    clearInterval(errorCountdownTimer)
+    errorCountdownTimer = null
+  }
+
+  showErrorMessage.value = false
+  currentErrorMessage.value = ''
+  showRateLimited.value = false
+  showVerificationRequired.value = false
+  errorCountdown.value = 15
+}
+
+// Success message display (shorter duration)
+const displaySuccess = (message: string) => {
+  console.log('✅ Displaying success message:', message)
+
+  // Clear existing success timer
+  if (successTimer) {
+    clearTimeout(successTimer)
+  }
+
+  currentSuccessMessage.value = message
+  showSuccessMessage.value = true
+
+  successTimer = setTimeout(() => {
+    showSuccessMessage.value = false
+    currentSuccessMessage.value = ''
+  }, 5000) // 5 seconds for success messages
+}
 
 const handleLogin = async () => {
   try {
     isLoading.value = true
-    errorMessage.value = ''
-    successMessage.value = ''
-    requiresVerification.value = false
-    rateLimited.value = false
+
+    // Clear any existing messages first
+    clearErrorTimers()
+    showSuccessMessage.value = false
 
     if (!email.value.trim() || !password.value.trim()) {
-      throw new Error('Please enter both email and password')
+      displayError('Please enter both email and password')
+      return
     }
 
     console.log('🔐 Attempting login for:', email.value)
@@ -146,14 +234,14 @@ const handleLogin = async () => {
     console.log('✅ Login response:', result)
 
     if (result.requiresVerification) {
-      requiresVerification.value = true
-      errorMessage.value = result.message
+      showVerificationRequired.value = true
+      displayError(result.message)
       startResendCooldown()
     } else if (result.rateLimited) {
-      rateLimited.value = true
-      errorMessage.value = result.message
+      showRateLimited.value = true
+      displayError(result.message)
     } else {
-      successMessage.value = result.message || 'Login successful!'
+      displaySuccess(result.message || 'Login successful!')
 
       // Store auth data if login includes token and user
       if (result.token && result.user) {
@@ -164,20 +252,20 @@ const handleLogin = async () => {
           router.push('/dashboard')
         }, 1000)
       } else {
-        throw new Error('Login response missing authentication data')
+        displayError('Login response missing authentication data')
       }
     }
   } catch (error) {
     console.error('❌ Login error:', error)
     if (error instanceof Error) {
       if (error.message.includes('verify') || error.message.includes('verification')) {
-        requiresVerification.value = true
+        showVerificationRequired.value = true
       } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        rateLimited.value = true
+        showRateLimited.value = true
       }
-      errorMessage.value = error.message
+      displayError(error.message)
     } else {
-      errorMessage.value = 'An unknown error occurred during login.'
+      displayError('An unknown error occurred during login.')
     }
   } finally {
     isLoading.value = false
@@ -187,11 +275,13 @@ const handleLogin = async () => {
 const handleResendVerification = async () => {
   try {
     isResending.value = true
-    errorMessage.value = ''
-    rateLimited.value = false
+
+    // Clear existing error messages
+    clearErrorTimers()
 
     if (!email.value.trim()) {
-      throw new Error('Please enter your email address first')
+      displayError('Please enter your email address first')
+      return
     }
 
     console.log('📧 Resending verification to:', email.value)
@@ -199,21 +289,21 @@ const handleResendVerification = async () => {
     const result = await resendVerification(email.value.trim().toLowerCase())
 
     if (result.rateLimited) {
-      rateLimited.value = true
-      errorMessage.value = result.message
+      showRateLimited.value = true
+      displayError(result.message)
     } else {
-      successMessage.value = result.message
+      displaySuccess(result.message)
       startResendCooldown()
     }
   } catch (error) {
     console.error('❌ Resend verification error:', error)
     if (error instanceof Error) {
       if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        rateLimited.value = true
+        showRateLimited.value = true
       }
-      errorMessage.value = error.message
+      displayError(error.message)
     } else {
-      errorMessage.value = 'Failed to resend verification email'
+      displayError('Failed to resend verification email')
     }
   } finally {
     isResending.value = false
@@ -232,6 +322,12 @@ const startResendCooldown = () => {
 }
 
 onUnmounted(() => {
+  console.log('🧹 Cleaning up all timers on component unmount')
+  clearErrorTimers()
+
+  if (successTimer) {
+    clearTimeout(successTimer)
+  }
   if (resendTimer) {
     clearInterval(resendTimer)
   }

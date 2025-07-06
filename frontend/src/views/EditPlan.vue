@@ -23,11 +23,15 @@
       class="bg-white rounded-lg border border-gray-200 shadow-sm max-w-2xl"
     >
       <div class="text-center py-12">
-        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <div
+          class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+        >
           <AlertCircle class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Plan not found</h3>
-        <p class="text-gray-500 mb-4">The plan you're looking for doesn't exist or has been deleted.</p>
+        <p class="text-gray-500 mb-4">
+          The plan you're looking for doesn't exist or has been deleted.
+        </p>
         <button
           @click="goBack"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
@@ -97,7 +101,9 @@
               :disabled="isLoading"
               @blur="validateDescription"
               class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-colors resize-vertical"
-              :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': descriptionError }"
+              :class="{
+                'border-red-300 focus:ring-red-500 focus:border-red-500': descriptionError,
+              }"
             />
             <p v-if="descriptionError" class="text-xs text-red-600 flex items-center">
               <AlertCircle class="w-3 h-3 mr-1" />
@@ -169,9 +175,7 @@
                 Features *
                 <span class="text-xs text-gray-500 font-normal">(Select at least one)</span>
               </label>
-              <span class="text-xs text-gray-500">
-                {{ selectedFeatures.length }} selected
-              </span>
+              <span class="text-xs text-gray-500"> {{ selectedFeatures.length }} selected </span>
             </div>
 
             <div
@@ -202,7 +206,9 @@
             </div>
 
             <div v-else class="text-center py-8 bg-gray-50 rounded-md border border-gray-200">
-              <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <div
+                class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+              >
                 <Settings class="w-6 h-6 text-gray-400" />
               </div>
               <p class="text-sm text-gray-500 mb-2">No features available</p>
@@ -216,7 +222,9 @@
           </div>
 
           <!-- Form Actions -->
-          <div class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200">
+          <div
+            class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200"
+          >
             <button
               type="button"
               @click="goBack"
@@ -351,7 +359,13 @@ const validateAllFields = () => {
 
 // Computed properties
 const hasValidationErrors = computed(() => {
-  return !!(nameError.value || descriptionError.value || priceError.value || durationError.value || featuresError.value)
+  return !!(
+    nameError.value ||
+    descriptionError.value ||
+    priceError.value ||
+    durationError.value ||
+    featuresError.value
+  )
 })
 
 const hasChanges = computed(() => {
@@ -362,7 +376,8 @@ const hasChanges = computed(() => {
     formData.value.description !== originalData.value.description ||
     formData.value.price !== originalData.value.price ||
     formData.value.duration !== originalData.value.duration ||
-    JSON.stringify(selectedFeatures.value.sort()) !== JSON.stringify(originalData.value.features?.sort() || [])
+    JSON.stringify(selectedFeatures.value.sort()) !==
+      JSON.stringify(originalData.value.features?.sort() || [])
   )
 })
 
@@ -395,7 +410,6 @@ const loadPlan = async () => {
 
     // Store original data for change detection
     originalData.value = { ...formData.value, features: [...planData.features] }
-
   } catch (error: any) {
     console.error('Error loading plan:', error)
     errorMessage.value = error.message || 'Failed to load plan'
@@ -440,7 +454,6 @@ const handleSubmit = async () => {
     setTimeout(() => {
       router.push(`/plans/${planId}`)
     }, 1500)
-
   } catch (error: any) {
     console.error('Update plan error:', error)
     errorMessage.value = error.message || 'Failed to update plan. Please try again.'
@@ -460,10 +473,13 @@ const goBack = () => {
 }
 
 // Watch for route changes to clear messages
-watch(() => route.params.id, () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-})
+watch(
+  () => route.params.id,
+  () => {
+    errorMessage.value = ''
+    successMessage.value = ''
+  },
+)
 
 // Lifecycle
 onMounted(() => {

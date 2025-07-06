@@ -8,12 +8,17 @@
           <p class="text-gray-600">Please wait while we confirm your account.</p>
         </div>
 
-        <div v-else-if="error" class="space-y-4">
+        <div v-else-if="showErrorMessage" class="space-y-4">
           <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle class="w-6 h-6 text-red-600" />
           </div>
           <h2 class="text-xl font-semibold text-red-600">Verification Failed</h2>
-          <p class="text-gray-600">{{ error }}</p>
+          <div class="text-center">
+            <p class="text-gray-600 mb-2">{{ currentErrorMessage }}</p>
+            <small class="text-xs text-red-500">
+              This message will disappear in {{ errorCountdown }} seconds
+            </small>
+          </div>
           <div class="space-y-2">
             <button
               @click="redirectToLogin"
@@ -52,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { CheckCircle, AlertCircle } from 'lucide-vue-next'
 import { supabase } from '../../lib/supabase'
@@ -63,10 +68,71 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+// Component state
 const isProcessing = ref(true)
-const error = ref('')
 const success = ref(false)
 const canRetry = ref(false)
+
+// Error display state
+const showErrorMessage = ref(false)
+const currentErrorMessage = ref('')
+const errorCountdown = ref(15)
+
+// Timer management
+let errorTimer: NodeJS.Timeout | null = null
+let errorCountdownTimer: NodeJS.Timeout | null = null
+
+// Robust error display function that GUARANTEES 15 seconds
+const displayError = (message: string) => {
+  console.log('🚨 Auth Callback Error - Displaying for 15 seconds:', message)
+
+  // Clear any existing error timers first
+  clearErrorTimers()
+
+  // Set error message and show it
+  currentErrorMessage.value = message
+  showErrorMessage.value = true
+  canRetry.value = true
+  errorCountdown.value = 15
+
+  // Start countdown timer (updates every second)
+  errorCountdownTimer = setInterval(() => {
+    errorCountdown.value--
+    console.log('⏰ Auth Error countdown:', errorCountdown.value)
+
+    if (errorCountdown.value <= 0) {
+      clearErrorTimers()
+    }
+  }, 1000)
+
+  // Main timer to clear error after exactly 15 seconds
+  errorTimer = setTimeout(() => {
+    console.log('✅ Clearing auth error after 15 seconds')
+    clearErrorTimers()
+  }, 15000)
+
+  // Force Vue to update the DOM
+  nextTick(() => {
+    console.log('🔄 DOM updated with auth error message')
+  })
+}
+
+// Clear all error timers and reset error state
+const clearErrorTimers = () => {
+  if (errorTimer) {
+    clearTimeout(errorTimer)
+    errorTimer = null
+  }
+  if (errorCountdownTimer) {
+    clearInterval(errorCountdownTimer)
+    errorCountdownTimer = null
+  }
+
+  showErrorMessage.value = false
+  currentErrorMessage.value = ''
+  canRetry.value = false
+  errorCountdown.value = 15
+}
 
 const processAuthCallback = async () => {
   try {
@@ -162,8 +228,8 @@ const processAuthCallback = async () => {
     }
   } catch (err) {
     console.error('❌ Auth callback error:', err)
-    error.value = err instanceof Error ? err.message : 'Authentication failed'
-    canRetry.value = true
+    const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+    displayError(errorMessage) // Use robust error display
   } finally {
     isProcessing.value = false
   }
@@ -208,8 +274,11 @@ const redirectToDashboard = () => {
 
 const retryVerification = () => {
   isProcessing.value = true
-  error.value = ''
-  canRetry.value = false
+  success.value = false
+
+  // Clear error timers when retrying
+  clearErrorTimers()
+
   processAuthCallback()
 }
 
@@ -218,5 +287,10 @@ onMounted(() => {
   setTimeout(() => {
     processAuthCallback()
   }, 500)
+})
+
+onUnmounted(() => {
+  console.log('🧹 Cleaning up auth callback timers')
+  clearErrorTimers()
 })
 </script>

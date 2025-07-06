@@ -42,11 +42,15 @@
       class="bg-white rounded-lg border border-gray-200 shadow-sm"
     >
       <div class="text-center py-12">
-        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <div
+          class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+        >
           <AlertCircle class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Plan not found</h3>
-        <p class="text-gray-500 mb-4">The plan you're looking for doesn't exist or has been deleted.</p>
+        <p class="text-gray-500 mb-4">
+          The plan you're looking for doesn't exist or has been deleted.
+        </p>
         <button
           @click="goBack"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
@@ -126,7 +130,9 @@
             </div>
           </div>
           <div v-else class="text-center py-8">
-            <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <div
+              class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+            >
               <Settings class="w-6 h-6 text-gray-400" />
             </div>
             <p class="text-gray-500 mb-2">No features assigned</p>
@@ -161,7 +167,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Edit, Trash2, Calendar, DollarSign, Clock, AlertCircle, Settings } from 'lucide-vue-next'
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Calendar,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  Settings,
+} from 'lucide-vue-next'
 import { plansService, type Plan } from '../service/plansService'
 import { featuresService, type Feature } from '../service/featuresService'
 import ConfirmationModal from '../components/ConfirmationModal.vue'

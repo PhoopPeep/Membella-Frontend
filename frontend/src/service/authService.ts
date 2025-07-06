@@ -51,8 +51,11 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
       return {
         message: errorMessage,
         requiresVerification: error.response.data.requiresVerification || false,
-        rateLimited: error.response.data.rateLimited || errorMessage.includes('rate limit') || errorMessage.includes('Too many'),
-        emailError: error.response.data.emailError || false
+        rateLimited:
+          error.response.data.rateLimited ||
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('Too many'),
+        emailError: error.response.data.emailError || false,
       }
     } else if (error.message) {
       throw new Error(error.message)
@@ -79,8 +82,12 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
 
       return {
         message: errorMessage,
-        requiresVerification: error.response.data.requiresVerification || errorMessage.includes('verify'),
-        rateLimited: error.response.data.rateLimited || errorMessage.includes('rate limit') || errorMessage.includes('Too many')
+        requiresVerification:
+          error.response.data.requiresVerification || errorMessage.includes('verify'),
+        rateLimited:
+          error.response.data.rateLimited ||
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('Too many'),
       }
     } else if (error.message) {
       throw new Error(error.message)
@@ -106,7 +113,10 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
 
       return {
         message: errorMessage,
-        rateLimited: error.response.data.rateLimited || errorMessage.includes('rate limit') || errorMessage.includes('Too many')
+        rateLimited:
+          error.response.data.rateLimited ||
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('Too many'),
       }
     } else if (error.message) {
       throw new Error(error.message)
@@ -116,13 +126,16 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
   }
 }
 
-export const handleAuthCallback = async (accessToken: string, refreshToken: string): Promise<AuthResponse> => {
+export const handleAuthCallback = async (
+  accessToken: string,
+  refreshToken: string,
+): Promise<AuthResponse> => {
   try {
     console.log('📤 Sending auth callback request')
 
     const response = await api.post('/api/auth/callback', {
       access_token: accessToken,
-      refresh_token: refreshToken
+      refresh_token: refreshToken,
     })
 
     console.log('📥 Auth callback response:', response.data)
@@ -151,7 +164,10 @@ export const initSupabaseAuth = (onAuthStateChange: (session: any) => void) => {
 // Helper function to check if user needs email verification
 export const checkEmailVerificationStatus = async (): Promise<boolean> => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
 
     if (error) {
       console.error('❌ Error checking session:', error)
@@ -172,7 +188,10 @@ export const checkEmailVerificationStatus = async (): Promise<boolean> => {
 // Helper function to get current Supabase session
 export const getCurrentSupabaseSession = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
 
     if (error) {
       console.error('❌ Error getting current session:', error)

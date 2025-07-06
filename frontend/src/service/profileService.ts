@@ -29,48 +29,51 @@ export const profileService = {
   // Get current user profile
   async getProfile(): Promise<ProfileResponse> {
     try {
-      console.log('📤 Fetching user profile...');
-      const response = await api.get('/api/auth/profile');
-      console.log('📥 Profile fetch response:', response.data);
-      return response.data;
+      console.log('📤 Fetching user profile...')
+      const response = await api.get('/api/auth/profile')
+      console.log('📥 Profile fetch response:', response.data)
+      return response.data
     } catch (error: any) {
-      console.error('❌ Profile fetch error:', error);
+      console.error('❌ Profile fetch error:', error)
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(error.response.data.message)
       }
-      throw new Error('Failed to fetch profile');
+      throw new Error('Failed to fetch profile')
     }
   },
 
   // Update user profile
   async updateProfile(data: ProfileUpdateData): Promise<ProfileResponse> {
     try {
-      console.log('📤 Updating user profile...', { ...data, logo: data.logo ? 'base64 image provided' : 'no image' });
-      const response = await api.put('/api/auth/profile', data);
-      console.log('📥 Profile update response:', response.data);
-      return response.data;
+      console.log('📤 Updating user profile...', {
+        ...data,
+        logo: data.logo ? 'base64 image provided' : 'no image',
+      })
+      const response = await api.put('/api/auth/profile', data)
+      console.log('📥 Profile update response:', response.data)
+      return response.data
     } catch (error: any) {
-      console.error('❌ Profile update error:', error);
+      console.error('❌ Profile update error:', error)
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(error.response.data.message)
       }
-      throw new Error('Failed to update profile');
+      throw new Error('Failed to update profile')
     }
   },
 
   // Change password
   async changePassword(data: PasswordChangeData): Promise<{ message: string }> {
     try {
-      console.log('📤 Changing password...');
-      const response = await api.put('/api/auth/change-password', data);
-      console.log('📥 Password change response:', response.data);
-      return response.data;
+      console.log('📤 Changing password...')
+      const response = await api.put('/api/auth/change-password', data)
+      console.log('📥 Password change response:', response.data)
+      return response.data
     } catch (error: any) {
-      console.error('❌ Password change error:', error);
+      console.error('❌ Password change error:', error)
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(error.response.data.message)
       }
-      throw new Error('Failed to change password');
+      throw new Error('Failed to change password')
     }
   },
 
@@ -80,42 +83,42 @@ export const profileService = {
       console.log('📤 Uploading profile image...', {
         name: file.name,
         size: file.size,
-        type: file.type
-      });
+        type: file.type,
+      })
 
-      const formData = new FormData();
-      formData.append('logo', file);
+      const formData = new FormData()
+      formData.append('logo', file)
 
       const response = await api.post('/api/auth/upload-avatar', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+          'Content-Type': 'multipart/form-data',
+        },
+      })
 
-      console.log('📥 Image upload response:', response.data);
-      return response.data;
+      console.log('📥 Image upload response:', response.data)
+      return response.data
     } catch (error: any) {
-      console.error('❌ Image upload error:', error);
+      console.error('❌ Image upload error:', error)
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(error.response.data.message)
       }
-      throw new Error('Failed to upload profile image');
+      throw new Error('Failed to upload profile image')
     }
   },
 
   // Remove profile image
   async removeProfileImage(): Promise<ProfileResponse> {
     try {
-      console.log('📤 Removing profile image...');
-      const response = await api.delete('/api/auth/avatar');
-      console.log('📥 Image removal response:', response.data);
-      return response.data;
+      console.log('📤 Removing profile image...')
+      const response = await api.delete('/api/auth/avatar')
+      console.log('📥 Image removal response:', response.data)
+      return response.data
     } catch (error: any) {
-      console.error('❌ Image removal error:', error);
+      console.error('❌ Image removal error:', error)
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(error.response.data.message)
       }
-      throw new Error('Failed to remove profile image');
+      throw new Error('Failed to remove profile image')
     }
-  }
-};
+  },
+}

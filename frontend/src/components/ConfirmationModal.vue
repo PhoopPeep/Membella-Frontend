@@ -1,10 +1,15 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+  <div
+    v-if="show"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+  >
     <div class="relative mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white">
       <div class="mt-3">
         <!-- Icon -->
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"
-             :class="iconBgClass">
+        <div
+          class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"
+          :class="iconBgClass"
+        >
           <component :is="icon" class="h-6 w-6" :class="iconClass" />
         </div>
 
@@ -17,9 +22,7 @@
             <p class="text-sm text-gray-500">
               {{ message }}
             </p>
-            <p v-if="itemName" class="text-sm font-medium text-gray-900 mt-2">
-              "{{ itemName }}"
-            </p>
+            <p v-if="itemName" class="text-sm font-medium text-gray-900 mt-2">"{{ itemName }}"</p>
           </div>
 
           <!-- Actions -->
@@ -71,7 +74,7 @@ const props = withDefaults(defineProps<Props>(), {
   confirmText: 'Confirm',
   cancelText: 'Cancel',
   loadingText: 'Processing...',
-  loading: false
+  loading: false,
 })
 
 const emit = defineEmits<{
