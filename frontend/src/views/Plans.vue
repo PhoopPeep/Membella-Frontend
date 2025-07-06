@@ -54,7 +54,9 @@
                   <div class="max-w-xs truncate text-gray-600">{{ plan.description }}</div>
                 </td>
                 <td class="py-4 px-4">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  >
                     ${{ plan.price }}
                   </span>
                 </td>
@@ -116,7 +118,9 @@
     <!-- Empty State -->
     <div v-else class="rounded-lg border bg-white shadow-sm">
       <div class="text-center py-12">
-        <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <div
+          class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+        >
           <Plus class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No plans yet</h3>

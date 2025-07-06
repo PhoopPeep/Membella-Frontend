@@ -156,7 +156,7 @@ const loadDashboardData = async () => {
       dashboardService.getDashboardStats(),
       dashboardService.getRevenueData(),
       dashboardService.getMembers(),
-      dashboardService.getMembersByPlan()
+      dashboardService.getMembersByPlan(),
     ])
 
     dashboardStats.value = statsData
@@ -168,9 +168,8 @@ const loadDashboardData = async () => {
       stats: statsData,
       revenueDataPoints: revenueResponse.length,
       membersCount: membersResponse.length,
-      planDistribution: membersByPlanResponse.length
+      planDistribution: membersByPlanResponse.length,
     })
-
   } catch (err) {
     console.error('Error loading dashboard data:', err)
     error.value = 'Failed to load dashboard data'
@@ -184,10 +183,23 @@ const loadDashboardData = async () => {
 
 const loadMockData = () => {
   // Generate mock revenue data for the last 12 months
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  revenueData.value = months.map(month => ({
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+  revenueData.value = months.map((month) => ({
     month,
-    revenue: Math.floor(Math.random() * 10000) + 1000
+    revenue: Math.floor(Math.random() * 10000) + 1000,
   }))
 
   // Mock plans and members data
@@ -211,34 +223,36 @@ const initializeChart = async () => {
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: revenueData.value.map(item => item.month),
-        datasets: [{
-          label: 'Revenue',
-          data: revenueData.value.map(item => item.revenue),
-          backgroundColor: '#3b82f6',
-          borderColor: '#3b82f6',
-          borderWidth: 1
-        }]
+        labels: revenueData.value.map((item) => item.month),
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueData.value.map((item) => item.revenue),
+            backgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false
-          }
+            display: false,
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString()
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     })
   } catch (chartError) {
     console.error('Error initializing chart:', chartError)

@@ -34,7 +34,10 @@
         </div>
 
         <!-- Email Verification Required -->
-        <div v-if="requiresVerification" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div
+          v-if="requiresVerification"
+          class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
+        >
           <div class="flex items-start">
             <Mail class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
             <div class="flex-1">
@@ -43,7 +46,9 @@
                 We've sent a verification link to <strong>{{ userEmail }}</strong>
               </p>
               <div class="mt-2 text-xs text-blue-600 space-y-1">
-                <p>• Check your <strong>spam/junk folder</strong> if you don't see it in your inbox</p>
+                <p>
+                  • Check your <strong>spam/junk folder</strong> if you don't see it in your inbox
+                </p>
                 <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
                 <p>• The email may take a few minutes to arrive</p>
                 <p>• Click the verification link to activate your account</p>
@@ -56,7 +61,13 @@
               :disabled="isResending || resendCooldown > 0"
               class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50 disabled:no-underline"
             >
-              {{ isResending ? 'Sending...' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email' }}
+              {{
+                isResending
+                  ? 'Sending...'
+                  : resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : 'Resend verification email'
+              }}
             </button>
             <button
               @click="tryDifferentEmail"
@@ -69,7 +80,9 @@
 
         <form v-if="!requiresVerification" @submit.prevent="handleRegister" class="space-y-4">
           <div class="space-y-2">
-            <label for="org_name" class="text-sm font-medium leading-none">Organization Name *</label>
+            <label for="org_name" class="text-sm font-medium leading-none"
+              >Organization Name *</label
+            >
             <input
               id="org_name"
               type="text"
@@ -98,7 +111,7 @@
             <input
               id="password"
               type="password"
-              placeholder="Enter your password (min. 6 characters)"
+            placeholder="Enter your password (min. 8 characters)"
               v-model="password"
               required
               :disabled="isLoading"
@@ -106,7 +119,9 @@
             />
           </div>
           <div class="space-y-2">
-            <label for="confirmPassword" class="text-sm font-medium leading-none">Confirm Password *</label>
+            <label for="confirmPassword" class="text-sm font-medium leading-none"
+              >Confirm Password *</label
+            >
             <input
               id="confirmPassword"
               type="password"
@@ -175,7 +190,7 @@ const handleRegister = async () => {
       throw new Error('Organization name is required')
     }
 
-    if (password.value.length < 6) {
+    if (password.value.length < 8) {
       throw new Error('Password must be at least 8 characters long')
     }
 
