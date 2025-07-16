@@ -19,31 +19,39 @@
         </div>
 
         <!-- Success Message -->
-        <div v-if="showSuccessMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+        <div
+          v-if="showSuccessMessage"
+          class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md"
+        >
           <p class="text-sm text-green-600">{{ currentSuccessMessage }}</p>
         </div>
 
         <!-- Rate Limited Message -->
-        <div v-if="showRateLimited" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+        <div
+          v-if="showRateLimited"
+          class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md"
+        >
           <div class="flex items-center">
             <Clock class="w-5 h-5 text-yellow-600 mr-2" />
             <div>
               <h3 class="text-sm font-medium text-yellow-800">Too Many Attempts</h3>
-              <p class="text-sm text-yellow-600 mt-1">
-                Please wait before trying again.
-              </p>
+              <p class="text-sm text-yellow-600 mt-1">Please wait before trying again.</p>
             </div>
           </div>
         </div>
 
         <!-- Email Verification Required -->
-        <div v-if="showVerificationRequired" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div
+          v-if="showVerificationRequired"
+          class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
+        >
           <div class="flex items-center">
             <Mail class="w-5 h-5 text-blue-600 mr-2" />
             <div>
               <h3 class="text-sm font-medium text-blue-800">Email Verification Required</h3>
               <p class="text-sm text-blue-600 mt-1">
-                Please verify your email address before signing in. Check your inbox for a verification link.
+                Please verify your email address before signing in. Check your inbox for a
+                verification link.
               </p>
               <div class="mt-2 text-xs text-blue-600">
                 <p>• Check your spam/junk folder if needed</p>
@@ -57,7 +65,13 @@
               :disabled="isResending || resendCooldown > 0"
               class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50"
             >
-              {{ isResending ? 'Sending...' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email' }}
+              {{
+                isResending
+                  ? 'Sending...'
+                  : resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : 'Resend verification email'
+              }}
             </button>
           </div>
         </div>

@@ -15,11 +15,13 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@supabase/supabase-js": "^2.50.2",
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",
     "chart.js": "^4.5.0",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "lucide-vue-next": "^0.522.0",
     "pinia": "^3.0.3",
     "tailwind-scrollbar": "^4.0.2",

@@ -20,73 +20,135 @@ export interface UpdateFeatureData {
 }
 
 export interface FeatureResponse {
+  success: boolean
   message: string
-  feature?: Feature
+  data?: Feature
+}
+
+export interface FeaturesListResponse {
+  success: boolean
+  data: Feature[]
 }
 
 export const featuresService = {
   // Get all features
   async getFeatures(): Promise<Feature[]> {
     try {
+      console.log('Fetching features...')
       const response = await api.get('/api/features')
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Features response:', response.data)
+
+      // Handle both old and new response formats
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      } else if (Array.isArray(response.data)) {
+        // Old format compatibility
+        return response.data
+      } else {
+        throw new Error('Invalid response format')
       }
-      throw new Error('Failed to fetch features')
+    } catch (error: any) {
+      console.error('Get features error:', error)
+      throw error
     }
   },
 
   // Get feature by ID
   async getFeatureById(id: string): Promise<Feature> {
     try {
+      console.log('Fetching feature:', id)
       const response = await api.get(`/api/features/${id}`)
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Feature response:', response.data)
+
+      // Handle both old and new response formats
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      } else if (response.data.feature_id) {
+        // Old format compatibility
+        return response.data
+      } else {
+        throw new Error('Invalid response format')
       }
-      throw new Error('Failed to fetch feature')
+    } catch (error: any) {
+      console.error('Get feature error:', error)
+      throw error
     }
   },
 
   // Create new feature
   async createFeature(data: CreateFeatureData): Promise<FeatureResponse> {
     try {
-      const response = await api.post('/api/features', data)
+      console.log('Creating feature:', data)
+
+      // Validate input
+      if (!data.name?.trim()) {
+        throw new Error('Feature name is required')
+      }
+      if (!data.description?.trim()) {
+        throw new Error('Feature description is required')
+      }
+      if (data.name.trim().length < 2) {
+        throw new Error('Feature name must be at least 2 characters long')
+      }
+      if (data.description.trim().length < 10) {
+        throw new Error('Feature description must be at least 10 characters long')
+      }
+
+      const response = await api.post('/api/features', {
+        name: data.name.trim(),
+        description: data.description.trim(),
+      })
+
+      console.log('Create feature response:', response.data)
       return response.data
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      }
-      throw new Error('Failed to create feature')
+      console.error('Create feature error:', error)
+      throw error
     }
   },
 
   // Update feature
   async updateFeature(id: string, data: UpdateFeatureData): Promise<FeatureResponse> {
     try {
-      const response = await api.put(`/api/features/${id}`, data)
+      console.log('Updating feature:', id, data)
+
+      // Validate input
+      if (!data.name?.trim()) {
+        throw new Error('Feature name is required')
+      }
+      if (!data.description?.trim()) {
+        throw new Error('Feature description is required')
+      }
+      if (data.name.trim().length < 2) {
+        throw new Error('Feature name must be at least 2 characters long')
+      }
+      if (data.description.trim().length < 10) {
+        throw new Error('Feature description must be at least 10 characters long')
+      }
+
+      const response = await api.put(`/api/features/${id}`, {
+        name: data.name.trim(),
+        description: data.description.trim(),
+      })
+
+      console.log('Update feature response:', response.data)
       return response.data
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      }
-      throw new Error('Failed to update feature')
+      console.error('Update feature error:', error)
+      throw error
     }
   },
 
   // Delete feature
-  async deleteFeature(id: string): Promise<{ message: string }> {
+  async deleteFeature(id: string): Promise<{ success: boolean; message: string }> {
     try {
+      console.log('Deleting feature:', id)
       const response = await api.delete(`/api/features/${id}`)
+      console.log('Delete feature response:', response.data)
       return response.data
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      }
-      throw new Error('Failed to delete feature')
+      console.error('Delete feature error:', error)
+      throw error
     }
   },
 }

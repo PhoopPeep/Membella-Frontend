@@ -1,15 +1,21 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+  >
     <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
       <div class="p-6 text-center">
         <div v-if="isProcessing" class="space-y-4">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
+          ></div>
           <h2 class="text-xl font-semibold">Verifying your email...</h2>
           <p class="text-gray-600">Please wait while we confirm your account.</p>
         </div>
 
         <div v-else-if="showErrorMessage" class="space-y-4">
-          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div
+            class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
             <AlertCircle class="w-6 h-6 text-red-600" />
           </div>
           <h2 class="text-xl font-semibold text-red-600">Verification Failed</h2>
@@ -37,11 +43,15 @@
         </div>
 
         <div v-else-if="success" class="space-y-4">
-          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div
+            class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
             <CheckCircle class="w-6 h-6 text-green-600" />
           </div>
           <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
-          <p class="text-gray-600">Your account has been successfully verified. You're being redirected to the dashboard...</p>
+          <p class="text-gray-600">
+            Your account has been successfully verified. You're being redirected to the dashboard...
+          </p>
           <div class="mt-4">
             <button
               @click="redirectToDashboard"
@@ -84,7 +94,7 @@ let errorCountdownTimer: NodeJS.Timeout | null = null
 
 // Robust error display function that GUARANTEES 15 seconds
 const displayError = (message: string) => {
-  console.log('🚨 Auth Callback Error - Displaying for 15 seconds:', message)
+  console.log('Auth Callback Error - Displaying for 15 seconds:', message)
 
   // Clear any existing error timers first
   clearErrorTimers()
@@ -98,7 +108,7 @@ const displayError = (message: string) => {
   // Start countdown timer (updates every second)
   errorCountdownTimer = setInterval(() => {
     errorCountdown.value--
-    console.log('⏰ Auth Error countdown:', errorCountdown.value)
+    console.log('Auth Error countdown:', errorCountdown.value)
 
     if (errorCountdown.value <= 0) {
       clearErrorTimers()
@@ -107,13 +117,13 @@ const displayError = (message: string) => {
 
   // Main timer to clear error after exactly 15 seconds
   errorTimer = setTimeout(() => {
-    console.log('✅ Clearing auth error after 15 seconds')
+    console.log('Clearing auth error after 15 seconds')
     clearErrorTimers()
   }, 15000)
 
   // Force Vue to update the DOM
   nextTick(() => {
-    console.log('🔄 DOM updated with auth error message')
+    console.log('DOM updated with auth error message')
   })
 }
 
@@ -136,9 +146,9 @@ const clearErrorTimers = () => {
 
 const processAuthCallback = async () => {
   try {
-    console.log('🔄 Starting auth callback processing')
-    console.log('📍 Current URL:', window.location.href)
-    console.log('🔗 Route query:', route.query)
+    console.log('Starting auth callback processing')
+    console.log('Current URL:', window.location.href)
+    console.log('Route query:', route.query)
 
     // Check if we have URL parameters for auth
     const urlParams = new URLSearchParams(window.location.search)
@@ -146,24 +156,27 @@ const processAuthCallback = async () => {
     const refreshToken = urlParams.get('refresh_token')
     const type = urlParams.get('type')
 
-    console.log('🔑 URL tokens found:', {
+    console.log('URL tokens found:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
-      type
+      type,
     })
 
     if (accessToken && refreshToken) {
       // This is a URL-based callback (email verification link)
-      console.log('📧 Processing email verification callback')
+      console.log('Processing email verification callback')
 
       // Set the session in Supabase client
-      const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.setSession({
         access_token: accessToken,
-        refresh_token: refreshToken
+        refresh_token: refreshToken,
       })
 
       if (sessionError) {
-        console.error('❌ Failed to set session:', sessionError)
+        console.error('Failed to set session:', sessionError)
         throw new Error('Failed to verify email: ' + sessionError.message)
       }
 
@@ -171,19 +184,19 @@ const processAuthCallback = async () => {
         throw new Error('No valid session created from email verification')
       }
 
-      console.log('✅ Session set successfully:', session.user.id)
-      console.log('📧 Email confirmed:', session.user.email_confirmed_at)
+      console.log('Session set successfully:', session.user.id)
+      console.log('Email confirmed:', session.user.email_confirmed_at)
 
       // Call our backend to complete the auth process
       try {
-        console.log('🔗 Calling backend auth callback...')
+        console.log('Calling backend auth callback...')
         const response = await api.post('/api/auth/callback', {
           access_token: accessToken,
           refresh_token: refreshToken,
-          type: type || 'signup'
+          type: type || 'signup',
         })
 
-        console.log('✅ Backend callback successful:', response.data)
+        console.log('Backend callback successful:', response.data)
 
         if (response.data.token && response.data.user) {
           // Store auth data
@@ -198,12 +211,12 @@ const processAuthCallback = async () => {
           throw new Error('Backend did not return authentication data')
         }
       } catch (backendError) {
-        console.error('❌ Backend callback failed:', backendError)
+        console.error('Backend callback failed:', backendError)
 
         // Even if backend fails, if we have a valid Supabase session,
         // we can try to get user data directly
         if (session.user.email_confirmed_at) {
-          console.log('🔄 Attempting direct user lookup...')
+          console.log('Attempting direct user lookup...')
           await handleDirectAuth(session)
         } else {
           throw new Error('Email verification failed on backend')
@@ -211,23 +224,26 @@ const processAuthCallback = async () => {
       }
     } else {
       // Check for existing session (page refresh scenario)
-      console.log('🔄 Checking for existing session...')
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      console.log('Checking for existing session...')
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
 
       if (sessionError) {
-        console.error('❌ Session error:', sessionError)
+        console.error('Session error:', sessionError)
         throw new Error('Session error: ' + sessionError.message)
       }
 
       if (session && session.user && session.user.email_confirmed_at) {
-        console.log('✅ Found existing confirmed session')
+        console.log('Found existing confirmed session')
         await handleDirectAuth(session)
       } else {
         throw new Error('No valid authentication session found. Please try logging in again.')
       }
     }
   } catch (err) {
-    console.error('❌ Auth callback error:', err)
+    console.error('Auth callback error:', err)
     const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
     displayError(errorMessage) // Use robust error display
   } finally {
@@ -237,13 +253,13 @@ const processAuthCallback = async () => {
 
 const handleDirectAuth = async (session: any) => {
   try {
-    console.log('🔄 Handling direct auth with session')
+    console.log('Handling direct auth with session')
 
     // Try to get user from our backend using the session
     const { data: profileResponse } = await api.get('/api/auth/profile', {
       headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
+        Authorization: `Bearer ${session.access_token}`,
+      },
     })
 
     if (profileResponse.user) {
@@ -259,7 +275,7 @@ const handleDirectAuth = async (session: any) => {
       throw new Error('User profile not found')
     }
   } catch (directAuthError) {
-    console.error('❌ Direct auth failed:', directAuthError)
+    console.error('Direct auth failed:', directAuthError)
     throw new Error('Failed to complete authentication')
   }
 }
@@ -290,7 +306,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  console.log('🧹 Cleaning up auth callback timers')
+  console.log('Cleaning up auth callback timers')
   clearErrorTimers()
 })
 </script>

@@ -111,7 +111,7 @@
             <input
               id="password"
               type="password"
-            placeholder="Enter your password (min. 8 characters)"
+              placeholder="Enter your password (min. 8 characters)"
               v-model="password"
               required
               :disabled="isLoading"

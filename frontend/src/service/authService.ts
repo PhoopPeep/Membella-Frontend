@@ -16,6 +16,7 @@ export interface LoginData {
 }
 
 export interface AuthResponse {
+  success: boolean
   message: string
   token?: string
   user?: {
@@ -34,94 +35,134 @@ export interface AuthResponse {
 
 export const registerUser = async (userData: RegisterData): Promise<AuthResponse> => {
   try {
-    console.log('📤 Sending registration request:', { ...userData, password: '[REDACTED]' })
+    console.log('Sending registration request:', { ...userData, password: '[REDACTED]' })
 
-    const response = await api.post('/api/auth/register', userData)
-    console.log('📥 Registration response:', response.data)
+    // Client-side validation
+    if (!userData.org_name?.trim()) {
+      throw new Error('Organization name is required')
+    }
+    if (!userData.email?.trim()) {
+      throw new Error('Email is required')
+    }
+    if (!userData.password?.trim()) {
+      throw new Error('Password is required')
+    }
 
+    // Additional validation
+    if (userData.org_name.trim().length < 2) {
+      throw new Error('Organization name must be at least 2 characters long')
+    }
+    if (userData.password.length < 8) {
+      throw new Error('Password must be at least 8 characters long')
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(userData.email.trim())) {
+      throw new Error('Please enter a valid email address')
+    }
+
+    // Password strength validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
+    if (!passwordRegex.test(userData.password)) {
+      throw new Error(
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      )
+    }
+
+    const response = await api.post('/api/auth/register', {
+      org_name: userData.org_name.trim(),
+      email: userData.email.trim().toLowerCase(),
+      password: userData.password,
+      description: userData.description?.trim() || undefined,
+      contact_info: userData.contact_info?.trim() || undefined,
+      logo: userData.logo || undefined,
+    })
+
+    console.log('Registration response:', response.data)
     return response.data
   } catch (error: any) {
-    console.error('❌ Registration service error:', error)
+    console.error('Registration service error:', error)
 
-    // Handle axios error response
-    if (error.response?.data?.message) {
-      // Check for specific error types
-      const errorMessage = error.response.data.message
-
-      return {
-        message: errorMessage,
-        requiresVerification: error.response.data.requiresVerification || false,
-        rateLimited:
-          error.response.data.rateLimited ||
-          errorMessage.includes('rate limit') ||
-          errorMessage.includes('Too many'),
-        emailError: error.response.data.emailError || false,
-      }
-    } else if (error.message) {
-      throw new Error(error.message)
-    } else {
-      throw new Error('Registration failed - network error')
+    // Return structured error response
+    return {
+      success: false,
+      message: error.message,
+      requiresVerification: false,
+      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
+      emailError: error.message.includes('email') && !error.message.includes('verify'),
     }
   }
 }
 
 export const login = async (userData: LoginData): Promise<AuthResponse> => {
   try {
-    console.log('📤 Sending login request for:', userData.email)
+    console.log('Sending login request for:', userData.email)
 
-    const response = await api.post('/api/auth/login', userData)
-    console.log('📥 Login response:', response.data)
+    // Client-side validation
+    if (!userData.email?.trim()) {
+      throw new Error('Email is required')
+    }
+    if (!userData.password?.trim()) {
+      throw new Error('Password is required')
+    }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(userData.email.trim())) {
+      throw new Error('Please enter a valid email address')
+    }
+
+    const response = await api.post('/api/auth/login', {
+      email: userData.email.trim().toLowerCase(),
+      password: userData.password,
+    })
+
+    console.log('Login response:', response.data)
     return response.data
   } catch (error: any) {
-    console.error('❌ Login service error:', error)
+    console.error('Login service error:', error)
 
-    // Handle axios error response
-    if (error.response?.data?.message) {
-      const errorMessage = error.response.data.message
-
-      return {
-        message: errorMessage,
-        requiresVerification:
-          error.response.data.requiresVerification || errorMessage.includes('verify'),
-        rateLimited:
-          error.response.data.rateLimited ||
-          errorMessage.includes('rate limit') ||
-          errorMessage.includes('Too many'),
-      }
-    } else if (error.message) {
-      throw new Error(error.message)
-    } else {
-      throw new Error('Login failed - network error')
+    // Return structured error response
+    return {
+      success: false,
+      message: error.message,
+      requiresVerification:
+        error.message.includes('verify') || error.message.includes('confirmation'),
+      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
     }
   }
 }
 
 export const resendVerification = async (email: string): Promise<AuthResponse> => {
   try {
-    console.log('📤 Sending resend verification request for:', email)
+    console.log('Sending resend verification request for:', email)
 
-    const response = await api.post('/api/auth/resend-verification', { email })
-    console.log('📥 Resend verification response:', response.data)
+    // Client-side validation
+    if (!email?.trim()) {
+      throw new Error('Email is required')
+    }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      throw new Error('Please enter a valid email address')
+    }
+
+    const response = await api.post('/api/auth/resend-verification', {
+      email: email.trim().toLowerCase(),
+    })
+
+    console.log('Resend verification response:', response.data)
     return response.data
   } catch (error: any) {
-    console.error('❌ Resend verification service error:', error)
+    console.error('Resend verification service error:', error)
 
-    if (error.response?.data?.message) {
-      const errorMessage = error.response.data.message
-
-      return {
-        message: errorMessage,
-        rateLimited:
-          error.response.data.rateLimited ||
-          errorMessage.includes('rate limit') ||
-          errorMessage.includes('Too many'),
-      }
-    } else if (error.message) {
-      throw new Error(error.message)
-    } else {
-      throw new Error('Failed to resend verification email')
+    // Return structured error response
+    return {
+      success: false,
+      message: error.message,
+      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
     }
   }
 }
@@ -131,32 +172,25 @@ export const handleAuthCallback = async (
   refreshToken: string,
 ): Promise<AuthResponse> => {
   try {
-    console.log('📤 Sending auth callback request')
+    console.log('Sending auth callback request')
 
     const response = await api.post('/api/auth/callback', {
       access_token: accessToken,
       refresh_token: refreshToken,
     })
 
-    console.log('📥 Auth callback response:', response.data)
+    console.log('Auth callback response:', response.data)
     return response.data
   } catch (error: any) {
-    console.error('❌ Auth callback service error:', error)
-
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message)
-    } else if (error.message) {
-      throw new Error(error.message)
-    } else {
-      throw new Error('Authentication callback failed')
-    }
+    console.error('Auth callback service error:', error)
+    throw error
   }
 }
 
 // Initialize Supabase auth state listener
 export const initSupabaseAuth = (onAuthStateChange: (session: any) => void) => {
   return supabase.auth.onAuthStateChange((event, session) => {
-    console.log('🔄 Supabase auth state change:', event, session?.user?.id)
+    console.log('Supabase auth state change:', event, session?.user?.id)
     onAuthStateChange(session)
   })
 }
@@ -170,7 +204,7 @@ export const checkEmailVerificationStatus = async (): Promise<boolean> => {
     } = await supabase.auth.getSession()
 
     if (error) {
-      console.error('❌ Error checking session:', error)
+      console.error('Error checking session:', error)
       return false
     }
 
@@ -180,7 +214,7 @@ export const checkEmailVerificationStatus = async (): Promise<boolean> => {
 
     return !!session.user.email_confirmed_at
   } catch (error) {
-    console.error('❌ Error checking email verification status:', error)
+    console.error('Error checking email verification status:', error)
     return false
   }
 }
@@ -194,13 +228,13 @@ export const getCurrentSupabaseSession = async () => {
     } = await supabase.auth.getSession()
 
     if (error) {
-      console.error('❌ Error getting current session:', error)
+      console.error('Error getting current session:', error)
       return null
     }
 
     return session
   } catch (error) {
-    console.error('❌ Error getting current session:', error)
+    console.error('Error getting current session:', error)
     return null
   }
 }

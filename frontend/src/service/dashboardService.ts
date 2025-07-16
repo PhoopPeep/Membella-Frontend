@@ -1,3 +1,4 @@
+// frontend/src/service/dashboardService.ts
 import api from '../router/api'
 
 export interface Plan {
@@ -30,64 +31,101 @@ export interface DashboardStats {
   totalRevenue: number
   totalMembers: number
   totalPlans: number
+  totalFeatures: number
   growthPercentage: number
   activeSubscriptions: number
   cancelledSubscriptions: number
   revenueThisMonth: number
   revenueLastMonth: number
-  newMembersThisMonth: number
+  newPlansThisMonth: number
 }
 
 export const dashboardService = {
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
     try {
+      console.log('Fetching dashboard stats...')
       const response = await api.get('/api/dashboard/stats')
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Dashboard stats response:', response.data)
+
+      // Handle response format
+      if (response.data && typeof response.data === 'object') {
+        return response.data
+      } else {
+        throw new Error('Invalid dashboard stats response format')
       }
-      throw new Error('Failed to fetch dashboard statistics')
+    } catch (error: any) {
+      console.error('Dashboard stats error:', error)
+      throw error
     }
   },
 
   // Get revenue data for charts
   async getRevenueData(period: string = '12months'): Promise<RevenueData[]> {
     try {
-      const response = await api.get(`/api/dashboard/revenue?period=${period}`)
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Fetching revenue data for period:', period)
+
+      // Validate period
+      if (!['6months', '12months'].includes(period)) {
+        throw new Error('Invalid period. Must be 6months or 12months')
       }
-      throw new Error('Failed to fetch revenue data')
+
+      const response = await api.get(`/api/dashboard/revenue?period=${period}`)
+      console.log('Revenue data response:', response.data)
+
+      if (Array.isArray(response.data)) {
+        return response.data
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      } else {
+        throw new Error('Invalid revenue data response format')
+      }
+    } catch (error: any) {
+      console.error('Revenue data error:', error)
+      throw error
     }
   },
 
   // Get plans for dashboard
   async getPlans(): Promise<Plan[]> {
     try {
+      console.log('Fetching plans for dashboard...')
       const response = await api.get('/api/plans')
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Plans response:', response.data)
+
+      if (Array.isArray(response.data)) {
+        return response.data
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      } else {
+        throw new Error('Invalid plans response format')
       }
-      throw new Error('Failed to fetch plans')
+    } catch (error: any) {
+      console.error('Plans error:', error)
+      throw error
     }
   },
 
   // Get members/subscribers
   async getMembers(): Promise<Member[]> {
     try {
+      console.log('Fetching members...')
       const response = await api.get('/api/dashboard/members')
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Members response:', response.data)
+
+      if (Array.isArray(response.data)) {
+        return response.data
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      } else {
+        // For now, return empty array as members are not implemented
+        return []
       }
-      throw new Error('Failed to fetch members')
+    } catch (error: any) {
+      console.error('Members error:', error)
+      // Don't throw for members as it's not fully implemented
+      console.warn('Members endpoint not fully implemented, returning empty array')
+      return []
     }
   },
 
@@ -96,13 +134,22 @@ export const dashboardService = {
     Array<{ planId: string; planName: string; memberCount: number }>
   > {
     try {
+      console.log('Fetching members by plan...')
       const response = await api.get('/api/dashboard/members-by-plan')
-      return response.data
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
+      console.log('Members by plan response:', response.data)
+
+      if (Array.isArray(response.data)) {
+        return response.data
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      } else {
+        return []
       }
-      throw new Error('Failed to fetch members by plan')
+    } catch (error: any) {
+      console.error('Members by plan error:', error)
+      // Don't throw for member distribution as it's simulated
+      console.warn('Members by plan endpoint returning simulated data')
+      return []
     }
   },
 }

@@ -5,7 +5,7 @@
     </div>
 
     <div class="grid gap-6 md:grid">
-      <!-- Profile Image Section -->
+      <!-- Profile Image Section - FIXED -->
       <div class="rounded-lg border bg-white shadow-sm">
         <div class="p-6 border-b border-gray-200">
           <h2 class="text-xl font-semibold flex items-center">
@@ -14,24 +14,89 @@
           </h2>
         </div>
         <div class="p-6 text-center space-y-4">
+          <!-- Image Display Container -->
           <div
-            class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden"
+            class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-200 relative"
           >
-            <img
-              v-if="authStore.user?.logo"
-              :src="authStore.user.logo"
-              :alt="authStore.user.org_name"
-              class="w-full h-full object-cover"
-            />
-            <span v-else class="text-xl font-medium text-gray-600">
-              {{ getInitials(authStore.user?.org_name || 'ORG') }}
-            </span>
+            <!-- Loading State -->
+            <div v-if="isUploading || isRemoving" class="flex flex-col items-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+              <span class="text-xs text-gray-500">
+                {{ isUploading ? 'Uploading...' : 'Removing...' }}
+              </span>
+            </div>
+
+            <!-- Profile Image or Fallback -->
+            <div v-else class="w-full h-full relative">
+              <!-- Image Loading State -->
+              <div
+                v-if="isImageLoading && userImageUrl"
+                class="absolute inset-0 flex items-center justify-center bg-gray-100"
+              >
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+              </div>
+
+              <!-- Actual Profile Image -->
+              <img
+                v-if="userImageUrl && !imageLoadError"
+                :src="userImageUrl"
+                :alt="authStore.user?.org_name || 'Profile'"
+                class="w-full h-full object-cover transition-opacity duration-300"
+                :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
+                @load="onImageLoad"
+                @error="onImageError"
+              />
+
+              <!-- Fallback: Initials -->
+              <div
+                v-if="!userImageUrl || imageLoadError"
+                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+              >
+                <span class="text-xl font-semibold">
+                  {{ getInitials(authStore.user?.org_name || 'ORG') }}
+                </span>
+              </div>
+            </div>
           </div>
 
+          <!-- Debug Info (Development Only) -->
+          <div
+            v-if="isDev && userImageUrl"
+            class="text-xs text-gray-500 space-y-1 p-2 bg-gray-50 rounded"
+          >
+            <p class="font-mono break-all">{{ userImageUrl }}</p>
+            <p class="flex items-center justify-center gap-2">
+              Status:
+              <span v-if="!isImageLoading && !imageLoadError" class="text-green-600"
+                >✅ Loaded</span
+              >
+              <span v-else-if="imageLoadError" class="text-red-600">❌ Failed</span>
+              <span v-else class="text-yellow-600">⏳ Loading</span>
+            </p>
+            <button
+              @click="testImageDirectly"
+              class="text-blue-600 hover:text-blue-700 underline text-xs"
+            >
+              Test URL in new tab
+            </button>
+          </div>
+
+          <!-- Error Message -->
+          <div
+            v-if="imageLoadError && !isUploading && !isRemoving"
+            class="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-3"
+          >
+            <p class="font-medium">⚠️ Image failed to load</p>
+            <p class="mt-1">
+              The image file may not be accessible or the bucket might not be public.
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
           <div class="flex justify-center space-x-2">
             <button
               @click="triggerFileInput"
-              :disabled="isUploading"
+              :disabled="isUploading || isRemoving"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
             >
               <Camera class="w-4 h-4 mr-2" />
@@ -39,19 +104,20 @@
             </button>
 
             <button
-              v-if="authStore.user?.logo"
+              v-if="userImageUrl && !isUploading"
               @click="handleRemoveImage"
               :disabled="isRemoving"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-300 bg-white text-red-600 hover:bg-red-50 h-10 px-4 py-2"
             >
               {{ isRemoving ? 'Removing...' : 'Remove' }}
             </button>
           </div>
 
+          <!-- File Input -->
           <input
             ref="fileInputRef"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             @change="handleImageUpload"
             class="hidden"
           />
@@ -384,7 +450,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Camera,
@@ -401,10 +467,20 @@ import {
 import { useAuthStore } from '../stores/auth'
 import { profileService } from '../service/profileService'
 import ConfirmationModal from '../components/ConfirmationModal.vue'
+import { eventNames } from 'process'
+import { useErrorHandler } from '@/composables/useErrorHandler'
+import { all } from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const fileInputRef = ref<HTMLInputElement>()
+
+//Image state
+const userImageUrl = ref('')
+const isImageLoading = ref(false)
+const imageLoadError = ref(false)
+
+const isDev = computed(() => import.meta.env.DEV)
 
 // Modal states
 const isEditingProfile = ref(false)
@@ -468,25 +544,105 @@ const triggerFileInput = () => {
   fileInputRef.value?.click()
 }
 
+const onImageLoad = () => {
+  console.log('Profile image loaded successfully')
+  isImageLoading.value = false
+  imageLoadError.value = false
+}
+
+const onImageError = (event: Event) => {
+  console.error('Profile image failed to load: ', userImageUrl.value)
+  isImageLoading.value = false
+  imageLoadError.value = false
+
+  const img = event.target as HTMLImageElement
+  console.error('Image error details: ', {
+    src: img.src,
+    naturalWidth: img.naturalWidth,
+    naturalHeight: img.naturalHeight,
+  })
+}
+
+const testImageDirectly = () => {
+  if (userImageUrl.value) {
+    window.open(userImageUrl.value, '_blank')
+  }
+}
+
+// Update image URL when user data changes
+const updateUserImageUrl = () => {
+  const logoUrl = authStore.user?.logo
+
+  if (logoUrl && logoUrl != userImageUrl.value) {
+    console.log('Updating profile image URL: ', logoUrl)
+    userImageUrl.value = logoUrl
+    isImageLoading.value = true
+    imageLoadError.value = false
+  } else if (!logoUrl) {
+    console.log('No profile image URL')
+    userImageUrl.value = ''
+    isImageLoading.value = false
+    imageLoadError.value = false
+  }
+}
+
+// Watch for changes in user logo
+watch(
+  () => authStore.user?.logo,
+  () => {
+    updateUserImageUrl()
+  },
+  { immediate: true },
+)
+
+// Upload Function
 const handleImageUpload = async (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
 
   try {
+    console.log('Starting profile image upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    })
+
+    // Client-side
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      throw new Error('File size must be less than 5MB')
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Please select an image file (JPEG, JPG, PNG, GIF, OR WebP)')
+    }
+
+    // Reset State
     isUploading.value = true
+    imageLoadError.value = false
+
+    // Call upload service
     const response = await profileService.uploadProfileImage(file)
 
     // Update auth store with new user data
     if (response.user) {
-      Object.assign(authStore.user!, response.user)
-    }
+      console.log('Upload sucessful, new logo URL:', response.user.logo)
 
-    showSuccessToast('Profile image updated successfully')
+      // Update auth store
+      Object.assign(authStore.user!, response.user)
+
+      // Update userImageUrl
+      showSuccessToast('Profile image updated successfully')
+    } else {
+      throw new Error('Upload succeeded but no user data returned')
+    }
   } catch (error: any) {
     console.error('Error updating profile image:', error)
     showErrorToast(error.message || 'Failed to upload profile image')
   } finally {
     isUploading.value = false
+
     // Clear the file input
     if (fileInputRef.value) {
       fileInputRef.value.value = ''
@@ -494,17 +650,29 @@ const handleImageUpload = async (event: Event) => {
   }
 }
 
+// Remove Function
 const handleRemoveImage = async () => {
   try {
+    console.log('Starting profile image removal')
+
     isRemoving.value = true
+    imageLoadError.value = false
+
+    // Call remove servie
     const response = await profileService.removeProfileImage()
 
     // Update auth store with new user data
     if (response.user) {
-      Object.assign(authStore.user!, response.user)
-    }
+      console.log('Remove Successful')
 
-    showSuccessToast('Profile image removed successfully')
+      // Update auth store
+      Object.assign(authStore.user!, response.user)
+
+      // Update userImageUrl to empty
+      showSuccessToast('Profile image removed successfully')
+    } else {
+      throw new Error('Remove succeeded but no user data returned')
+    }
   } catch (error: any) {
     console.error('Error removing profile image:', error)
     showErrorToast(error.message || 'Failed to remove profile image')
@@ -555,7 +723,7 @@ const handleUpdateProfile = async () => {
       }),
     }
 
-    console.log('🔄 Submitting profile update:', updateData)
+    console.log('Submitting profile update:', updateData)
 
     const response = await profileService.updateProfile(updateData)
 
@@ -567,7 +735,7 @@ const handleUpdateProfile = async () => {
     isEditingProfile.value = false
     showSuccessToast('Profile updated successfully')
   } catch (error: any) {
-    console.error('❌ Profile update error:', error)
+    console.error('Profile update error:', error)
     profileError.value = error.message || 'Failed to update profile'
   } finally {
     isUpdatingProfile.value = false
@@ -585,11 +753,11 @@ const handleChangePassword = async () => {
     }
 
     if (passwordForm.value.newPassword.length < 6) {
-      passwordError.value = 'Password must be at least 6 characters long'
+      passwordError.value = 'Password must be at least 8 characters long'
       return
     }
 
-    console.log('🔐 Submitting password change...')
+    console.log('Submitting password change...')
 
     await profileService.changePassword({
       currentPassword: passwordForm.value.currentPassword,
@@ -600,7 +768,7 @@ const handleChangePassword = async () => {
     resetPasswordForm()
     showSuccessToast('Password changed successfully')
   } catch (error: any) {
-    console.error('❌ Password change error:', error)
+    console.error('Password change error:', error)
     passwordError.value = error.message || 'Failed to change password'
   } finally {
     isChangingPasswordLoading.value = false
@@ -676,8 +844,8 @@ const showErrorToast = (message: string) => {
 
 // Lifecycle
 onMounted(() => {
-  console.log('📋 Profile component mounted')
-  console.log('👤 Current user:', authStore.user)
+  console.log('Profile component mounted')
+  console.log('Current user:', authStore.user)
   initializeProfileForm()
 })
 </script>
