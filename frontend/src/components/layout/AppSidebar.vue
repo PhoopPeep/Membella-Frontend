@@ -56,6 +56,8 @@
               isCollapsed ? 'justify-center' : 'justify-start',
             ]"
             active-class="bg-blue-50 text-blue-700"
+            @mouseenter="handleMouseEnter(item.title)"
+            @mouseleave="handleMouseLeave"
           >
             <!-- Active indicator -->
             <div
@@ -103,17 +105,42 @@
           @click="handleProfileClick"
           class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors mb-3 group"
         >
+          <!-- Profile Image with improved loading -->
           <div
-            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 relative"
           >
+            <!-- Loading State -->
+            <div
+              v-if="isImageLoading"
+              class="absolute inset-0 flex items-center justify-center bg-gray-100"
+            >
+              <div class="animate-spin rounded-full h-4 w-4 border-b border-gray-400"></div>
+            </div>
+
+            <!-- Profile Image -->
             <img
-              v-if="authStore.user?.logo"
-              :src="authStore.user.logo"
-              :alt="authStore.user.org_name"
-              class="w-full h-full object-cover"
+              v-if="profileImageUrl && !imageError"
+              :src="profileImageUrl"
+              :alt="authStore.user?.org_name || 'Profile'"
+              class="w-full h-full object-cover transition-opacity duration-300"
+              :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
+              @load="onImageLoad"
+              @error="onImageError"
+              :key="imageKey"
             />
-            <User v-else class="w-4 h-4 text-gray-500" />
+
+            <!-- Fallback: User Icon or Initials -->
+            <div
+              v-if="!profileImageUrl || imageError"
+              class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+            >
+              <span v-if="authStore.user?.org_name" class="text-xs font-semibold">
+                {{ getInitials(authStore.user.org_name) }}
+              </span>
+              <User v-else class="w-4 h-4 text-white" />
+            </div>
           </div>
+
           <div class="flex-1 min-w-0">
             <p
               class="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors"
@@ -125,12 +152,52 @@
           <ChevronRight class="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
         </div>
       </Transition>
+
+      <!-- Collapsed Profile Icon -->
+      <div v-if="isCollapsed" class="flex justify-center">
+        <button
+          @click="handleProfileClick"
+          class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden hover:bg-gray-200 transition-colors relative"
+          :title="`Profile - ${authStore.user?.email}`"
+        >
+          <!-- Loading State for collapsed -->
+          <div
+            v-if="isImageLoading"
+            class="absolute inset-0 flex items-center justify-center bg-gray-100"
+          >
+            <div class="animate-spin rounded-full h-4 w-4 border-b border-gray-400"></div>
+          </div>
+
+          <!-- Profile Image for collapsed -->
+          <img
+            v-if="profileImageUrl && !imageError"
+            :src="profileImageUrl"
+            :alt="authStore.user?.org_name || 'Profile'"
+            class="w-full h-full object-cover transition-opacity duration-300"
+            :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
+            @load="onImageLoad"
+            @error="onImageError"
+            :key="imageKey"
+          />
+
+          <!-- Fallback for collapsed -->
+          <div
+            v-if="!profileImageUrl || imageError"
+            class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+          >
+            <span v-if="authStore.user?.org_name" class="text-xs font-semibold">
+              {{ getInitials(authStore.user.org_name) }}
+            </span>
+            <User v-else class="w-4 h-4 text-white" />
+          </div>
+        </button>
+      </div>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { LayoutDashboard, CreditCard, Settings, User, Menu, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
@@ -142,6 +209,12 @@ const authStore = useAuthStore()
 // Sidebar state
 const isCollapsed = ref(false)
 const isHovered = ref<string | null>(null)
+
+// Profile image state
+const profileImageUrl = ref('')
+const isImageLoading = ref(false)
+const imageError = ref(false)
+const imageKey = ref(0)
 
 // Menu items configuration
 const menuItems = [
@@ -162,7 +235,32 @@ const menuItems = [
   },
 ]
 
-// Methods
+// Methods - ย้ายมาก่อน watch
+const updateProfileImage = (logoUrl: string | undefined | null) => {
+  const newUrl = logoUrl || ''
+
+  if (newUrl !== profileImageUrl.value) {
+    console.log('🔄 Sidebar: Updating profile image:', { from: profileImageUrl.value, to: newUrl })
+
+    profileImageUrl.value = newUrl
+    imageKey.value++ // Force re-render
+    isImageLoading.value = !!newUrl
+    imageError.value = false
+  }
+}
+
+const onImageLoad = () => {
+  console.log('✅ Sidebar: Profile image loaded successfully')
+  isImageLoading.value = false
+  imageError.value = false
+}
+
+const onImageError = () => {
+  console.error('❌ Sidebar: Profile image failed to load:', profileImageUrl.value)
+  isImageLoading.value = false
+  imageError.value = true
+}
+
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
 
@@ -187,15 +285,6 @@ const handleProfileClick = () => {
   router.push('/profile')
 }
 
-// Initialize sidebar state from localStorage
-const initSidebarState = () => {
-  const saved = localStorage.getItem('sidebarCollapsed')
-  if (saved !== null) {
-    isCollapsed.value = saved === 'true'
-  }
-}
-
-// Mouse event handlers for tooltips
 const handleMouseEnter = (itemTitle: string) => {
   if (isCollapsed.value) {
     isHovered.value = itemTitle
@@ -206,16 +295,33 @@ const handleMouseLeave = () => {
   isHovered.value = null
 }
 
-// Add mouse event listeners to menu items
-const addTooltipListeners = () => {
-  menuItems.forEach((item) => {
-    // These will be handled in template with @mouseenter/@mouseleave
-  })
+// Initialize sidebar state from localStorage
+const initSidebarState = () => {
+  const saved = localStorage.getItem('sidebarCollapsed')
+  if (saved !== null) {
+    isCollapsed.value = saved === 'true'
+  }
 }
+
+// Watch for changes in user logo - ย้ายมาหลัง methods
+watch(
+  () => authStore.user?.logo,
+  (newLogo) => {
+    console.log('🖼️ Sidebar: User logo changed:', newLogo)
+    updateProfileImage(newLogo)
+  },
+  { immediate: true },
+)
 
 // Initialize on component mount
 onMounted(() => {
+  console.log('🚀 Sidebar: Component mounted')
   initSidebarState()
+
+  // Initialize profile image
+  if (authStore.user?.logo) {
+    updateProfileImage(authStore.user.logo)
+  }
 })
 </script>
 

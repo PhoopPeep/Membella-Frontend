@@ -30,7 +30,7 @@
             <div v-else class="w-full h-full relative">
               <!-- Image Loading State -->
               <div
-                v-if="isImageLoading && userImageUrl"
+                v-if="isImageLoading && currentImageUrl"
                 class="absolute inset-0 flex items-center justify-center bg-gray-100"
               >
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
@@ -38,18 +38,19 @@
 
               <!-- Actual Profile Image -->
               <img
-                v-if="userImageUrl && !imageLoadError"
-                :src="userImageUrl"
+                v-if="currentImageUrl && !imageLoadError"
+                :src="currentImageUrl"
                 :alt="authStore.user?.org_name || 'Profile'"
                 class="w-full h-full object-cover transition-opacity duration-300"
                 :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
                 @load="onImageLoad"
                 @error="onImageError"
+                :key="imageKey"
               />
 
               <!-- Fallback: Initials -->
               <div
-                v-if="!userImageUrl || imageLoadError"
+                v-if="!currentImageUrl || imageLoadError"
                 class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
               >
                 <span class="text-xl font-semibold">
@@ -60,20 +61,22 @@
           </div>
 
           <!-- Debug Info (Development Only) -->
-          <div
-            v-if="isDev && userImageUrl"
-            class="text-xs text-gray-500 space-y-1 p-2 bg-gray-50 rounded"
-          >
-            <p class="font-mono break-all">{{ userImageUrl }}</p>
+          <div v-if="isDev" class="text-xs text-gray-500 space-y-1 p-2 bg-gray-50 rounded">
+            <p class="font-mono break-all">Current: {{ currentImageUrl || 'None' }}</p>
+            <p class="font-mono break-all">Store: {{ authStore.user?.logo || 'None' }}</p>
             <p class="flex items-center justify-center gap-2">
               Status:
-              <span v-if="!isImageLoading && !imageLoadError" class="text-green-600"
+              <span
+                v-if="!isImageLoading && !imageLoadError && currentImageUrl"
+                class="text-green-600"
                 >✅ Loaded</span
               >
               <span v-else-if="imageLoadError" class="text-red-600">❌ Failed</span>
-              <span v-else class="text-yellow-600">⏳ Loading</span>
+              <span v-else-if="isImageLoading" class="text-yellow-600">⏳ Loading</span>
+              <span v-else class="text-gray-600">⚪ No Image</span>
             </p>
             <button
+              v-if="currentImageUrl"
               @click="testImageDirectly"
               class="text-blue-600 hover:text-blue-700 underline text-xs"
             >
@@ -83,13 +86,19 @@
 
           <!-- Error Message -->
           <div
-            v-if="imageLoadError && !isUploading && !isRemoving"
+            v-if="imageLoadError && !isUploading && !isRemoving && currentImageUrl"
             class="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-3"
           >
             <p class="font-medium">⚠️ Image failed to load</p>
             <p class="mt-1">
               The image file may not be accessible or the bucket might not be public.
             </p>
+            <button
+              @click="refreshImage"
+              class="mt-2 text-blue-600 hover:text-blue-700 underline text-xs"
+            >
+              Try to reload image
+            </button>
           </div>
 
           <!-- Action Buttons -->
@@ -104,7 +113,7 @@
             </button>
 
             <button
-              v-if="userImageUrl && !isUploading"
+              v-if="currentImageUrl && !isUploading"
               @click="handleRemoveImage"
               :disabled="isRemoving"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-300 bg-white text-red-600 hover:bg-red-50 h-10 px-4 py-2"
@@ -450,7 +459,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Camera,
@@ -467,18 +476,17 @@ import {
 import { useAuthStore } from '../stores/auth'
 import { profileService } from '../service/profileService'
 import ConfirmationModal from '../components/ConfirmationModal.vue'
-import { eventNames } from 'process'
-import { useErrorHandler } from '@/composables/useErrorHandler'
-import { all } from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const fileInputRef = ref<HTMLInputElement>()
 
-//Image state
-const userImageUrl = ref('')
+// Image state
+const currentImageUrl = ref('')
 const isImageLoading = ref(false)
 const imageLoadError = ref(false)
+const imageKey = ref(0) // Force refresh image
+const lastKnownImageUrl = ref('')
 
 const isDev = computed(() => import.meta.env.DEV)
 
@@ -545,18 +553,21 @@ const triggerFileInput = () => {
 }
 
 const onImageLoad = () => {
-  console.log('Profile image loaded successfully')
+  console.log('✅ Profile image loaded successfully:', currentImageUrl.value)
   isImageLoading.value = false
   imageLoadError.value = false
+
+  // Update last known URL
+  lastKnownImageUrl.value = currentImageUrl.value
 }
 
 const onImageError = (event: Event) => {
-  console.error('Profile image failed to load: ', userImageUrl.value)
+  console.error('❌ Profile image failed to load:', currentImageUrl.value)
   isImageLoading.value = false
-  imageLoadError.value = false
+  imageLoadError.value = true
 
   const img = event.target as HTMLImageElement
-  console.error('Image error details: ', {
+  console.error('Image error details:', {
     src: img.src,
     naturalWidth: img.naturalWidth,
     naturalHeight: img.naturalHeight,
@@ -564,35 +575,60 @@ const onImageError = (event: Event) => {
 }
 
 const testImageDirectly = () => {
-  if (userImageUrl.value) {
-    window.open(userImageUrl.value, '_blank')
+  if (currentImageUrl.value) {
+    window.open(currentImageUrl.value, '_blank')
   }
 }
 
-// Update image URL when user data changes
-const updateUserImageUrl = () => {
-  const logoUrl = authStore.user?.logo
+// Update image URL
+const updateImageUrl = (newUrl: string | null | undefined) => {
+  console.log('🔄 Updating image URL:', {
+    from: currentImageUrl.value,
+    to: newUrl,
+    storeValue: authStore.user?.logo,
+  })
 
-  if (logoUrl && logoUrl != userImageUrl.value) {
-    console.log('Updating profile image URL: ', logoUrl)
-    userImageUrl.value = logoUrl
-    isImageLoading.value = true
+  const finalUrl = newUrl || ''
+
+  // Check that URL change or not?
+  if (finalUrl !== currentImageUrl.value) {
+    currentImageUrl.value = finalUrl
+    imageKey.value++ // Force Vue to re-render image
+    isImageLoading.value = !!finalUrl
     imageLoadError.value = false
-  } else if (!logoUrl) {
-    console.log('No profile image URL')
-    userImageUrl.value = ''
-    isImageLoading.value = false
-    imageLoadError.value = false
+
+    console.log('✅ Image URL updated successfully:', finalUrl)
   }
 }
 
-// Watch for changes in user logo
+// Refresh image function
+const refreshImage = () => {
+  console.log('🔄 Manually refreshing image...')
+  imageKey.value++
+  isImageLoading.value = !!currentImageUrl.value
+  imageLoadError.value = false
+}
+
+// Watch for authStore.user?.logo
 watch(
   () => authStore.user?.logo,
-  () => {
-    updateUserImageUrl()
+  (newLogo) => {
+    console.log('👀 Auth store logo changed:', newLogo)
+    updateImageUrl(newLogo)
   },
   { immediate: true },
+)
+
+// Watch for user object
+watch(
+  () => authStore.user,
+  (newUser) => {
+    if (newUser?.logo !== lastKnownImageUrl.value) {
+      console.log('👤 User object changed, updating image URL')
+      updateImageUrl(newUser?.logo)
+    }
+  },
+  { deep: true, immediate: true },
 )
 
 // Upload Function
@@ -601,13 +637,13 @@ const handleImageUpload = async (event: Event) => {
   if (!file) return
 
   try {
-    console.log('Starting profile image upload:', {
+    console.log('📤 Starting profile image upload:', {
       name: file.name,
       size: file.size,
       type: file.type,
     })
 
-    // Client-side
+    // Client-side validation
     const maxSize = 5 * 1024 * 1024 // 5MB
     if (file.size > maxSize) {
       throw new Error('File size must be less than 5MB')
@@ -618,27 +654,32 @@ const handleImageUpload = async (event: Event) => {
       throw new Error('Please select an image file (JPEG, JPG, PNG, GIF, OR WebP)')
     }
 
-    // Reset State
+    // Reset states
     isUploading.value = true
     imageLoadError.value = false
 
     // Call upload service
     const response = await profileService.uploadProfileImage(file)
 
-    // Update auth store with new user data
     if (response.user) {
-      console.log('Upload sucessful, new logo URL:', response.user.logo)
+      console.log('✅ Upload successful, new logo URL:', response.user.logo)
 
       // Update auth store
       Object.assign(authStore.user!, response.user)
 
-      // Update userImageUrl
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(response.user))
+
+      // Update current image URL
+      await nextTick()
+      updateImageUrl(response.user.logo)
+
       showSuccessToast('Profile image updated successfully')
     } else {
       throw new Error('Upload succeeded but no user data returned')
     }
   } catch (error: any) {
-    console.error('Error updating profile image:', error)
+    console.error('❌ Error updating profile image:', error)
     showErrorToast(error.message || 'Failed to upload profile image')
   } finally {
     isUploading.value = false
@@ -653,28 +694,33 @@ const handleImageUpload = async (event: Event) => {
 // Remove Function
 const handleRemoveImage = async () => {
   try {
-    console.log('Starting profile image removal')
+    console.log('🗑️ Starting profile image removal')
 
     isRemoving.value = true
     imageLoadError.value = false
 
-    // Call remove servie
+    // Call remove service
     const response = await profileService.removeProfileImage()
 
-    // Update auth store with new user data
     if (response.user) {
-      console.log('Remove Successful')
+      console.log('✅ Remove successful')
 
       // Update auth store
       Object.assign(authStore.user!, response.user)
 
-      // Update userImageUrl to empty
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(response.user))
+
+      // Update current image URL
+      await nextTick()
+      updateImageUrl(response.user.logo)
+
       showSuccessToast('Profile image removed successfully')
     } else {
       throw new Error('Remove succeeded but no user data returned')
     }
   } catch (error: any) {
-    console.error('Error removing profile image:', error)
+    console.error('❌ Error removing profile image:', error)
     showErrorToast(error.message || 'Failed to remove profile image')
   } finally {
     isRemoving.value = false
@@ -723,19 +769,22 @@ const handleUpdateProfile = async () => {
       }),
     }
 
-    console.log('Submitting profile update:', updateData)
+    console.log('📝 Submitting profile update:', updateData)
 
     const response = await profileService.updateProfile(updateData)
 
     // Update auth store with new data
     if (response.user) {
       Object.assign(authStore.user!, response.user)
+
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(response.user))
     }
 
     isEditingProfile.value = false
     showSuccessToast('Profile updated successfully')
   } catch (error: any) {
-    console.error('Profile update error:', error)
+    console.error('❌ Profile update error:', error)
     profileError.value = error.message || 'Failed to update profile'
   } finally {
     isUpdatingProfile.value = false
@@ -752,12 +801,12 @@ const handleChangePassword = async () => {
       return
     }
 
-    if (passwordForm.value.newPassword.length < 6) {
+    if (passwordForm.value.newPassword.length < 8) {
       passwordError.value = 'Password must be at least 8 characters long'
       return
     }
 
-    console.log('Submitting password change...')
+    console.log('🔐 Submitting password change...')
 
     await profileService.changePassword({
       currentPassword: passwordForm.value.currentPassword,
@@ -768,7 +817,7 @@ const handleChangePassword = async () => {
     resetPasswordForm()
     showSuccessToast('Password changed successfully')
   } catch (error: any) {
-    console.error('Password change error:', error)
+    console.error('❌ Password change error:', error)
     passwordError.value = error.message || 'Failed to change password'
   } finally {
     isChangingPasswordLoading.value = false
@@ -809,12 +858,12 @@ const handleLogout = async () => {
     // Close modal
     showLogoutModal.value = false
 
-    // Small delay for better UX
+    // Small delay
     setTimeout(() => {
       router.push('/login')
     }, 500)
   } catch (error) {
-    console.error('Logout error:', error)
+    console.error('❌ Logout error:', error)
   } finally {
     isLoggingOut.value = false
   }
@@ -833,8 +882,6 @@ const showSuccessToast = (message: string) => {
 }
 
 const showErrorToast = (message: string) => {
-  // For now, we'll use the same toast styling
-  // You could create a separate error toast component
   toastMessage.value = message
   showToast.value = true
   setTimeout(() => {
@@ -842,10 +889,42 @@ const showErrorToast = (message: string) => {
   }, 5000)
 }
 
+// Load profile function
+const loadProfile = async () => {
+  try {
+    console.log('🔄 Loading fresh profile data...')
+    const response = await profileService.getProfile()
+
+    if (response.user) {
+      // Update auth store
+      Object.assign(authStore.user!, response.user)
+
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(response.user))
+
+      // Update logo
+      updateImageUrl(response.user.logo)
+
+      console.log('✅ Profile loaded successfully')
+    }
+  } catch (error) {
+    console.error('❌ Failed to load profile:', error)
+  }
+}
+
 // Lifecycle
-onMounted(() => {
-  console.log('Profile component mounted')
-  console.log('Current user:', authStore.user)
+onMounted(async () => {
+  console.log('🚀 Profile component mounted')
+  console.log('👤 Current user:', authStore.user)
+
   initializeProfileForm()
+
+  // loaded new profile to make sure the profile is lastest
+  await loadProfile()
+
+  // check that user have logo or nor?
+  if (authStore.user?.logo) {
+    updateImageUrl(authStore.user.logo)
+  }
 })
 </script>

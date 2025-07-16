@@ -29,9 +29,9 @@ export const profileService = {
   // Get current user profile
   async getProfile(): Promise<ProfileResponse> {
     try {
-      console.log('Fetching user profile...')
+      console.log('📤 ProfileService: Fetching user profile...')
       const response = await api.get('/api/auth/profile')
-      console.log('Profile fetch response:', response.data)
+      console.log('📥 ProfileService: Profile fetch response:', response.data)
 
       // Handle different response formats
       if (response.data.user) {
@@ -47,7 +47,7 @@ export const profileService = {
         throw new Error('Invalid profile response format')
       }
     } catch (error: any) {
-      console.error('Profile fetch error:', error)
+      console.error('❌ ProfileService: Profile fetch error:', error)
       throw error
     }
   },
@@ -55,7 +55,7 @@ export const profileService = {
   // Update user profile
   async updateProfile(data: ProfileUpdateData): Promise<ProfileResponse> {
     try {
-      console.log('Updating user profile...', data)
+      console.log('📤 ProfileService: Updating user profile...', data)
 
       // Client-side validation
       if (data.org_name !== undefined) {
@@ -93,10 +93,11 @@ export const profileService = {
       if (data.contact_info !== undefined) updateData.contact_info = data.contact_info
 
       const response = await api.put('/api/auth/profile', updateData)
-      console.log('Profile update response:', response.data)
+      console.log('📥 ProfileService: Profile update response:', response.data)
+
       return response.data
     } catch (error: any) {
-      console.error('Profile update error:', error)
+      console.error('❌ ProfileService: Profile update error:', error)
       throw error
     }
   },
@@ -104,7 +105,7 @@ export const profileService = {
   // Change password
   async changePassword(data: PasswordChangeData): Promise<{ message: string }> {
     try {
-      console.log('Changing password...')
+      console.log('📤 ProfileService: Changing password...')
 
       // Client-side validation
       if (!data.currentPassword?.trim()) {
@@ -113,8 +114,8 @@ export const profileService = {
       if (!data.newPassword?.trim()) {
         throw new Error('New password is required')
       }
-      if (data.newPassword.length < 6) {
-        throw new Error('New password must be at least 6 characters long')
+      if (data.newPassword.length < 8) {
+        throw new Error('New password must be at least 8 characters long')
       }
 
       // Password strength validation
@@ -130,10 +131,10 @@ export const profileService = {
         newPassword: data.newPassword,
       })
 
-      console.log('Password change response:', response.data)
+      console.log('📥 ProfileService: Password change response:', response.data)
       return response.data
     } catch (error: any) {
-      console.error('Password change error:', error)
+      console.error('❌ ProfileService: Password change error:', error)
       throw error
     }
   },
@@ -141,7 +142,7 @@ export const profileService = {
   // Upload profile image to Supabase Storage
   async uploadProfileImage(file: File): Promise<ProfileResponse> {
     try {
-      console.log('Uploading profile image to Supabase Storage...', {
+      console.log('📤 ProfileService: Uploading profile image to Supabase Storage...', {
         name: file.name,
         size: file.size,
         type: file.type,
@@ -176,15 +177,25 @@ export const profileService = {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            console.log(`Upload progress: ${percentCompleted}%`)
+            console.log(`📊 Upload progress: ${percentCompleted}%`)
           }
         },
       })
 
-      console.log('Image upload response:', response.data)
+      console.log('📥 ProfileService: Image upload response:', response.data)
+
+      // Validate response
+      if (!response.data.user) {
+        throw new Error('Upload response missing user data')
+      }
+
+      if (!response.data.user.logo) {
+        console.warn('⚠️ Upload successful but no logo URL in response')
+      }
+
       return response.data
     } catch (error: any) {
-      console.error('Image upload error:', error)
+      console.error('❌ ProfileService: Image upload error:', error)
 
       // Handle specific file upload errors
       if (error.message?.includes('413') || error.message?.includes('too large')) {
@@ -207,12 +218,18 @@ export const profileService = {
   // Remove profile image from Supabase Storage
   async removeProfileImage(): Promise<ProfileResponse> {
     try {
-      console.log('Removing profile image from Supabase Storage...')
+      console.log('📤 ProfileService: Removing profile image from Supabase Storage...')
       const response = await api.delete('/api/auth/avatar')
-      console.log('Image removal response:', response.data)
+      console.log('📥 ProfileService: Image removal response:', response.data)
+
+      // Validate response
+      if (!response.data.user) {
+        throw new Error('Remove response missing user data')
+      }
+
       return response.data
     } catch (error: any) {
-      console.error('Image removal error:', error)
+      console.error('❌ ProfileService: Image removal error:', error)
       throw error
     }
   },
@@ -266,5 +283,36 @@ export const profileService = {
     }
 
     return { valid: true }
+  },
+
+  // Test image URL accessibility
+  async testImageUrl(url: string): Promise<boolean> {
+    try {
+      const response = await fetch(url, {
+        method: 'HEAD',
+        cache: 'no-cache',
+      })
+      console.log(`🧪 Image URL test: ${url} - Status: ${response.status}`)
+      return response.ok
+    } catch (error) {
+      console.error('❌ Image URL test failed:', error)
+      return false
+    }
+  },
+
+  // Force refresh profile data
+  async refreshProfile(): Promise<ProfileResponse> {
+    try {
+      console.log('🔄 ProfileService: Force refreshing profile data...')
+
+      // Add timestamp to bypass cache
+      const response = await api.get(`/api/auth/profile?t=${Date.now()}`)
+      console.log('📥 ProfileService: Refreshed profile data:', response.data)
+
+      return response.data
+    } catch (error: any) {
+      console.error('❌ ProfileService: Profile refresh error:', error)
+      throw error
+    }
   },
 }
