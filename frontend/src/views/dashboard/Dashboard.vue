@@ -104,9 +104,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { Users, DollarSign, CreditCard, TrendingUp } from 'lucide-vue-next'
-import { useAuthStore } from '../stores/auth'
-import { dashboardService } from '../service/dashboardService'
-import type { Plan, Member, RevenueData, DashboardStats } from '../type'
+import { useAuthStore } from '../../stores/auth'
+import { dashboardService } from '../../service/dashboardService'
+import type { Plan, Member, RevenueData, DashboardStats } from '../../type'
 
 const authStore = useAuthStore()
 

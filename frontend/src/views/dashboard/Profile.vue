@@ -473,9 +473,9 @@ import {
   Lock,
   LogOut,
 } from 'lucide-vue-next'
-import { useAuthStore } from '../stores/auth'
-import { profileService } from '../service/profileService'
-import ConfirmationModal from '../components/ConfirmationModal.vue'
+import { useAuthStore } from '../../stores/auth'
+import { profileService } from '../../service/profileService'
+import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

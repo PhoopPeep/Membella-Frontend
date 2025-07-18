@@ -170,11 +170,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Eye, Edit, Trash2, Settings } from 'lucide-vue-next'
-import { featuresService, type Feature } from '../service/featuresService'
-import { useErrorHandler } from '../composables/useErrorHandler'
-import ConfirmationModal from '../components/ConfirmationModal.vue'
-import ErrorToast from '../components/ErrorToast.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
+import { featuresService, type Feature } from '../../service/featuresService'
+import { useErrorHandler } from '../../composables/useErrorHandler'
+import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
+import ErrorToast from '../../components/common/ErrorToast.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 
 const router = useRouter()
 

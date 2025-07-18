@@ -177,9 +177,9 @@ import {
   AlertCircle,
   Settings,
 } from 'lucide-vue-next'
-import { plansService, type Plan } from '../service/plansService'
-import { featuresService, type Feature } from '../service/featuresService'
-import ConfirmationModal from '../components/ConfirmationModal.vue'
+import { plansService, type Plan } from '../../service/plansService'
+import { featuresService, type Feature } from '../../service/featuresService'
+import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 
 const router = useRouter()
 const route = useRoute()

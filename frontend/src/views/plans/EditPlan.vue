@@ -255,8 +255,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, AlertCircle, CheckCircle, Settings } from 'lucide-vue-next'
-import { plansService, type Plan, type UpdatePlanData } from '../service/plansService'
-import { featuresService, type Feature } from '../service/featuresService'
+import { plansService, type Plan, type UpdatePlanData } from '../../service/plansService'
+import { featuresService, type Feature } from '../../service/featuresService'
 
 const router = useRouter()
 const route = useRoute()

@@ -126,9 +126,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, AlertCircle } from 'lucide-vue-next'
-import { featuresService, type CreateFeatureData } from '../service/featuresService'
-import { useErrorHandler } from '../composables/useErrorHandler'
-import ErrorToast from '../components/ErrorToast.vue'
+import { featuresService, type CreateFeatureData } from '../../service/featuresService'
+import { useErrorHandler } from '../../composables/useErrorHandler'
+import ErrorToast from '../../components/common/ErrorToast.vue'
 
 const router = useRouter()
 

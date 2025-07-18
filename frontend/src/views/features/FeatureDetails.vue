@@ -120,8 +120,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Edit, Trash2, Calendar, Clock, AlertCircle } from 'lucide-vue-next'
-import { featuresService } from '../service/featuresService'
-import ConfirmationModal from '../components/ConfirmationModal.vue'
+import { featuresService } from '../../service/featuresService'
+import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 
 interface Feature {
   feature_id: string

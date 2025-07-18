@@ -156,8 +156,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from 'lucide-vue-next'
-import { plansService, type CreatePlanData } from '../service/plansService'
-import { featuresService, type Feature } from '../service/featuresService'
+import { plansService, type CreatePlanData } from '../../service/plansService'
+import { featuresService, type Feature } from '../../service/featuresService'
 
 const router = useRouter()
 

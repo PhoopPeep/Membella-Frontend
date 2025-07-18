@@ -102,7 +102,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft } from 'lucide-vue-next'
-import { featuresService } from '../service/featuresService'
+import { featuresService } from '../../service/featuresService'
 
 interface Feature {
   feature_id: string
