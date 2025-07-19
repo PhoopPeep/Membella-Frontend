@@ -62,13 +62,13 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
       throw new Error('Please enter a valid email address')
     }
 
-    // Password strength validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
-    if (!passwordRegex.test(userData.password)) {
-      throw new Error(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
-      )
-    }
+    // // Password strength validation
+    // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
+    // if (!passwordRegex.test(userData.password)) {
+    //   throw new Error(
+    //     'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+    //   )
+    // }
 
     const response = await api.post('/api/auth/register', {
       org_name: userData.org_name.trim(),

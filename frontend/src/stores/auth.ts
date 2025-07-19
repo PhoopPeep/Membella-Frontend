@@ -42,6 +42,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  // Add refreshUserData method
+  const refreshUserData = async () => {
+    try {
+      const { authApi } = await import('@/api/auth');
+      const response = await authApi.getProfile();
+      if (response.user) {
+        updateUser(response.user);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+      throw error;
+    }
+  };
+
   return {
     user: computed(() => user.value),
     token: computed(() => token.value),
@@ -50,5 +64,6 @@ export const useAuthStore = defineStore('auth', () => {
     updateUser,
     clearAuth,
     initAuth,
+    refreshUserData,
   };
 });

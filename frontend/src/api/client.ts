@@ -99,7 +99,7 @@ class ApiClient {
 
   async uploadFile<T = any>(url: string, file: File, onProgress?: (progress: number) => void): Promise<T> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('logo', file);
 
     const response = await this.client.post<T>(url, formData, {
       headers: {
