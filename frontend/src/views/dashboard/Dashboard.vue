@@ -1,101 +1,96 @@
 <template>
   <div class="flex-1 gap-4 space-y-4 p-4 md:p-8 pt-6">
-    <div class="flex items-center justify-between space-y-2">
-      <div class="flex items-center space-x-2">
-        <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
-      </div>
-    </div>
+    <!-- Page Header -->
+    <PageHeader title="Dashboard" />
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
-      <p class="text-gray-600">Loading dashboard data...</p>
-    </div>
+    <LoadingSpinner
+      v-if="loading"
+      text="Loading dashboard data..."
+      subtitle="Please wait while we fetch your analytics"
+      full-screen
+    />
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-      <p class="text-red-600">{{ error }}</p>
-      <button
-        @click="loadDashboardData"
-        class="mt-2 text-sm text-red-700 hover:text-red-900 underline"
-      >
-        Try again
-      </button>
-    </div>
+    <Card v-else-if="error">
+      <div class="bg-red-50 border border-red-200 rounded-md p-4">
+        <p class="text-red-600">{{ error }}</p>
+        <button
+          @click="loadDashboardData"
+          class="mt-2 text-sm text-red-700 hover:text-red-900 underline"
+        >
+          Try again
+        </button>
+      </div>
+    </Card>
 
     <!-- Dashboard Content -->
     <div v-else>
       <!-- Stats Cards -->
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-lg border bg-white shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Total Revenue</h3>
-            <DollarSign class="h-4 w-4 text-gray-500" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">${{ totalRevenue.toLocaleString() }}</div>
-            <p class="text-xs text-gray-500">Last 12 months</p>
-          </div>
-        </div>
+        <StatCard
+          title="Total Revenue"
+          :value="totalRevenue"
+          description="Last 12 months"
+          icon="DollarSign"
+          prefix="$"
+          :format-value="(value) => Number(value).toLocaleString()"
+        />
 
-        <div class="rounded-lg border bg-white shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Total Members</h3>
-            <Users class="h-4 w-4 text-gray-500" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">{{ totalMembers }}</div>
-            <p class="text-xs text-gray-500">Active subscribers</p>
-          </div>
-        </div>
+        <StatCard
+          title="Total Members"
+          :value="totalMembers"
+          description="Active subscribers"
+          icon="Users"
+        />
 
-        <div class="rounded-lg border bg-white shadow-sm">
-          <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Active Plans</h3>
-            <CreditCard class="h-4 w-4 text-gray-500" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold">{{ activePlans }}</div>
-            <p class="text-xs text-gray-500">Available plans</p>
-          </div>
-        </div>
+        <StatCard
+          title="Active Plans"
+          :value="activePlans"
+          description="Available plans"
+          icon="CreditCard"
+        />
       </div>
 
-      <!-- Charts -->
+      <!-- Charts Section -->
       <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7 mt-4">
-        <div class="col-span-4 rounded-lg border bg-white shadow-sm">
-          <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold">Revenue Overview</h3>
-            <p class="text-sm text-gray-500">Last 12 months revenue data</p>
+        <!-- Revenue Chart -->
+        <Card
+          title="Revenue Overview"
+          subtitle="Last 12 months revenue data"
+          card-class="col-span-4"
+        >
+          <div class="w-full h-350">
+            <canvas ref="revenueChart" class="w-full h-full"></canvas>
           </div>
-          <div class="p-6 pt-2">
-            <div class="w-full h-350">
-              <canvas ref="revenueChart" class="w-full h-full"></canvas>
-            </div>
-          </div>
-        </div>
+        </Card>
 
-        <div class="col-span-3 rounded-lg border bg-white shadow-sm">
-          <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold">Members by Plan</h3>
-            <p class="text-sm text-gray-500">Distribution of members across plans</p>
-          </div>
-          <div class="p-6">
-            <div class="space-y-4">
-              <div v-for="plan in membersByPlan" :key="plan.planName" class="flex items-center">
-                <div class="w-2 h-2 rounded-full bg-blue-600 mr-3"></div>
-                <div class="flex-1">
-                  <p class="text-sm font-medium">{{ plan.planName }}</p>
-                  <p class="text-xs text-gray-500">{{ plan.memberCount }} members</p>
-                </div>
-                <div class="text-sm font-medium">{{ plan.memberCount }}</div>
+        <!-- Members by Plan -->
+        <Card
+          title="Members by Plan"
+          subtitle="Distribution of members across plans"
+          card-class="col-span-3"
+        >
+          <div class="space-y-4">
+            <div v-for="plan in membersByPlan" :key="plan.planName" class="flex items-center">
+              <div class="w-2 h-2 rounded-full bg-blue-600 mr-3"></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium">{{ plan.planName }}</p>
+                <p class="text-xs text-gray-500">{{ plan.memberCount }} members</p>
               </div>
-              <div v-if="plans.length === 0" class="text-sm text-gray-500">
-                No plans created yet
-              </div>
+              <div class="text-sm font-medium">{{ plan.memberCount }}</div>
             </div>
+
+            <EmptyState
+              v-if="plans.length === 0"
+              title="No plans created"
+              description="Create your first plan to see member distribution"
+              size="sm"
+              container-class="py-8"
+              icon="CreditCard"
+            />
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   </div>
@@ -103,10 +98,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { Users, DollarSign, CreditCard, TrendingUp } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { dashboardService } from '../../service/dashboardService'
 import type { Plan, Member, RevenueData, DashboardStats } from '../../type'
+
+// Import reusable components
+import PageHeader from '../../components/common/PageHeader.vue'
+import Card from '../../components/common/Card.vue'
+import StatCard from '../../components/common/StatCard.vue'
+import EmptyState from '../../components/common/EmptyState.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 
@@ -131,14 +132,6 @@ const totalMembers = computed(() => {
 
 const activePlans = computed(() => {
   return dashboardStats.value?.totalPlans || 0
-})
-
-// const totalFeatures = computed(() => {
-//   return dashboardStats.value?.totalFeatures || 0
-// })
-
-const growthPercentage = computed(() => {
-  return dashboardStats.value?.growthPercentage || 0
 })
 
 const membersByPlan = computed(() => {
@@ -173,38 +166,9 @@ const loadDashboardData = async () => {
   } catch (err) {
     console.error('Error loading dashboard data:', err)
     error.value = 'Failed to load dashboard data'
-
-    // Don't fallback to mock data, show the error
-    // This way you can see what's actually happening with the API
   } finally {
     loading.value = false
   }
-}
-
-const loadMockData = () => {
-  // Generate mock revenue data for the last 12 months
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-  revenueData.value = months.map((month) => ({
-    month,
-    revenue: Math.floor(Math.random() * 10000) + 1000,
-  }))
-
-  // Mock plans and members data
-  plans.value = []
-  members.value = []
 }
 
 const initializeChart = async () => {
@@ -247,7 +211,7 @@ const initializeChart = async () => {
             beginAtZero: true,
             ticks: {
               callback: function (value) {
-                return '$' + value.toLocaleString()
+                return '' + value.toLocaleString()
               },
             },
           },

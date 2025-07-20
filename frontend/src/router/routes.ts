@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -56,27 +56,27 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/plans',
     name: 'plans',
-    component: () => import('@/views/plans/Plans.vue')
+    component: () => import('@/views/plans/Plans.vue'),
   },
   {
     path: '/plans/create',
     name: 'create-plan',
-    component: () => import('@/views/plans/CreatePlan.vue')
+    component: () => import('@/views/plans/CreatePlan.vue'),
   },
   {
     path: '/plans/:id',
     name: 'plans-details',
-    component: () => import('@/views/plans/PlanDetails.vue')
+    component: () => import('@/views/plans/PlanDetails.vue'),
   },
   {
     path: '/plans/:id/edit',
-    name:  'plans-edit',
-    component: () => import('@/views/plans/EditPlan.vue')
+    name: 'plans-edit',
+    component: () => import('@/views/plans/EditPlan.vue'),
   },
   {
     path: '/profile',
     name: 'profile',
     component: () => import('@/views/dashboard/Profile.vue'),
-    meta: { requireAuth: true }
-  }
-];
+    meta: { requireAuth: true },
+  },
+]

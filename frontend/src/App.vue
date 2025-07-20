@@ -38,7 +38,7 @@ const isInitializing = ref(true)
 
 onMounted(async () => {
   try {
-    console.log('🚀 App: Initializing application...')
+    console.log('App: Initializing application...')
 
     // Initialize auth state from localStorage
     authStore.initAuth()
@@ -50,9 +50,9 @@ onMounted(async () => {
       // Try to refresh user data from server to get latest info including profile image
       try {
         await authStore.refreshUserData()
-        console.log('✅ App: User data refreshed successfully')
+        console.log('App: User data refreshed successfully')
       } catch (error) {
-        console.warn('⚠️ App: Failed to refresh user data, continuing with cached data:', error)
+        console.warn('App: Failed to refresh user data, continuing with cached data:', error)
         // Continue with cached data if server request fails
       }
     }
@@ -60,10 +60,10 @@ onMounted(async () => {
     // Add a small delay to prevent flash of content
     await new Promise((resolve) => setTimeout(resolve, 100))
   } catch (error) {
-    console.error('❌ App: Error initializing auth:', error)
+    console.error('App: Error initializing auth:', error)
   } finally {
     isInitializing.value = false
-    console.log('✅ App: Initialization complete')
+    console.log('App: Initialization complete')
   }
 })
 </script>
