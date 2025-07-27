@@ -10,7 +10,7 @@
         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
         :class="backButtonClass"
       >
-        <ArrowLeft class="w-4 h-4 mr-1" />
+        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
         {{ backText }}
       </button>
 
@@ -32,12 +32,14 @@
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
           :class="getPrimaryActionClass()"
         >
-          <DynamicIcon
+          <FontAwesomeIcon
             v-if="primaryAction.icon"
             :icon="primaryAction.icon"
             class="w-4 h-4 mr-2"
           />
-          {{ primaryAction.loading ? primaryAction.loadingText || 'Loading...' : primaryAction.text }}
+          {{
+            primaryAction.loading ? primaryAction.loadingText || 'Loading...' : primaryAction.text
+          }}
         </button>
       </slot>
     </div>
@@ -45,9 +47,6 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
-import DynamicIcon from './DynamicIcon.vue'
-
 export interface PrimaryAction {
   text: string
   icon?: any

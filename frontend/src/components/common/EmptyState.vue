@@ -5,16 +5,13 @@
       class="mx-auto rounded-full flex items-center justify-center mb-4"
       :class="[
         iconContainerClass,
-        size === 'sm' ? 'w-10 h-10' : size === 'lg' ? 'w-16 h-16' : 'w-12 h-12'
+        size === 'sm' ? 'w-10 h-10' : size === 'lg' ? 'w-16 h-16' : 'w-12 h-12',
       ]"
     >
       <slot name="icon">
-        <DynamicIcon
+        <FontAwesomeIcon
           :icon="icon"
-          :class="[
-            iconClass,
-            size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-8 h-8' : 'w-6 h-6'
-          ]"
+          :class="[iconClass, size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-8 h-8' : 'w-6 h-6']"
         />
       </slot>
     </div>
@@ -24,7 +21,7 @@
       :class="[
         titleClass,
         size === 'sm' ? 'text-base' : size === 'lg' ? 'text-xl' : 'text-lg',
-        'font-medium text-gray-900 mb-2'
+        'font-medium text-gray-900 mb-2',
       ]"
     >
       <slot name="title">{{ title }}</slot>
@@ -33,11 +30,7 @@
     <!-- Description -->
     <p
       v-if="description || $slots.description"
-      :class="[
-        descriptionClass,
-        size === 'sm' ? 'text-xs' : 'text-sm',
-        'text-gray-500 mb-4'
-      ]"
+      :class="[descriptionClass, size === 'sm' ? 'text-xs' : 'text-sm', 'text-gray-500 mb-4']"
     >
       <slot name="description">{{ description }}</slot>
     </p>
@@ -52,7 +45,7 @@
           :disabled="primaryAction.disabled"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
         >
-          <DynamicIcon
+          <FontAwesomeIcon
             v-if="primaryAction.icon"
             :icon="primaryAction.icon"
             class="w-4 h-4 mr-2"
@@ -67,7 +60,7 @@
             :disabled="secondaryAction.disabled"
             class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 py-2"
           >
-            <DynamicIcon
+            <FontAwesomeIcon
               v-if="secondaryAction.icon"
               :icon="secondaryAction.icon"
               class="w-4 h-4 mr-2"
@@ -81,9 +74,6 @@
 </template>
 
 <script setup lang="ts">
-import { Database } from 'lucide-vue-next'
-import DynamicIcon from './DynamicIcon.vue'
-
 export interface EmptyStateAction {
   text: string
   icon?: any
@@ -95,7 +85,7 @@ interface Props {
   // Content
   title: string
   description?: string
-  icon?: any
+  icon?: string
 
   // Actions
   primaryAction?: EmptyStateAction
@@ -111,7 +101,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  icon: Database,
+  icon: 'database',
   size: 'md',
   containerClass: 'py-12',
   iconContainerClass: 'bg-gray-100',

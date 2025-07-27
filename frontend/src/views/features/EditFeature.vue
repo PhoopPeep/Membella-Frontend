@@ -5,7 +5,7 @@
         @click="goBack"
         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
       >
-        <ArrowLeft class="w-4 h-4 mr-1" />
+        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
         Back
       </button>
       <h1 class="text-3xl font-bold tracking-tight">Edit Feature</h1>
@@ -101,7 +101,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft } from 'lucide-vue-next'
 import { featuresService } from '../../service/featuresService'
 
 interface Feature {

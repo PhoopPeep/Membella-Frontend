@@ -1,4 +1,4 @@
-import DynamicIcon from './DynamicIcon.vue'<template>
+<template>
   <div class="flex space-x-2" :class="containerClass">
     <button
       v-for="action in actions"
@@ -7,20 +7,20 @@ import DynamicIcon from './DynamicIcon.vue'<template>
       :disabled="action.disabled || action.loading"
       :title="action.tooltip"
       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-      :class="[
-        getButtonClass(action.variant, action.size),
-        action.className || ''
-      ]"
+      :class="[getButtonClass(action.variant, action.size), action.className || '']"
     >
       <!-- Loading state -->
       <div v-if="action.loading" class="flex items-center">
-        <div class="animate-spin rounded-full border-b-2 mr-2" :class="getSpinnerClass(action.size)"></div>
+        <div
+          class="animate-spin rounded-full border-b-2 mr-2"
+          :class="getSpinnerClass(action.size)"
+        ></div>
         {{ action.loadingText || 'Loading...' }}
       </div>
 
       <!-- Normal state -->
       <template v-else>
-        <DynamicIcon
+        <FontAwesomeIcon
           v-if="action.icon"
           :icon="action.icon"
           :class="getIconClass(action.size, !!action.text)"

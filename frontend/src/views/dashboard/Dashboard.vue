@@ -32,8 +32,8 @@
           title="Total Revenue"
           :value="totalRevenue"
           description="Last 12 months"
-          icon="DollarSign"
-          prefix="$"
+          icon="baht-sign"
+          prefix="฿"
           :format-value="(value) => Number(value).toLocaleString()"
         />
 
@@ -41,14 +41,14 @@
           title="Total Members"
           :value="totalMembers"
           description="Active subscribers"
-          icon="Users"
+          icon="users"
         />
 
         <StatCard
           title="Active Plans"
           :value="activePlans"
           description="Available plans"
-          icon="CreditCard"
+          icon="credit-card"
         />
       </div>
 
@@ -87,7 +87,7 @@
               description="Create your first plan to see member distribution"
               size="sm"
               container-class="py-8"
-              icon="CreditCard"
+              icon="credit-card"
             />
           </div>
         </Card>

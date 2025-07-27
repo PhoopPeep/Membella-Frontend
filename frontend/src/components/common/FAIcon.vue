@@ -16,7 +16,22 @@ import { computed } from 'vue'
 
 interface Props {
   icon: string
-  size?: 'xs' | 'sm' | 'lg' | 'xl' | '2xl' | '1x' | '2x' | '3x' | '4x' | '5x' | '6x' | '7x' | '8x' | '9x' | '10x'
+  size?:
+    | 'xs'
+    | 'sm'
+    | 'lg'
+    | 'xl'
+    | '2xl'
+    | '1x'
+    | '2x'
+    | '3x'
+    | '4x'
+    | '5x'
+    | '6x'
+    | '7x'
+    | '8x'
+    | '9x'
+    | '10x'
   color?: string
   className?: string
   spin?: boolean
@@ -30,7 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
   color: 'currentColor',
   className: '',
   spin: false,
-  pulse: false
+  pulse: false,
 })
 
 // Map icon names from Lucide-style to Font Awesome
@@ -45,7 +60,7 @@ const iconMap: Record<string, string> = {
   Database: 'database',
 
   // Financial & Business
-  DollarSign: 'dollar-sign',
+  BahtSign: 'baht-sign',
   CreditCard: 'credit-card',
   TrendingUp: 'chart-line',
   TrendingDown: 'chart-line-down',

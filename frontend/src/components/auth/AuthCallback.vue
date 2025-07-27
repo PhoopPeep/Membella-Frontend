@@ -16,7 +16,7 @@
           <div
             class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
-            <AlertCircle class="w-6 h-6 text-red-600" />
+            <FontAwesomeIcon icon="exclamation-circle" class="w-6 h-6 text-red-600" />
           </div>
           <h2 class="text-xl font-semibold text-red-600">Verification Failed</h2>
           <div class="text-center">
@@ -46,7 +46,7 @@
           <div
             class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
-            <CheckCircle class="w-6 h-6 text-green-600" />
+            <FontAwesomeIcon icon="check-circle" class="w-6 h-6 text-green-600" />
           </div>
           <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
           <p class="text-gray-600">
@@ -69,7 +69,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { CheckCircle, AlertCircle } from 'lucide-vue-next'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../router/api'

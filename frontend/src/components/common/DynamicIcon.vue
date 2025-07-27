@@ -1,9 +1,11 @@
 <template>
-  <FAIcon
-    :icon="iconName || 'Database'"
-    :size="faSize"
-    :color="color"
+  <FontAwesomeIcon
+    :icon="iconName"
     :class="className"
+    :style="{
+      fontSize: typeof size === 'number' ? `${size}px` : size,
+      color: color,
+    }"
     :spin="spin"
     :pulse="pulse"
   />
@@ -11,7 +13,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import FAIcon from './FAIcon.vue'
 
 interface Props {
   icon?: string | any
@@ -23,42 +24,109 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  icon: 'Database',
+  icon: 'database',
   size: 16,
   color: 'currentColor',
   className: '',
   spin: false,
-  pulse: false
+  pulse: false,
 })
 
-// Convert icon to string
+// Convert icon to FontAwesome icon name
 const iconName = computed(() => {
   if (typeof props.icon === 'string') {
-    return props.icon
+    const iconMap: Record<string, string> = {
+      // Core actions
+      Plus: 'plus',
+      Eye: 'eye',
+      Edit: 'edit',
+      Trash2: 'trash',
+      Settings: 'cog',
+      ArrowLeft: 'arrow-left',
+      Database: 'database',
+
+      // Financial & Business
+      BahtSign: 'baht-sign',
+      CreditCard: 'credit-card',
+      TrendingUp: 'arrow-up',
+      TrendingDown: 'arrow-down',
+
+      // Users & People
+      Users: 'users',
+      User: 'user',
+
+      // Communication
+      Mail: 'envelope',
+      Phone: 'phone',
+      Globe: 'globe',
+
+      // Location & Building
+      Building: 'building',
+      MapPin: 'map-marker-alt',
+
+      // Time & Calendar
+      Calendar: 'calendar',
+      Clock: 'clock',
+
+      // Security
+      Lock: 'lock',
+      LogOut: 'sign-out-alt',
+
+      // Media
+      Camera: 'camera',
+
+      // Navigation
+      Menu: 'bars',
+      ChevronRight: 'chevron-right',
+
+      // Status & Feedback
+      CheckCircle: 'check-circle',
+      AlertCircle: 'exclamation-circle',
+      AlertTriangle: 'exclamation-triangle',
+
+      // Math & Misc
+      Minus: 'minus',
+      X: 'times',
+
+      // Convert kebab-case to match our mapping
+      plus: 'plus',
+      eye: 'eye',
+      edit: 'edit',
+      trash: 'trash',
+      settings: 'cog',
+      'arrow-left': 'arrow-left',
+      database: 'database',
+      'baht-sign': 'baht-sign',
+      'credit-card': 'credit-card',
+      users: 'users',
+      user: 'user',
+      envelope: 'envelope',
+      phone: 'phone',
+      globe: 'globe',
+      building: 'building',
+      calendar: 'calendar',
+      clock: 'clock',
+      lock: 'lock',
+      camera: 'camera',
+      bars: 'bars',
+      'chevron-right': 'chevron-right',
+      'check-circle': 'check-circle',
+      'exclamation-circle': 'exclamation-circle',
+      'exclamation-triangle': 'exclamation-triangle',
+      minus: 'minus',
+      times: 'times',
+    }
+
+    return iconMap[props.icon] || iconMap[props.icon.toLowerCase()] || 'database'
   }
 
-  // If it's a Lucide component object, try to get name
+  // If it's a component object, try to get name
   if (props.icon && typeof props.icon === 'object') {
-    if (props.icon.name) return props.icon.name
-    if (props.icon.__name) return props.icon.__name
-    if (props.icon.displayName) return props.icon.displayName
+    if (props.icon.name) return props.icon.name.toLowerCase()
+    if (props.icon.__name) return props.icon.__name.toLowerCase()
+    if (props.icon.displayName) return props.icon.displayName.toLowerCase()
   }
 
-  return 'Database'
-})
-
-// Convert pixel size to Font Awesome size
-const faSize = computed(() => {
-  const sizeNum = typeof props.size === 'number' ? props.size : parseInt(props.size as string) || 16
-
-  if (sizeNum <= 10) return 'xs'
-  if (sizeNum <= 14) return 'sm'
-  if (sizeNum <= 18) return '1x'
-  if (sizeNum <= 24) return 'lg'
-  if (sizeNum <= 32) return 'xl'
-  if (sizeNum <= 48) return '2xl'
-  if (sizeNum <= 64) return '2x'
-  if (sizeNum <= 96) return '3x'
-  return '4x'
+  return 'database'
 })
 </script>

@@ -9,7 +9,7 @@
       <div class="rounded-lg border bg-white shadow-sm">
         <div class="p-6 border-b border-gray-200">
           <h2 class="text-xl font-semibold flex items-center">
-            <User class="w-5 h-5 mr-2" />
+            <FontAwesomeIcon icon="user" class="w-5 h-5 mr-2" />
             Profile Image
           </h2>
         </div>
@@ -60,7 +60,7 @@
             </div>
           </div>
 
-          <!-- Debug Info (Development Only) -->
+          <!-- Debug Info (Development Only)
           <div v-if="isDev" class="text-xs text-gray-500 space-y-1 p-2 bg-gray-50 rounded">
             <p class="font-mono break-all">Current: {{ currentImageUrl || 'None' }}</p>
             <p class="font-mono break-all">Store: {{ authStore.user?.logo || 'None' }}</p>
@@ -82,14 +82,14 @@
             >
               Test URL in new tab
             </button>
-          </div>
+          </div> -->
 
           <!-- Error Message -->
           <div
             v-if="imageLoadError && !isUploading && !isRemoving && currentImageUrl"
             class="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-3"
           >
-            <p class="font-medium">⚠️ Image failed to load</p>
+            <p class="font-medium">Image failed to load</p>
             <p class="mt-1">
               The image file may not be accessible or the bucket might not be public.
             </p>
@@ -108,7 +108,7 @@
               :disabled="isUploading || isRemoving"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
             >
-              <Camera class="w-4 h-4 mr-2" />
+              <FontAwesomeIcon icon="camera" class="w-4 h-4 mr-2" />
               {{ isUploading ? 'Uploading...' : 'Upload' }}
             </button>
 
@@ -142,7 +142,7 @@
           <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-4">
               <div class="flex items-center space-x-3">
-                <Building class="w-5 h-5 text-gray-500" />
+                <FontAwesomeIcon icon="building" class="w-5 h-5 text-gray-500" />
                 <div>
                   <p class="text-sm text-gray-500">Organization</p>
                   <p class="font-medium">{{ authStore.user?.org_name || 'Not specified' }}</p>
@@ -150,7 +150,7 @@
               </div>
 
               <div class="flex items-center space-x-3">
-                <Mail class="w-5 h-5 text-gray-500" />
+                <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-gray-500" />
                 <div>
                   <p class="text-sm text-gray-500">Email</p>
                   <p class="font-medium">{{ authStore.user?.email || 'Not specified' }}</p>
@@ -158,7 +158,7 @@
               </div>
 
               <div v-if="contactInfo?.phone" class="flex items-center space-x-3">
-                <Phone class="w-5 h-5 text-gray-500" />
+                <FontAwesomeIcon icon="phone" class="w-5 h-5 text-gray-500" />
                 <div>
                   <p class="text-sm text-gray-500">Phone</p>
                   <p class="font-medium">{{ contactInfo.phone }}</p>
@@ -168,7 +168,7 @@
 
             <div class="space-y-4">
               <div v-if="contactInfo?.website" class="flex items-center space-x-3">
-                <Globe class="w-5 h-5 text-gray-500" />
+                <FontAwesomeIcon icon="globe" class="w-5 h-5 text-gray-500" />
                 <div>
                   <p class="text-sm text-gray-500">Website</p>
                   <p class="font-medium">{{ contactInfo.website }}</p>
@@ -176,7 +176,7 @@
               </div>
 
               <div v-if="contactInfo?.address" class="flex items-start space-x-3">
-                <MapPin class="w-5 h-5 text-gray-500 mt-0.5" />
+                <FontAwesomeIcon icon="map-marker-alt" class="w-5 h-5 text-gray-500 mt-0.5" />
                 <div>
                   <p class="text-sm text-gray-500">Address</p>
                   <p class="font-medium">{{ contactInfo.address }}</p>
@@ -202,7 +202,7 @@
             @click="openEditProfile"
             class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            <Edit class="w-4 h-4 mr-2" />
+            <FontAwesomeIcon icon="edit" class="w-4 h-4 mr-2" />
             Edit Profile
           </button>
 
@@ -210,7 +210,7 @@
             @click="openChangePassword"
             class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            <Lock class="w-4 h-4 mr-2" />
+            <FontAwesomeIcon icon="lock" class="w-4 h-4 mr-2" />
             Change Password
           </button>
 
@@ -219,7 +219,7 @@
             :disabled="isLoggingOut"
             class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <LogOut class="w-4 h-4 mr-2" />
+            <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
             {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
           </button>
         </div>
@@ -442,13 +442,7 @@
     >
       <div class="flex">
         <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clip-rule="evenodd"
-            />
-          </svg>
+          <FontAwesomeIcon icon="check-circle" class="h-5 w-5 text-green-400" />
         </div>
         <div class="ml-3">
           <p class="text-sm font-medium text-green-800">{{ toastMessage }}</p>
@@ -461,18 +455,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  Camera,
-  Edit,
-  User,
-  Mail,
-  Building,
-  Phone,
-  MapPin,
-  Globe,
-  Lock,
-  LogOut,
-} from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { profileService } from '../../service/profileService'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
@@ -553,7 +535,7 @@ const triggerFileInput = () => {
 }
 
 const onImageLoad = () => {
-  console.log('✅ Profile image loaded successfully:', currentImageUrl.value)
+  console.log('Profile image loaded successfully:', currentImageUrl.value)
   isImageLoading.value = false
   imageLoadError.value = false
 
@@ -562,7 +544,7 @@ const onImageLoad = () => {
 }
 
 const onImageError = (event: Event) => {
-  console.error('❌ Profile image failed to load:', currentImageUrl.value)
+  console.error('Profile image failed to load:', currentImageUrl.value)
   isImageLoading.value = false
   imageLoadError.value = true
 
@@ -582,7 +564,7 @@ const testImageDirectly = () => {
 
 // Update image URL
 const updateImageUrl = (newUrl: string | null | undefined) => {
-  console.log('🔄 Updating image URL:', {
+  console.log('Updating image URL:', {
     from: currentImageUrl.value,
     to: newUrl,
     storeValue: authStore.user?.logo,
@@ -597,13 +579,13 @@ const updateImageUrl = (newUrl: string | null | undefined) => {
     isImageLoading.value = !!finalUrl
     imageLoadError.value = false
 
-    console.log('✅ Image URL updated successfully:', finalUrl)
+    console.log('Image URL updated successfully:', finalUrl)
   }
 }
 
 // Refresh image function
 const refreshImage = () => {
-  console.log('🔄 Manually refreshing image...')
+  console.log('Manually refreshing image...')
   imageKey.value++
   isImageLoading.value = !!currentImageUrl.value
   imageLoadError.value = false
@@ -613,7 +595,7 @@ const refreshImage = () => {
 watch(
   () => authStore.user?.logo,
   (newLogo) => {
-    console.log('👀 Auth store logo changed:', newLogo)
+    console.log('Auth store logo changed:', newLogo)
     updateImageUrl(newLogo)
   },
   { immediate: true },
@@ -624,7 +606,7 @@ watch(
   () => authStore.user,
   (newUser) => {
     if (newUser?.logo !== lastKnownImageUrl.value) {
-      console.log('👤 User object changed, updating image URL')
+      console.log('User object changed, updating image URL')
       updateImageUrl(newUser?.logo)
     }
   },
@@ -637,7 +619,7 @@ const handleImageUpload = async (event: Event) => {
   if (!file) return
 
   try {
-    console.log('📤 Starting profile image upload:', {
+    console.log('Starting profile image upload:', {
       name: file.name,
       size: file.size,
       type: file.type,
@@ -662,48 +644,7 @@ const handleImageUpload = async (event: Event) => {
     const response = await profileService.uploadProfileImage(file)
 
     if (response.user) {
-      console.log('✅ Upload successful, new logo URL:', response.user.logo)
-
-      // Update auth store
-      Object.assign(authStore.user!, response.user)
-
-      // Update localStorage
-      localStorage.setItem('user', JSON.stringify(response.user))
-
-      // Update current image URL
-      await nextTick()
-      updateImageUrl(response.user.logo)
-
-      showSuccessToast('Profile image updated successfully')
-    } else {
-      throw new Error('Upload succeeded but no user data returned')
-    }
-  } catch (error: any) {
-    console.error('❌ Error updating profile image:', error)
-    showErrorToast(error.message || 'Failed to upload profile image')
-  } finally {
-    isUploading.value = false
-
-    // Clear the file input
-    if (fileInputRef.value) {
-      fileInputRef.value.value = ''
-    }
-  }
-}
-
-// Remove Function
-const handleRemoveImage = async () => {
-  try {
-    console.log('🗑️ Starting profile image removal')
-
-    isRemoving.value = true
-    imageLoadError.value = false
-
-    // Call remove service
-    const response = await profileService.removeProfileImage()
-
-    if (response.user) {
-      console.log('✅ Remove successful')
+      console.log('Upload successful, new logo URL:', response.user.logo)
 
       // Update auth store
       Object.assign(authStore.user!, response.user)
@@ -720,7 +661,7 @@ const handleRemoveImage = async () => {
       throw new Error('Remove succeeded but no user data returned')
     }
   } catch (error: any) {
-    console.error('❌ Error removing profile image:', error)
+    console.error('Error removing profile image:', error)
     showErrorToast(error.message || 'Failed to remove profile image')
   } finally {
     isRemoving.value = false
@@ -769,7 +710,7 @@ const handleUpdateProfile = async () => {
       }),
     }
 
-    console.log('📝 Submitting profile update:', updateData)
+    console.log('Submitting profile update:', updateData)
 
     const response = await profileService.updateProfile(updateData)
 
@@ -784,7 +725,7 @@ const handleUpdateProfile = async () => {
     isEditingProfile.value = false
     showSuccessToast('Profile updated successfully')
   } catch (error: any) {
-    console.error('❌ Profile update error:', error)
+    console.error('Profile update error:', error)
     profileError.value = error.message || 'Failed to update profile'
   } finally {
     isUpdatingProfile.value = false
@@ -806,7 +747,7 @@ const handleChangePassword = async () => {
       return
     }
 
-    console.log('🔐 Submitting password change...')
+    console.log('Submitting password change...')
 
     await profileService.changePassword({
       currentPassword: passwordForm.value.currentPassword,
@@ -817,7 +758,7 @@ const handleChangePassword = async () => {
     resetPasswordForm()
     showSuccessToast('Password changed successfully')
   } catch (error: any) {
-    console.error('❌ Password change error:', error)
+    console.error('Password change error:', error)
     passwordError.value = error.message || 'Failed to change password'
   } finally {
     isChangingPasswordLoading.value = false
@@ -892,7 +833,7 @@ const showErrorToast = (message: string) => {
 // Load profile function
 const loadProfile = async () => {
   try {
-    console.log('🔄 Loading fresh profile data...')
+    console.log('Loading fresh profile data...')
     const response = await profileService.getProfile()
 
     if (response.user) {
@@ -905,17 +846,53 @@ const loadProfile = async () => {
       // Update logo
       updateImageUrl(response.user.logo)
 
-      console.log('✅ Profile loaded successfully')
+      console.log('Profile loaded successfully')
     }
   } catch (error) {
-    console.error('❌ Failed to load profile:', error)
+    console.error('Failed to load profile:', error)
+  }
+}
+
+// Remove function
+const handleRemoveImage = async () => {
+  try {
+    console.log('Starting profile image removal')
+
+    isRemoving.value = true
+    imageLoadError.value = false
+
+    // Call remove service
+    const response = await profileService.removeProfileImage()
+
+    if (response.user) {
+      console.log('Remove successful')
+
+      // Update auth store
+      Object.assign(authStore.user!, response.user)
+
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(response.user))
+
+      // Update current image URL
+      await nextTick()
+      updateImageUrl(response.user.logo)
+
+      showSuccessToast('Profile image removed successfully')
+    } else {
+      throw new Error('Remove succeeded but no user data returned')
+    }
+  } catch (error: any) {
+    console.error('Error removing profile image:', error)
+    showErrorToast(error.message || 'Failed to remove profile image')
+  } finally {
+    isRemoving.value = false
   }
 }
 
 // Lifecycle
 onMounted(async () => {
-  console.log('🚀 Profile component mounted')
-  console.log('👤 Current user:', authStore.user)
+  console.log('Profile component mounted')
+  console.log('Current user:', authStore.user)
 
   initializeProfileForm()
 

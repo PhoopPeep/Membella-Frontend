@@ -5,7 +5,7 @@
         @click="goBack"
         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3 mr-2"
       >
-        <ArrowLeft class="w-4 h-4 mr-1" />
+        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
         Back
       </button>
       <h1 class="text-3xl font-bold tracking-tight">Create Plan</h1>
@@ -155,7 +155,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft } from 'lucide-vue-next'
 import { plansService, type CreatePlanData } from '../../service/plansService'
 import { featuresService, type Feature } from '../../service/featuresService'
 

@@ -27,7 +27,7 @@
         :class="isCollapsed ? 'justify-center' : 'justify-start'"
         :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
       >
-        <Menu class="w-4 h-4" />
+        <FontAwesomeIcon icon="bars" class="w-4 h-4" />
         <Transition name="fade">
           <span v-show="!isCollapsed" class="ml-2 text-sm">Collapse</span>
         </Transition>
@@ -65,8 +65,8 @@
               class="absolute right-0 top-0 bottom-0 w-0.5 bg-blue-700"
             ></div>
 
-            <component
-              :is="item.icon"
+            <FontAwesomeIcon
+              :icon="item.icon"
               :class="[
                 'flex-shrink-0 transition-colors',
                 isActive(item.url) ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500',
@@ -137,7 +137,7 @@
               <span v-if="authStore.user?.org_name" class="text-xs font-semibold">
                 {{ getInitials(authStore.user.org_name) }}
               </span>
-              <User v-else class="w-4 h-4 text-white" />
+              <FontAwesomeIcon v-else icon="user" class="w-4 h-4 text-white" />
             </div>
           </div>
 
@@ -149,7 +149,10 @@
             </p>
             <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
           </div>
-          <ChevronRight class="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+          <FontAwesomeIcon
+            icon="chevron-right"
+            class="w-4 h-4 text-gray-400 group-hover:text-gray-600"
+          />
         </div>
       </Transition>
 
@@ -188,7 +191,7 @@
             <span v-if="authStore.user?.org_name" class="text-xs font-semibold">
               {{ getInitials(authStore.user.org_name) }}
             </span>
-            <User v-else class="w-4 h-4 text-white" />
+            <FontAwesomeIcon v-else icon="user" class="w-4 h-4 text-white" />
           </div>
         </button>
       </div>
@@ -199,7 +202,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboard, CreditCard, Settings, User, Menu, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
@@ -216,22 +218,22 @@ const isImageLoading = ref(false)
 const imageError = ref(false)
 const imageKey = ref(0)
 
-// Menu items configuration
+// Menu items configuration with Font Awesome icons
 const menuItems = [
   {
     title: 'Dashboard',
     url: '/dashboard',
-    icon: LayoutDashboard,
+    icon: 'home',
   },
   {
     title: 'Plan Management',
     url: '/plans',
-    icon: CreditCard,
+    icon: 'credit-card',
   },
   {
     title: 'Features Management',
     url: '/features',
-    icon: Settings,
+    icon: 'cog',
   },
 ]
 
@@ -240,7 +242,7 @@ const updateProfileImage = (logoUrl: string | undefined | null) => {
   const newUrl = logoUrl || ''
 
   if (newUrl !== profileImageUrl.value) {
-    console.log('🔄 Sidebar: Updating profile image:', { from: profileImageUrl.value, to: newUrl })
+    console.log('Sidebar: Updating profile image:', { from: profileImageUrl.value, to: newUrl })
 
     profileImageUrl.value = newUrl
     imageKey.value++ // Force re-render
@@ -250,13 +252,13 @@ const updateProfileImage = (logoUrl: string | undefined | null) => {
 }
 
 const onImageLoad = () => {
-  console.log('✅ Sidebar: Profile image loaded successfully')
+  console.log('Sidebar: Profile image loaded successfully')
   isImageLoading.value = false
   imageError.value = false
 }
 
 const onImageError = () => {
-  console.error('❌ Sidebar: Profile image failed to load:', profileImageUrl.value)
+  console.error('Sidebar: Profile image failed to load:', profileImageUrl.value)
   isImageLoading.value = false
   imageError.value = true
 }
@@ -307,7 +309,7 @@ const initSidebarState = () => {
 watch(
   () => authStore.user?.logo,
   (newLogo) => {
-    console.log('🖼️ Sidebar: User logo changed:', newLogo)
+    console.log('Sidebar: User logo changed:', newLogo)
     updateProfileImage(newLogo)
   },
   { immediate: true },
@@ -315,7 +317,7 @@ watch(
 
 // Initialize on component mount
 onMounted(() => {
-  console.log('🚀 Sidebar: Component mounted')
+  console.log('Sidebar: Component mounted')
   initSidebarState()
 
   // Initialize profile image

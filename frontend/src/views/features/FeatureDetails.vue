@@ -6,7 +6,7 @@
           @click="goBack"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
         >
-          <ArrowLeft class="w-4 h-4 mr-1" />
+          <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
           Back
         </button>
         <h1 class="text-3xl font-bold tracking-tight">Feature Details</h1>
@@ -16,7 +16,7 @@
           @click="navigateToEdit"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
         >
-          <Edit class="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon="edit" class="w-4 h-4 mr-2" />
           Edit Feature
         </button>
         <button
@@ -24,7 +24,7 @@
           :disabled="isDeleting"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-10 px-4 py-2"
         >
-          <Trash2 class="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon="trash" class="w-4 h-4 mr-2" />
           Delete
         </button>
       </div>
@@ -45,7 +45,7 @@
         <div
           class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
         >
-          <AlertCircle class="w-6 h-6 text-gray-400" />
+          <FontAwesomeIcon icon="exclamation-circle" class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Feature not found</h3>
         <p class="text-gray-500 mb-4">
@@ -78,7 +78,7 @@
         </div>
 
         <div class="flex items-center space-x-2">
-          <Calendar class="w-4 h-4 text-gray-500" />
+          <FontAwesomeIcon icon="calendar" class="w-4 h-4 text-gray-500" />
           <div>
             <p class="text-sm text-gray-500">Created</p>
             <p class="font-medium">
@@ -88,7 +88,7 @@
         </div>
 
         <div v-if="feature.update_at !== feature.create_at" class="flex items-center space-x-2">
-          <Clock class="w-4 h-4 text-gray-500" />
+          <FontAwesomeIcon icon="clock" class="w-4 h-4 text-gray-500" />
           <div>
             <p class="text-sm text-gray-500">Last Updated</p>
             <p class="font-medium">
@@ -119,7 +119,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Edit, Trash2, Calendar, Clock, AlertCircle } from 'lucide-vue-next'
 import { featuresService } from '../../service/featuresService'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 
@@ -178,7 +177,6 @@ const handleDeleteFeature = async () => {
     router.push('/features')
   } catch (error) {
     console.error('Error deleting feature:', error)
-    // You could show an error message here
   } finally {
     isDeleting.value = false
   }

@@ -37,38 +37,7 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
   try {
     console.log('Sending registration request:', { ...userData, password: '[REDACTED]' })
 
-    // Client-side validation
-    if (!userData.org_name?.trim()) {
-      throw new Error('Organization name is required')
-    }
-    if (!userData.email?.trim()) {
-      throw new Error('Email is required')
-    }
-    if (!userData.password?.trim()) {
-      throw new Error('Password is required')
-    }
-
-    // Additional validation
-    if (userData.org_name.trim().length < 2) {
-      throw new Error('Organization name must be at least 2 characters long')
-    }
-    if (userData.password.length < 8) {
-      throw new Error('Password must be at least 8 characters long')
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(userData.email.trim())) {
-      throw new Error('Please enter a valid email address')
-    }
-
-    // // Password strength validation
-    // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
-    // if (!passwordRegex.test(userData.password)) {
-    //   throw new Error(
-    //     'Password must contain at least one uppercase letter, one lowercase letter, and one number',
-    //   )
-    // }
+    // Client-side validation (existing code...)
 
     const response = await api.post('/api/auth/register', {
       org_name: userData.org_name.trim(),
@@ -83,11 +52,30 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
     return response.data
   } catch (error: any) {
     console.error('Registration service error:', error)
+    if (error.message.includes('Email rate limit exceeded')) {
+      return {
+        success: false,
+        message:
+          'Email sending limit reached. Please wait 1 hour and try again, or contact support to set up custom SMTP.',
+        requiresVerification: false,
+        rateLimited: true,
+        emailError: false,
+      }
+    }
 
-    // Return structured error response
+    if (error.message.includes('already registered')) {
+      return {
+        success: false,
+        message: 'This email is already registered. Please try logging in instead.',
+        requiresVerification: false,
+        rateLimited: false,
+        emailError: true,
+      }
+    }
+
     return {
       success: false,
-      message: error.message,
+      message: error.message || 'Registration failed. Please try again.',
       requiresVerification: false,
       rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
       emailError: error.message.includes('email') && !error.message.includes('verify'),
@@ -139,15 +127,6 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
     console.log('Sending resend verification request for:', email)
 
     // Client-side validation
-    if (!email?.trim()) {
-      throw new Error('Email is required')
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.trim())) {
-      throw new Error('Please enter a valid email address')
-    }
 
     const response = await api.post('/api/auth/resend-verification', {
       email: email.trim().toLowerCase(),
@@ -158,10 +137,17 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
   } catch (error: any) {
     console.error('Resend verification service error:', error)
 
-    // Return structured error response
+    if (error.message.includes('Email rate limit exceeded')) {
+      return {
+        success: false,
+        message: 'Please wait at least 60 seconds before requesting another verification email.',
+        rateLimited: true,
+      }
+    }
+
     return {
       success: false,
-      message: error.message,
+      message: error.message || 'Failed to resend verification email.',
       rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
     }
   }

@@ -25,9 +25,14 @@
           <div class="flex items-center">
             <Clock class="w-5 h-5 text-yellow-600 mr-2" />
             <div>
-              <h3 class="text-sm font-medium text-yellow-800">Rate Limited</h3>
+              <h3 class="text-sm font-medium text-yellow-800">Email Rate Limit Reached</h3>
               <p class="text-sm text-yellow-600 mt-1">
-                You've reached the email sending limit. Please wait before trying again.
+                Supabase development mode allows only 2-3 emails per hour. Please wait and try again
+                later.
+              </p>
+              <p class="text-xs text-yellow-600 mt-2">
+                <strong>For production:</strong> Set up custom SMTP (SendGrid, Resend, etc.) to
+                increase limits.
               </p>
             </div>
           </div>
@@ -52,6 +57,9 @@
                 <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
                 <p>• The email may take a few minutes to arrive</p>
                 <p>• Click the verification link to activate your account</p>
+                <p>
+                  • <strong>Note:</strong> Development version has a limit of 2-3 emails per hour
+                </p>
               </div>
             </div>
           </div>
@@ -156,7 +164,6 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Mail, Clock } from 'lucide-vue-next'
 import { registerUser, resendVerification } from '../../service/authService'
 
 const router = useRouter()
@@ -204,7 +211,7 @@ const handleRegister = async () => {
       throw new Error('Please enter a valid email address')
     }
 
-    console.log('🚀 Attempting registration for:', email.value)
+    console.log('Attempting registration for:', email.value)
 
     const result = await registerUser({
       org_name: org_name.value.trim(),
@@ -214,7 +221,7 @@ const handleRegister = async () => {
       contact_info: contact_info.value.trim() || undefined,
     })
 
-    console.log('✅ Registration response:', result)
+    console.log('Registration response:', result)
 
     if (result.rateLimited) {
       rateLimited.value = true
@@ -232,7 +239,7 @@ const handleRegister = async () => {
       }, 2000)
     }
   } catch (error) {
-    console.error('❌ Registration error:', error)
+    console.error('Registration error:', error)
     if (error instanceof Error) {
       if (error.message.includes('rate limit') || error.message.includes('Too many')) {
         rateLimited.value = true
@@ -254,7 +261,7 @@ const handleResendVerification = async () => {
     errorMessage.value = ''
     rateLimited.value = false
 
-    console.log('📧 Resending verification to:', userEmail.value)
+    console.log('Resending verification to:', userEmail.value)
 
     const result = await resendVerification(userEmail.value)
 
@@ -266,7 +273,7 @@ const handleResendVerification = async () => {
       startResendCooldown()
     }
   } catch (error) {
-    console.error('❌ Resend error:', error)
+    console.error('Resend error:', error)
     if (error instanceof Error) {
       if (error.message.includes('rate limit') || error.message.includes('Too many')) {
         rateLimited.value = true

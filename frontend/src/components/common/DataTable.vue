@@ -27,8 +27,11 @@
                 :key="column.key"
                 :class="[
                   'py-3 px-4 font-medium text-gray-900',
-                  column.align === 'center' ? 'text-center' :
-                  column.align === 'right' ? 'text-right' : 'text-left'
+                  column.align === 'center'
+                    ? 'text-center'
+                    : column.align === 'right'
+                      ? 'text-right'
+                      : 'text-left',
                 ]"
               >
                 {{ column.title }}
@@ -49,8 +52,11 @@
                 :key="column.key"
                 :class="[
                   'py-4 px-4',
-                  column.align === 'center' ? 'text-center' :
-                  column.align === 'right' ? 'text-right' : 'text-left'
+                  column.align === 'center'
+                    ? 'text-center'
+                    : column.align === 'right'
+                      ? 'text-right'
+                      : 'text-left',
                 ]"
               >
                 <!-- Custom slot for column -->
@@ -61,7 +67,10 @@
                   :index="index"
                 >
                   <!-- Default column rendering -->
-                  <span v-if="column.type === 'badge'" :class="getBadgeClass(getColumnValue(item, column.key))">
+                  <span
+                    v-if="column.type === 'badge'"
+                    :class="getBadgeClass(getColumnValue(item, column.key))"
+                  >
                     {{ formatValue(getColumnValue(item, column.key), column) }}
                   </span>
                   <span v-else-if="column.type === 'currency'" class="font-medium">
@@ -72,14 +81,21 @@
                   </span>
                   <span v-else-if="column.type === 'tags'" class="flex flex-wrap gap-1">
                     <span
-                      v-for="tag in getColumnValue(item, column.key) && Array.isArray(getColumnValue(item, column.key)) ? getColumnValue(item, column.key).slice(0, 3) : []"
+                      v-for="tag in getColumnValue(item, column.key) &&
+                      Array.isArray(getColumnValue(item, column.key))
+                        ? getColumnValue(item, column.key).slice(0, 3)
+                        : []"
                       :key="tag"
                       class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
                     >
                       {{ tag }}
                     </span>
                     <span
-                      v-if="getColumnValue(item, column.key) && Array.isArray(getColumnValue(item, column.key)) && getColumnValue(item, column.key).length > 3"
+                      v-if="
+                        getColumnValue(item, column.key) &&
+                        Array.isArray(getColumnValue(item, column.key)) &&
+                        getColumnValue(item, column.key).length > 3
+                      "
                       class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
                     >
                       +{{ getColumnValue(item, column.key).length - 3 }} more
@@ -98,8 +114,10 @@
       <!-- Empty State -->
       <div v-if="!loading && data.length === 0" class="text-center py-12">
         <slot name="empty">
-          <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <DynamicIcon :icon="emptyIcon" class="w-6 h-6 text-gray-400" />
+          <div
+            class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+          >
+            <FontAwesomeIcon :icon="emptyIcon" class="w-6 h-6 text-gray-400" />
           </div>
           <h3 class="text-lg font-medium text-gray-900 mb-2">{{ emptyTitle }}</h3>
           <p class="text-gray-500 mb-4">{{ emptyDescription }}</p>
@@ -112,9 +130,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Database } from 'lucide-vue-next'
 import LoadingSpinner from './LoadingSpinner.vue'
-import DynamicIcon from './DynamicIcon.vue'
 
 export interface TableColumn {
   key: string
@@ -145,7 +161,7 @@ interface Props {
   // Empty state
   emptyTitle?: string
   emptyDescription?: string
-  emptyIcon?: any
+  emptyIcon?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -154,7 +170,7 @@ const props = withDefaults(defineProps<Props>(), {
   rowKey: 'id',
   emptyTitle: 'No data',
   emptyDescription: 'No items to display',
-  emptyIcon: Database,
+  emptyIcon: 'database',
   disabledRows: () => [],
 })
 
@@ -189,14 +205,14 @@ const formatValue = (value: any, column: TableColumn): string => {
 
 const formatCurrency = (value: number): string => {
   if (typeof value !== 'number') return '0.00'
-  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return value.toLocaleString('en-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
 const formatDate = (value: string | Date): string => {
   if (!value) return '-'
   try {
     const date = new Date(value)
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-TH', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

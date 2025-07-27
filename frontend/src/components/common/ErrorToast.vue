@@ -1,3 +1,4 @@
+<!-- ErrorToast.vue -->
 <template>
   <!-- Toast Container -->
   <Teleport to="body">
@@ -9,7 +10,7 @@
         <!-- Toast Header -->
         <div class="flex items-start p-4">
           <div class="flex-shrink-0">
-            <component :is="icon" class="w-5 h-5" :class="iconClass" />
+            <FontAwesomeIcon :icon="icon" class="w-5 h-5" :class="iconClass" />
           </div>
           <div class="ml-3 flex-1">
             <p class="text-sm font-medium" :class="titleClass">
@@ -22,7 +23,7 @@
             <!-- Countdown for auto-dismiss -->
             <div v-if="countdown > 0 && type === 'error'" class="mt-2">
               <div class="flex items-center text-xs text-gray-500">
-                <Clock class="w-3 h-3 mr-1" />
+                <FontAwesomeIcon icon="clock" class="w-3 h-3 mr-1" />
                 <span>Disappears in {{ countdown }}s</span>
               </div>
               <div class="mt-1 w-full bg-gray-200 rounded-full h-1">
@@ -39,7 +40,7 @@
               class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <span class="sr-only">Close</span>
-              <X class="w-5 h-5" />
+              <FontAwesomeIcon icon="times" class="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -50,7 +51,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { CheckCircle, AlertCircle, AlertTriangle, Info, Clock, X } from 'lucide-vue-next'
 
 interface Props {
   show: boolean
@@ -79,14 +79,14 @@ let dismissTimer: NodeJS.Timeout | null = null
 const icon = computed(() => {
   switch (props.type) {
     case 'success':
-      return CheckCircle
+      return 'check-circle'
     case 'error':
-      return AlertCircle
+      return 'exclamation-circle'
     case 'warning':
-      return AlertTriangle
+      return 'exclamation-triangle'
     case 'info':
     default:
-      return Info
+      return 'info-circle'
   }
 })
 

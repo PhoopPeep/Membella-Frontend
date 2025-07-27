@@ -1,11 +1,7 @@
 <template>
   <div class="flex-1 space-y-4 p-4 md:p-8 pt-6">
     <!-- Page Header -->
-    <PageHeader
-      title="Add Feature"
-      show-back-button
-      @back="goBack"
-    />
+    <PageHeader title="Add Feature" show-back-button @back="goBack" />
 
     <!-- Error Toast -->
     <ErrorToast
@@ -51,7 +47,9 @@
           :rows="4"
           required
           :disabled="isLoading"
-          :error-message="hasErrorForField('description') ? getErrorsForField('description')[0]?.message : ''"
+          :error-message="
+            hasErrorForField('description') ? getErrorsForField('description')[0]?.message : ''
+          "
           :show-char-count="true"
           :max-length="1000"
           @blur="validateDescription"
@@ -60,10 +58,7 @@
 
         <!-- Form Actions -->
         <div class="flex space-x-2 pt-4 border-t border-gray-200">
-          <ActionButtons
-            :actions="formActions"
-            @action="handleFormAction"
-          />
+          <ActionButtons :actions="formActions" @action="handleFormAction" />
         </div>
       </form>
     </Card>

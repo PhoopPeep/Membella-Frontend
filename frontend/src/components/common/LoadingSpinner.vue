@@ -31,7 +31,7 @@
 
       <!-- Estimated Time -->
       <div v-if="estimatedTime && estimatedTime > 0" class="text-xs text-gray-400">
-        <Clock class="w-3 h-3 inline mr-1" />
+        <FontAwesomeIcon icon="clock" class="w-3 h-3 inline mr-1" />
         ~{{ formatTime(estimatedTime) }} remaining
       </div>
     </div>
@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Clock } from 'lucide-vue-next'
 
 interface Props {
   size?: 'sm' | 'md' | 'lg' | 'xl'

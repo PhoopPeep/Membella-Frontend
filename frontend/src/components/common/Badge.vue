@@ -4,21 +4,16 @@
       'inline-flex items-center font-medium rounded-full transition-colors',
       getSizeClass(),
       getVariantClass(),
-      className
+      className,
     ]"
   >
-    <component
-      v-if="icon"
-      :is="icon"
-      :class="getIconSizeClass()"
-    />
+    <FontAwesomeIcon v-if="icon" :icon="icon" :class="getIconSizeClass()" />
     <slot>{{ text }}</slot>
   </span>
 </template>
 
 <script setup lang="ts">
 import { useSlots } from 'vue'
-import { icons } from 'lucide-vue-next'
 
 const slots = useSlots()
 

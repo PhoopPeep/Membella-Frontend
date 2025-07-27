@@ -4,12 +4,7 @@
       <h3 class="tracking-tight text-sm font-medium" :class="titleClass">
         {{ title }}
       </h3>
-      <DynamicIcon
-        v-if="icon"
-        :icon="icon"
-        class="h-4 w-4"
-        :class="iconClass"
-      />
+      <FontAwesomeIcon v-if="icon" :icon="icon" class="h-4 w-4" :class="iconClass" />
     </div>
     <div class="p-6 pt-0">
       <div class="text-2xl font-bold" :class="valueClass">
@@ -27,16 +22,8 @@
       <div v-if="trend !== undefined || $slots.trend" class="flex items-center mt-2">
         <slot name="trend">
           <div v-if="trend !== undefined" class="flex items-center space-x-1">
-            <DynamicIcon
-              :icon="getTrendIcon()"
-              :class="[
-                'w-3 h-3',
-                getTrendColor()
-              ]"
-            />
-            <span :class="['text-xs font-medium', getTrendColor()]">
-              {{ Math.abs(trend) }}%
-            </span>
+            <FontAwesomeIcon :icon="getTrendIcon()" :class="['w-3 h-3', getTrendColor()]" />
+            <span :class="['text-xs font-medium', getTrendColor()]"> {{ Math.abs(trend) }}% </span>
             <span class="text-xs text-gray-500">
               {{ trendLabel }}
             </span>
@@ -49,15 +36,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
-import DynamicIcon from './DynamicIcon.vue'
 
 interface Props {
   // Content
   title: string
   value: string | number
   description?: string
-  icon?: any
+  icon?: string
 
   // Formatting
   prefix?: string
@@ -99,11 +84,11 @@ const formattedValue = computed(() => {
 })
 
 // Methods
-const getTrendIcon = () => {
-  if (props.trend === undefined) return Minus
-  if (props.trend > 0) return TrendingUp
-  if (props.trend < 0) return TrendingDown
-  return Minus
+const getTrendIcon = (): string => {
+  if (props.trend === undefined) return 'minus'
+  if (props.trend > 0) return 'arrow-up'
+  if (props.trend < 0) return 'arrow-down'
+  return 'minus'
 }
 
 const getTrendColor = (): string => {

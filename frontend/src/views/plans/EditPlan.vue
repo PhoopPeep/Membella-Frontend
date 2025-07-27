@@ -5,7 +5,7 @@
         @click="goBack"
         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3 mr-2"
       >
-        <ArrowLeft class="w-4 h-4 mr-1" />
+        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
         Back
       </button>
       <h1 class="text-3xl font-bold tracking-tight">Edit Plan</h1>
@@ -26,7 +26,7 @@
         <div
           class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
         >
-          <AlertCircle class="w-6 h-6 text-gray-400" />
+          <FontAwesomeIcon icon="exclamation-circle" class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Plan not found</h3>
         <p class="text-gray-500 mb-4">
@@ -51,7 +51,10 @@
         <!-- Error Message -->
         <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <div class="flex">
-            <AlertCircle class="w-5 h-5 text-red-400 mt-0.5 mr-2 flex-shrink-0" />
+            <FontAwesomeIcon
+              icon="exclamation-circle"
+              class="w-5 h-5 text-red-400 mt-0.5 mr-2 flex-shrink-0"
+            />
             <p class="text-sm text-red-600">{{ errorMessage }}</p>
           </div>
         </div>
@@ -59,7 +62,10 @@
         <!-- Success Message -->
         <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
           <div class="flex">
-            <CheckCircle class="w-5 h-5 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
+            <FontAwesomeIcon
+              icon="check-circle"
+              class="w-5 h-5 text-green-400 mt-0.5 mr-2 flex-shrink-0"
+            />
             <p class="text-sm text-green-600">{{ successMessage }}</p>
           </div>
         </div>
@@ -82,7 +88,7 @@
               :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': nameError }"
             />
             <p v-if="nameError" class="text-xs text-red-600 flex items-center">
-              <AlertCircle class="w-3 h-3 mr-1" />
+              <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
               {{ nameError }}
             </p>
           </div>
@@ -106,7 +112,7 @@
               }"
             />
             <p v-if="descriptionError" class="text-xs text-red-600 flex items-center">
-              <AlertCircle class="w-3 h-3 mr-1" />
+              <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
               {{ descriptionError }}
             </p>
           </div>
@@ -138,7 +144,7 @@
                 />
               </div>
               <p v-if="priceError" class="text-xs text-red-600 flex items-center">
-                <AlertCircle class="w-3 h-3 mr-1" />
+                <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
                 {{ priceError }}
               </p>
             </div>
@@ -162,7 +168,7 @@
                 :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': durationError }"
               />
               <p v-if="durationError" class="text-xs text-red-600 flex items-center">
-                <AlertCircle class="w-3 h-3 mr-1" />
+                <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
                 {{ durationError }}
               </p>
             </div>
@@ -209,14 +215,14 @@
               <div
                 class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
               >
-                <Settings class="w-6 h-6 text-gray-400" />
+                <FontAwesomeIcon icon="cog" class="w-6 h-6 text-gray-400" />
               </div>
               <p class="text-sm text-gray-500 mb-2">No features available</p>
               <p class="text-xs text-gray-400">Create features first to assign them to plans</p>
             </div>
 
             <p v-if="featuresError" class="text-xs text-red-600 flex items-center">
-              <AlertCircle class="w-3 h-3 mr-1" />
+              <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
               {{ featuresError }}
             </p>
           </div>
@@ -254,7 +260,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, AlertCircle, CheckCircle, Settings } from 'lucide-vue-next'
 import { plansService, type Plan, type UpdatePlanData } from '../../service/plansService'
 import { featuresService, type Feature } from '../../service/featuresService'
 

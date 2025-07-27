@@ -1,3 +1,4 @@
+<!-- ConfirmationModal.vue -->
 <template>
   <div
     v-if="show"
@@ -10,7 +11,7 @@
           class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"
           :class="iconBgClass"
         >
-          <component :is="icon" class="h-6 w-6" :class="iconClass" />
+          <FontAwesomeIcon :icon="icon" class="h-6 w-6" :class="iconClass" />
         </div>
 
         <!-- Content -->
@@ -55,7 +56,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AlertTriangle, Trash2, LogOut, AlertCircle } from 'lucide-vue-next'
 
 interface Props {
   show: boolean
@@ -85,13 +85,13 @@ const emit = defineEmits<{
 const icon = computed(() => {
   switch (props.type) {
     case 'danger':
-      return Trash2
+      return 'trash'
     case 'warning':
-      return AlertTriangle
+      return 'exclamation-triangle'
     case 'info':
-      return AlertCircle
+      return 'exclamation-circle'
     default:
-      return AlertTriangle
+      return 'exclamation-triangle'
   }
 })
 

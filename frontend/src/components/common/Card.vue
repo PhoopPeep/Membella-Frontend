@@ -1,10 +1,7 @@
 <template>
   <div
     class="rounded-lg border bg-white shadow-sm"
-    :class="[
-      cardClass,
-      { 'hover:shadow-md transition-shadow': hoverable }
-    ]"
+    :class="[cardClass, { 'hover:shadow-md transition-shadow': hoverable }]"
   >
     <!-- Header -->
     <div
@@ -32,22 +29,12 @@
     </div>
 
     <!-- Content -->
-    <div
-      class="p-6"
-      :class="[
-        contentClass,
-        { 'pt-6': !title && !subtitle && !$slots.header }
-      ]"
-    >
+    <div class="p-6" :class="[contentClass, { 'pt-6': !title && !subtitle && !$slots.header }]">
       <slot />
     </div>
 
     <!-- Footer -->
-    <div
-      v-if="$slots.footer"
-      class="p-6 pt-0 border-t border-gray-200"
-      :class="footerClass"
-    >
+    <div v-if="$slots.footer" class="p-6 pt-0 border-t border-gray-200" :class="footerClass">
       <slot name="footer" />
     </div>
   </div>

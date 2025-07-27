@@ -6,7 +6,7 @@
           @click="goBack"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
         >
-          <ArrowLeft class="w-4 h-4 mr-1" />
+          <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
           Back
         </button>
         <h1 class="text-3xl font-bold tracking-tight">Plan Details</h1>
@@ -16,7 +16,7 @@
           @click="navigateToEdit"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
         >
-          <Edit class="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon="edit" class="w-4 h-4 mr-2" />
           Edit Plan
         </button>
         <button
@@ -24,7 +24,7 @@
           :disabled="isDeleting"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-10 px-4 py-2"
         >
-          <Trash2 class="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon="trash" class="w-4 h-4 mr-2" />
           Delete
         </button>
       </div>
@@ -45,7 +45,7 @@
         <div
           class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
         >
-          <AlertCircle class="w-6 h-6 text-gray-400" />
+          <FontAwesomeIcon icon="exclamation-circle" class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Plan not found</h3>
         <p class="text-gray-500 mb-4">
@@ -68,7 +68,7 @@
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">{{ plan.name }}</h2>
             <span class="bg-gray-100 text-gray-800 text-lg font-medium px-3 py-1 rounded">
-              ${{ plan.price }}
+              ฿{{ plan.price }}
             </span>
           </div>
         </div>
@@ -80,15 +80,15 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div class="flex items-center space-x-2">
-              <DollarSign class="w-4 h-4 text-gray-500" />
+              <FontAwesomeIcon icon="dollar-sign" class="w-4 h-4 text-gray-500" />
               <div>
                 <p class="text-sm text-gray-500">Price</p>
-                <p class="font-medium">${{ plan.price }}</p>
+                <p class="font-medium">฿{{ plan.price }}</p>
               </div>
             </div>
 
             <div class="flex items-center space-x-2">
-              <Clock class="w-4 h-4 text-gray-500" />
+              <FontAwesomeIcon icon="clock" class="w-4 h-4 text-gray-500" />
               <div>
                 <p class="text-sm text-gray-500">Duration</p>
                 <p class="font-medium">{{ plan.duration }} days</p>
@@ -97,7 +97,7 @@
           </div>
 
           <div class="flex items-center space-x-2">
-            <Calendar class="w-4 h-4 text-gray-500" />
+            <FontAwesomeIcon icon="calendar" class="w-4 h-4 text-gray-500" />
             <div>
               <p class="text-sm text-gray-500">Created</p>
               <p class="font-medium">
@@ -133,7 +133,7 @@
             <div
               class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
             >
-              <Settings class="w-6 h-6 text-gray-400" />
+              <FontAwesomeIcon icon="cog" class="w-6 h-6 text-gray-400" />
             </div>
             <p class="text-gray-500 mb-2">No features assigned</p>
             <button
@@ -167,16 +167,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Calendar,
-  DollarSign,
-  Clock,
-  AlertCircle,
-  Settings,
-} from 'lucide-vue-next'
 import { plansService, type Plan } from '../../service/plansService'
 import { featuresService, type Feature } from '../../service/featuresService'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
@@ -253,7 +243,7 @@ const goBack = () => {
 }
 
 const navigateToEdit = () => {
-  router.push(`/plans/${planId}/edit`)
+  router.push(`/plans/฿{planId}/edit`)
 }
 
 onMounted(() => {

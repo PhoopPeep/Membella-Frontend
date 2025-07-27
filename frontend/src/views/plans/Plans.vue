@@ -8,7 +8,7 @@
         @click="navigateToCreate"
         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
       >
-        <Plus class="w-4 h-4 mr-2" />
+        <FontAwesomeIcon icon="plus" class="w-4 h-4 mr-2" />
         Create Plan
       </button>
     </div>
@@ -57,7 +57,7 @@
                   <span
                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
                   >
-                    ${{ plan.price }}
+                    ฿{{ plan.price }}
                   </span>
                 </td>
                 <td class="py-4 px-4">
@@ -89,14 +89,14 @@
                       @click="navigateToDetails(plan.id)"
                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-8 px-3"
                     >
-                      <Eye class="w-3 h-3 mr-1" />
+                      <FontAwesomeIcon icon="eye" class="w-3 h-3 mr-1" />
                       View
                     </button>
                     <button
                       @click="navigateToEdit(plan.id)"
                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-8 px-3"
                     >
-                      <Edit class="w-3 h-3 mr-1" />
+                      <FontAwesomeIcon icon="edit" class="w-3 h-3 mr-1" />
                       Edit
                     </button>
                     <button
@@ -104,7 +104,7 @@
                       :disabled="deleting === plan.id"
                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-3"
                     >
-                      <Trash2 class="w-3 h-3" />
+                      <FontAwesomeIcon icon="trash" class="w-3 h-3" />
                     </button>
                   </div>
                 </td>
@@ -121,7 +121,7 @@
         <div
           class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4"
         >
-          <Plus class="w-6 h-6 text-gray-400" />
+          <FontAwesomeIcon icon="plus" class="w-6 h-6 text-gray-400" />
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No plans yet</h3>
         <p class="text-gray-500 mb-4">Create your first subscription plan to get started.</p>
@@ -129,7 +129,7 @@
           @click="navigateToCreate"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
         >
-          <Plus class="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon="plus" class="w-4 h-4 mr-2" />
           Create Plan
         </button>
       </div>
@@ -155,7 +155,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Eye, Edit, Trash2 } from 'lucide-vue-next'
 import { plansService, type Plan } from '../../service/plansService'
 import { featuresService, type Feature } from '../../service/featuresService'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
@@ -232,11 +231,11 @@ const navigateToCreate = () => {
 }
 
 const navigateToDetails = (id: string) => {
-  router.push(`/plans/${id}`)
+  router.push(`/plans/฿{id}`)
 }
 
 const navigateToEdit = (id: string) => {
-  router.push(`/plans/${id}/edit`)
+  router.push(`/plans/฿{id}/edit`)
 }
 
 onMounted(() => {

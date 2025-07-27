@@ -5,9 +5,9 @@
       title="Feature Management"
       :primary-action="{
         text: 'Add Feature',
-        icon: 'Plus',
+        icon: 'plus',
         disabled: isLoading,
-        onClick: navigateToCreate
+        onClick: navigateToCreate,
       }"
     />
 
@@ -58,7 +58,7 @@
       <!-- Custom column for name with icon -->
       <template #column-name="{ item }">
         <div class="flex items-center">
-          <DynamicIcon icon="Settings" class="w-4 h-4 text-blue-600 mr-2" />
+          <FontAwesomeIcon icon="cog" class="w-4 h-4 text-blue-600 mr-2" />
           <span class="font-medium text-gray-900">{{ item.name }}</span>
         </div>
       </template>
@@ -85,11 +85,11 @@
       v-else-if="!isLoading"
       title="No features yet"
       description="Create your first feature to assign to plans."
-      icon="Settings"
+      icon="cog"
       :primary-action="{
         text: 'Add Feature',
-        icon: 'Plus',
-        onClick: navigateToCreate
+        icon: 'plus',
+        onClick: navigateToCreate,
       }"
     />
 
@@ -124,7 +124,6 @@ import EmptyState from '../../components/common/EmptyState.vue'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import ErrorToast from '../../components/common/ErrorToast.vue'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
-import DynamicIcon from '../../components/common/DynamicIcon.vue'
 
 const router = useRouter()
 
@@ -173,7 +172,7 @@ const getRowActions = (feature: Feature): ActionButton[] => [
   {
     key: 'view',
     text: 'View',
-    icon: 'Eye',
+    icon: 'eye',
     variant: 'secondary',
     size: 'sm',
     disabled: isLoading.value,
@@ -182,7 +181,7 @@ const getRowActions = (feature: Feature): ActionButton[] => [
   {
     key: 'edit',
     text: 'Edit',
-    icon: 'Edit',
+    icon: 'edit',
     variant: 'secondary',
     size: 'sm',
     disabled: isLoading.value,
@@ -190,7 +189,7 @@ const getRowActions = (feature: Feature): ActionButton[] => [
   },
   {
     key: 'delete',
-    icon: 'Trash2',
+    icon: 'trash',
     variant: 'danger',
     size: 'sm',
     disabled: isLoading.value || deletingIds.value.includes(feature.feature_id),

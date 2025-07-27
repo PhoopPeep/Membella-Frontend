@@ -32,7 +32,7 @@
           class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md"
         >
           <div class="flex items-center">
-            <Clock class="w-5 h-5 text-yellow-600 mr-2" />
+            <FontAwesomeIcon icon="clock" class="w-5 h-5 text-yellow-600 mr-2" />
             <div>
               <h3 class="text-sm font-medium text-yellow-800">Too Many Attempts</h3>
               <p class="text-sm text-yellow-600 mt-1">Please wait before trying again.</p>
@@ -46,7 +46,7 @@
           class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
         >
           <div class="flex items-center">
-            <Mail class="w-5 h-5 text-blue-600 mr-2" />
+            <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-blue-600 mr-2" />
             <div>
               <h3 class="text-sm font-medium text-blue-800">Email Verification Required</h3>
               <p class="text-sm text-blue-600 mt-1">
@@ -124,7 +124,6 @@
 <script setup lang="ts">
 import { ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { Mail, Clock } from 'lucide-vue-next'
 import { login, resendVerification } from '../../service/authService'
 import { useAuthStore } from '../../stores/auth'
 
@@ -157,7 +156,7 @@ let resendTimer: NodeJS.Timeout | null = null
 
 // Robust error display function that GUARANTEES 15 seconds
 const displayError = (message: string) => {
-  console.log('🚨 Displaying error for 15 seconds:', message)
+  console.log('Displaying error for 15 seconds:', message)
 
   // Clear any existing error timers first
   clearErrorTimers()
@@ -170,7 +169,7 @@ const displayError = (message: string) => {
   // Start countdown timer (updates every second)
   errorCountdownTimer = setInterval(() => {
     errorCountdown.value--
-    console.log('⏰ Error countdown:', errorCountdown.value)
+    console.log('Error countdown:', errorCountdown.value)
 
     if (errorCountdown.value <= 0) {
       clearErrorTimers()
@@ -179,13 +178,13 @@ const displayError = (message: string) => {
 
   // Main timer to clear error after exactly 15 seconds
   errorTimer = setTimeout(() => {
-    console.log('✅ Clearing error after 15 seconds')
+    console.log('Clearing error after 15 seconds')
     clearErrorTimers()
   }, 15000)
 
   // Force Vue to update the DOM
   nextTick(() => {
-    console.log('🔄 DOM updated with error message')
+    console.log('DOM updated with error message')
   })
 }
 
@@ -209,7 +208,7 @@ const clearErrorTimers = () => {
 
 // Success message display (shorter duration)
 const displaySuccess = (message: string) => {
-  console.log('✅ Displaying success message:', message)
+  console.log('Displaying success message:', message)
 
   // Clear existing success timer
   if (successTimer) {
@@ -238,14 +237,14 @@ const handleLogin = async () => {
       return
     }
 
-    console.log('🔐 Attempting login for:', email.value)
+    console.log('Attempting login for:', email.value)
 
     const result = await login({
       email: email.value.trim().toLowerCase(),
       password: password.value,
     })
 
-    console.log('✅ Login response:', result)
+    console.log('Login response:', result)
 
     if (result.requiresVerification) {
       showVerificationRequired.value = true
@@ -270,7 +269,7 @@ const handleLogin = async () => {
       }
     }
   } catch (error) {
-    console.error('❌ Login error:', error)
+    console.error('Login error:', error)
     if (error instanceof Error) {
       if (error.message.includes('verify') || error.message.includes('verification')) {
         showVerificationRequired.value = true
@@ -298,7 +297,7 @@ const handleResendVerification = async () => {
       return
     }
 
-    console.log('📧 Resending verification to:', email.value)
+    console.log('Resending verification to:', email.value)
 
     const result = await resendVerification(email.value.trim().toLowerCase())
 
@@ -310,7 +309,7 @@ const handleResendVerification = async () => {
       startResendCooldown()
     }
   } catch (error) {
-    console.error('❌ Resend verification error:', error)
+    console.error('Resend verification error:', error)
     if (error instanceof Error) {
       if (error.message.includes('rate limit') || error.message.includes('Too many')) {
         showRateLimited.value = true
@@ -336,7 +335,7 @@ const startResendCooldown = () => {
 }
 
 onUnmounted(() => {
-  console.log('🧹 Cleaning up all timers on component unmount')
+  console.log('Cleaning up all timers on component unmount')
   clearErrorTimers()
 
   if (successTimer) {

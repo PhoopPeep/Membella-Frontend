@@ -5,10 +5,7 @@
       v-if="label"
       :for="inputId"
       class="text-sm font-medium leading-none"
-      :class="[
-        labelClass,
-        { 'text-red-700': hasError }
-      ]"
+      :class="[labelClass, { 'text-red-700': hasError }]"
     >
       {{ label }}
       <span v-if="required" class="text-red-500 ml-1">*</span>
@@ -21,7 +18,7 @@
         v-if="prefixIcon"
         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
       >
-        <DynamicIcon :icon="prefixIcon" class="w-4 h-4 text-gray-400" />
+        <FontAwesomeIcon :icon="prefixIcon" class="w-4 h-4 text-gray-400" />
       </div>
 
       <!-- Input Field -->
@@ -46,7 +43,7 @@
           getInputClasses(),
           prefixIcon ? 'pl-10' : '',
           suffixIcon ? 'pr-10' : '',
-          inputClass
+          inputClass,
         ]"
       />
 
@@ -64,11 +61,7 @@
         :required="required"
         :rows="rows"
         class="flex w-full rounded-md border bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-colors resize-vertical"
-        :class="[
-          getInputClasses(),
-          `min-h-[${rows * 1.5}rem]`,
-          inputClass
-        ]"
+        :class="[getInputClasses(), `min-h-[${rows * 1.5}rem]`, inputClass]"
       />
 
       <!-- Suffix Icon -->
@@ -76,31 +69,23 @@
         v-if="suffixIcon"
         class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
       >
-        <DynamicIcon :icon="suffixIcon" class="w-4 h-4 text-gray-400" />
+        <FontAwesomeIcon :icon="suffixIcon" class="w-4 h-4 text-gray-400" />
       </div>
 
       <!-- Loading Spinner -->
-      <div
-        v-if="loading"
-        class="absolute inset-y-0 right-0 pr-3 flex items-center"
-      >
+      <div v-if="loading" class="absolute inset-y-0 right-0 pr-3 flex items-center">
         <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
       </div>
     </div>
 
     <!-- Helper Text / Error Message -->
     <div v-if="hasError || helperText" class="flex items-start space-x-1">
-      <DynamicIcon
+      <FontAwesomeIcon
         v-if="hasError"
-        :icon="AlertCircle"
+        icon="exclamation-circle"
         class="w-3 h-3 text-red-600 mt-0.5 flex-shrink-0"
       />
-      <p
-        :class="[
-          'text-xs',
-          hasError ? 'text-red-600' : 'text-gray-500'
-        ]"
-      >
+      <p :class="['text-xs', hasError ? 'text-red-600' : 'text-gray-500']">
         {{ hasError ? errorMessage : helperText }}
       </p>
     </div>
@@ -114,8 +99,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { AlertCircle } from 'lucide-vue-next'
-import DynamicIcon from './DynamicIcon.vue'
 
 interface Props {
   // Value
