@@ -1,5 +1,6 @@
 import api from '../router/api'
 import { supabase } from '../lib/supabase'
+import type { Session } from '@supabase/supabase-js'
 
 export interface RegisterData {
   org_name: string
@@ -30,14 +31,12 @@ export interface AuthResponse {
   requiresVerification?: boolean
   rateLimited?: boolean
   emailError?: boolean
-  supabaseSession?: any
+  supabaseSession?: Session
 }
 
 export const registerUser = async (userData: RegisterData): Promise<AuthResponse> => {
   try {
     console.log('Sending registration request:', { ...userData, password: '[REDACTED]' })
-
-    // Client-side validation (existing code...)
 
     const response = await api.post('/api/auth/register', {
       org_name: userData.org_name.trim(),
@@ -50,9 +49,9 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
 
     console.log('Registration response:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Registration service error:', error)
-    if (error.message.includes('Email rate limit exceeded')) {
+    if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
       return {
         success: false,
         message:
@@ -63,7 +62,7 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
       }
     }
 
-    if (error.message.includes('already registered')) {
+    if (error instanceof Error && error.message.includes('already registered')) {
       return {
         success: false,
         message: 'This email is already registered. Please try logging in instead.',
@@ -75,10 +74,15 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
 
     return {
       success: false,
-      message: error.message || 'Registration failed. Please try again.',
+      message: error instanceof Error ? error.message : 'Registration failed. Please try again.',
       requiresVerification: false,
-      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
-      emailError: error.message.includes('email') && !error.message.includes('verify'),
+      rateLimited:
+        error instanceof Error &&
+        (error.message.includes('rate limit') || error.message.includes('Too many')),
+      emailError:
+        error instanceof Error &&
+        error.message.includes('email') &&
+        !error.message.includes('verify'),
     }
   }
 }
@@ -108,16 +112,19 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
 
     console.log('Login response:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Login service error:', error)
 
     // Return structured error response
     return {
       success: false,
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Login failed. Please try again.',
       requiresVerification:
-        error.message.includes('verify') || error.message.includes('confirmation'),
-      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
+        error instanceof Error &&
+        (error.message.includes('verify') || error.message.includes('confirmation')),
+      rateLimited:
+        error instanceof Error &&
+        (error.message.includes('rate limit') || error.message.includes('Too many')),
     }
   }
 }
@@ -134,10 +141,10 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
 
     console.log('Resend verification response:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Resend verification service error:', error)
 
-    if (error.message.includes('Email rate limit exceeded')) {
+    if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
       return {
         success: false,
         message: 'Please wait at least 60 seconds before requesting another verification email.',
@@ -147,8 +154,10 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
 
     return {
       success: false,
-      message: error.message || 'Failed to resend verification email.',
-      rateLimited: error.message.includes('rate limit') || error.message.includes('Too many'),
+      message: error instanceof Error ? error.message : 'Failed to resend verification email.',
+      rateLimited:
+        error instanceof Error &&
+        (error.message.includes('rate limit') || error.message.includes('Too many')),
     }
   }
 }
@@ -167,17 +176,17 @@ export const handleAuthCallback = async (
 
     console.log('Auth callback response:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Auth callback service error:', error)
     throw error
   }
 }
 
 // Initialize Supabase auth state listener
-export const initSupabaseAuth = (onAuthStateChange: (session: any) => void) => {
+export const initSupabaseAuth = (onAuthStateChange: (session: Session) => void) => {
   return supabase.auth.onAuthStateChange((event, session) => {
     console.log('Supabase auth state change:', event, session?.user?.id)
-    onAuthStateChange(session)
+    onAuthStateChange(session as Session)
   })
 }
 
@@ -222,5 +231,111 @@ export const getCurrentSupabaseSession = async () => {
   } catch (error) {
     console.error('Error getting current session:', error)
     return null
+  }
+}
+
+export const forgotPassword = async (email: string): Promise<AuthResponse> => {
+  try {
+    console.log('Sending forgot password request for:', email)
+
+    // Client-side validation
+    if (!email?.trim()) {
+      throw new Error('Email is required')
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      throw new Error('Please enter a valid email address')
+    }
+
+    const response = await api.post('/api/auth/forgot-password', {
+      email: email.trim().toLowerCase(),
+    })
+
+    console.log('Forgot password response:', response.data)
+    return response.data
+  } catch (error: unknown) {
+    console.error('Forgot password service error:', error)
+
+    if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
+      return {
+        success: false,
+        message: 'Too many password reset attempts. Please wait at least 60 seconds and try again.',
+        rateLimited: true,
+      }
+    }
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to send password reset email.',
+      rateLimited:
+        error instanceof Error &&
+        (error.message.includes('rate limit') || error.message.includes('Too many')),
+    }
+  }
+}
+
+export const resetPassword = async (
+  accessToken: string,
+  password: string,
+): Promise<AuthResponse> => {
+  try {
+    console.log('Sending reset password request')
+
+    // Client-side validation
+    if (!accessToken?.trim()) {
+      throw new Error('Invalid reset link')
+    }
+
+    if (!password?.trim()) {
+      throw new Error('Password is required')
+    }
+
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long')
+    }
+
+    const response = await api.post('/api/auth/reset-password', {
+      access_token: accessToken,
+      password: password,
+    })
+
+    console.log('Reset password response:', response.data)
+    return response.data
+  } catch (error: unknown) {
+    console.error('Reset password service error:', error)
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reset password.',
+      rateLimited:
+        error instanceof Error &&
+        (error.message.includes('rate limit') || error.message.includes('Too many')),
+    }
+  }
+}
+
+export const verifyResetToken = async (accessToken: string): Promise<AuthResponse> => {
+  try {
+    console.log('Verifying reset token')
+
+    if (!accessToken?.trim()) {
+      throw new Error('Invalid reset link')
+    }
+
+    const response = await api.post('/api/auth/verify-reset-token', {
+      access_token: accessToken,
+    })
+
+    console.log('Verify reset token response:', response.data)
+    return response.data
+  } catch (error: unknown) {
+    console.error('Verify reset token service error:', error)
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Invalid or expired reset link.',
+    }
   }
 }

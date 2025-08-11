@@ -1,4 +1,3 @@
-<!-- ErrorToast.vue -->
 <template>
   <!-- Toast Container -->
   <Teleport to="body">

@@ -1,3 +1,5 @@
+import type { Session } from '@supabase/supabase-js'
+
 export interface User {
   owner_id: string
   org_name: string
@@ -5,8 +7,8 @@ export interface User {
   description?: string
   contact_info?: string
   logo?: string
-  create_at: string
-  update_at: string
+  create_at?: string
+  update_at?: string
 }
 
 export interface LoginData {
@@ -30,5 +32,5 @@ export interface AuthResponse {
   user?: User
   requiresVerification?: boolean
   rateLimited?: boolean
-  supabaseSession?: any
+  supabaseSession?: Session
 }

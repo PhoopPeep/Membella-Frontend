@@ -8,7 +8,7 @@
         <p class="text-center text-gray-600">Enter your credentials to access your account</p>
       </div>
       <div class="p-6 pt-0">
-        <!-- Error Message - Will stay for exactly 15 seconds -->
+        <!-- Error Message -->
         <div v-if="showErrorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <p class="text-sm text-red-600">{{ currentErrorMessage }}</p>
           <div class="mt-2">
@@ -45,25 +45,29 @@
           v-if="showVerificationRequired"
           class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
         >
-          <div class="flex items-center">
-            <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-blue-600 mr-2" />
-            <div>
+          <div class="flex items-start">
+            <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+            <div class="flex-1">
               <h3 class="text-sm font-medium text-blue-800">Email Verification Required</h3>
               <p class="text-sm text-blue-600 mt-1">
                 Please verify your email address before signing in. Check your inbox for a
                 verification link.
               </p>
-              <div class="mt-2 text-xs text-blue-600">
-                <p>• Check your spam/junk folder if needed</p>
-                <p>• Look for email from <code>noreply@mail.supabase.io</code></p>
+              <div class="mt-2 text-xs text-blue-600 space-y-1">
+                <p>
+                  • Check your <strong>spam/junk folder</strong> if you don't see it in your inbox
+                </p>
+                <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
+                <p>• The email may take a few minutes to arrive</p>
+                <p>• Click the verification link to activate your account</p>
               </div>
             </div>
           </div>
-          <div class="mt-3">
+          <div class="mt-3 flex flex-col sm:flex-row gap-2">
             <button
               @click="handleResendVerification"
               :disabled="isResending || resendCooldown > 0"
-              class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50"
+              class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50 disabled:no-underline"
             >
               {{
                 isResending
@@ -76,7 +80,15 @@
           </div>
         </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-4">
+        <!-- Login Form -->
+        <form
+          ref="loginFormRef"
+          @submit.prevent="handleLogin"
+          @keydown.enter.prevent="handleLogin"
+          method="post"
+          action="#"
+          class="space-y-4"
+        >
           <div class="space-y-2">
             <label for="email" class="text-sm font-medium leading-none">Email</label>
             <input
@@ -86,6 +98,7 @@
               v-model="email"
               required
               :disabled="isLoading"
+              autocomplete="email"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -98,13 +111,29 @@
               v-model="password"
               required
               :disabled="isLoading"
+              autocomplete="current-password"
               class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
+
+          <!-- Forgot Password Link -->
+          <div class="flex items-center justify-between">
+            <div class="text-sm">
+              <router-link
+                to="/forgot-password"
+                class="text-blue-600 hover:text-blue-700 underline"
+              >
+                Forgot your password?
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Login Button -->
           <button
-            type="submit"
-            class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            type="button"
+            @click.prevent="handleLogin"
             :disabled="isLoading"
+            class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {{ isLoading ? 'Signing In...' : 'Sign In' }}
           </button>
@@ -130,6 +159,9 @@ import { useAuthStore } from '../../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// Form ref
+const loginFormRef = ref<HTMLFormElement>()
+
 // Form state
 const email = ref('')
 const password = ref('')
@@ -153,6 +185,86 @@ let errorTimer: NodeJS.Timeout | null = null
 let errorCountdownTimer: NodeJS.Timeout | null = null
 let successTimer: NodeJS.Timeout | null = null
 let resendTimer: NodeJS.Timeout | null = null
+
+// Login handler
+const handleLogin = async (event?: Event) => {
+  // Prevent default form submission
+  if (event) {
+    event.preventDefault()
+    event.stopPropagation()
+    console.log('Event prevented:', event.type)
+  }
+
+  // Prevent duplicate requests
+  if (isLoading.value) {
+    console.log('Already loading, ignoring duplicate request')
+    return
+  }
+
+  try {
+    console.log('Starting login process...')
+    isLoading.value = true
+
+    // Clear any existing messages first
+    clearErrorTimers()
+    showSuccessMessage.value = false
+
+    if (!email.value.trim() || !password.value.trim()) {
+      displayError('Please enter both email and password')
+      return
+    }
+
+    console.log('Attempting login for:', email.value)
+
+    const result = await login({
+      email: email.value.trim().toLowerCase(),
+      password: password.value,
+    })
+
+    console.log('Login response:', result)
+
+    if (result.requiresVerification) {
+      showVerificationRequired.value = true
+      displayError(result.message)
+      startResendCooldown()
+    } else if (result.rateLimited) {
+      showRateLimited.value = true
+      displayError(result.message)
+    } else if (result.success) {
+      displaySuccess(result.message || 'Login successful!')
+
+      // Store auth data if login includes token and user
+      if (result.token && result.user) {
+        authStore.setAuth(result.token, result.user)
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          console.log('Redirecting to dashboard...')
+          router.push('/dashboard')
+        }, 1000)
+      } else {
+        displayError('Login response missing authentication data')
+      }
+    } else {
+      displayError(result.message)
+    }
+  } catch (error) {
+    console.error('Login error:', error)
+    if (error instanceof Error) {
+      if (error.message.includes('verify') || error.message.includes('verification')) {
+        showVerificationRequired.value = true
+      } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+        showRateLimited.value = true
+      }
+      displayError(error.message)
+    } else {
+      displayError('An unknown error occurred during login.')
+    }
+  } finally {
+    isLoading.value = false
+    console.log('Login process completed')
+  }
+}
 
 // Robust error display function that GUARANTEES 15 seconds
 const displayError = (message: string) => {
@@ -208,7 +320,7 @@ const clearErrorTimers = () => {
 
 // Success message display (shorter duration)
 const displaySuccess = (message: string) => {
-  console.log('Displaying success message:', message)
+    console.log('Displaying success message:', message)
 
   // Clear existing success timer
   if (successTimer) {
@@ -222,67 +334,6 @@ const displaySuccess = (message: string) => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
   }, 5000) // 5 seconds for success messages
-}
-
-const handleLogin = async () => {
-  try {
-    isLoading.value = true
-
-    // Clear any existing messages first
-    clearErrorTimers()
-    showSuccessMessage.value = false
-
-    if (!email.value.trim() || !password.value.trim()) {
-      displayError('Please enter both email and password')
-      return
-    }
-
-    console.log('Attempting login for:', email.value)
-
-    const result = await login({
-      email: email.value.trim().toLowerCase(),
-      password: password.value,
-    })
-
-    console.log('Login response:', result)
-
-    if (result.requiresVerification) {
-      showVerificationRequired.value = true
-      displayError(result.message)
-      startResendCooldown()
-    } else if (result.rateLimited) {
-      showRateLimited.value = true
-      displayError(result.message)
-    } else {
-      displaySuccess(result.message || 'Login successful!')
-
-      // Store auth data if login includes token and user
-      if (result.token && result.user) {
-        authStore.setAuth(result.token, result.user)
-
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 1000)
-      } else {
-        displayError('Login response missing authentication data')
-      }
-    }
-  } catch (error) {
-    console.error('Login error:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('verify') || error.message.includes('verification')) {
-        showVerificationRequired.value = true
-      } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        showRateLimited.value = true
-      }
-      displayError(error.message)
-    } else {
-      displayError('An unknown error occurred during login.')
-    }
-  } finally {
-    isLoading.value = false
-  }
 }
 
 const handleResendVerification = async () => {

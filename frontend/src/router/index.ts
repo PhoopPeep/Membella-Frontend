@@ -13,6 +13,8 @@ import CreatePlan from '../views/plans/CreatePlan.vue'
 import PlanDetails from '../views/plans/PlanDetails.vue'
 import EditPlan from '../views/plans/EditPlan.vue'
 import Profile from '../views/dashboard/Profile.vue'
+import ForgotPassword from '@/components/auth/ForgotPassword.vue'
+import ResetPassword from '@/components/auth/ResetPassword.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +36,24 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView,
+      meta: {
+        requiresAuth: false,
+        redirectIfAuth: true, // Redirect to dashboard if already authenticated
+      },
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPassword,
+      meta: {
+        requiresAuth: false,
+        redirectIfAuth: true, // Redirect to dashboard if already authenticated
+      },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: ResetPassword,
       meta: {
         requiresAuth: false,
         redirectIfAuth: true, // Redirect to dashboard if already authenticated
