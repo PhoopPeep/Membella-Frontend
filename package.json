@@ -1,0 +1,20 @@
+{
+  "name": "membella-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../owner-dashboard && npm install && cd ../member-portal && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:owner\" \"npm run dev:member\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:owner": "cd owner-dashboard && npm run dev",
+    "dev:member": "cd member-portal && npm run dev",
+    "build:all": "npm run build:backend && npm run build:owner && npm run build:member"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
