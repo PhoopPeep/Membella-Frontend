@@ -1,4 +1,3 @@
-// member-portal/src/main.ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
@@ -29,7 +28,7 @@ import {
   faPlus,
   faMinus,
   faHeart,
-  faStar
+  faStar,
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
@@ -54,7 +53,7 @@ library.add(
   faPlus,
   faMinus,
   faHeart,
-  faStar
+  faStar,
 )
 
 const app = createApp(App)

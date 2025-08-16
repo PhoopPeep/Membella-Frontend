@@ -49,21 +49,30 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500">Start Date</p>
-                <p class="text-lg font-medium text-gray-900">{{ formatDate(subscription.startDate) }}</p>
+                <p class="text-lg font-medium text-gray-900">
+                  {{ formatDate(subscription.startDate) }}
+                </p>
               </div>
               <div>
                 <p class="text-sm text-gray-500">End Date</p>
-                <p class="text-lg font-medium text-gray-900">{{ formatDate(subscription.endDate) }}</p>
+                <p class="text-lg font-medium text-gray-900">
+                  {{ formatDate(subscription.endDate) }}
+                </p>
               </div>
             </div>
 
             <!-- Days Remaining -->
-            <div v-if="subscription.status === 'active'" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div
+              v-if="subscription.status === 'active'"
+              class="bg-blue-50 border border-blue-200 rounded-lg p-4"
+            >
               <div class="flex items-center">
                 <FontAwesomeIcon icon="clock" class="w-5 h-5 text-blue-600 mr-2" />
                 <div>
                   <p class="text-sm font-medium text-blue-800">Days Remaining</p>
-                  <p class="text-lg font-bold text-blue-900">{{ subscription.daysRemaining }} days</p>
+                  <p class="text-lg font-bold text-blue-900">
+                    {{ subscription.daysRemaining }} days
+                  </p>
                 </div>
               </div>
             </div>
@@ -92,7 +101,9 @@
           <div v-else class="text-center py-8">
             <FontAwesomeIcon icon="credit-card" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Subscription</h3>
-            <p class="text-gray-500 mb-6">You don't have an active subscription. Browse our plans to get started.</p>
+            <p class="text-gray-500 mb-6">
+              You don't have an active subscription. Browse our plans to get started.
+            </p>
             <button
               @click="goToBrowsePlans"
               class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
@@ -190,7 +201,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 

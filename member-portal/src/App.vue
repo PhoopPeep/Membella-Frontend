@@ -2,7 +2,9 @@
   <div id="app" class="min-h-screen bg-gray-50">
     <div v-if="isInitializing" class="min-h-screen flex items-center justify-center">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
+        ></div>
         <p class="text-gray-600">Loading...</p>
       </div>
     </div>
@@ -36,7 +38,7 @@ onMounted(async () => {
   try {
     console.log('Member Portal: Initializing...')
     authStore.initAuth()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
   } catch (error) {
     console.error('Member Portal: Initialization error:', error)
   } finally {

@@ -1,4 +1,3 @@
-<!-- member-portal/src/views/BrowsePlans.vue -->
 <template>
   <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Header -->
@@ -55,12 +54,11 @@
         <div class="p-6">
           <h4 class="font-medium text-gray-900 mb-4">What's included:</h4>
           <ul class="space-y-3">
-            <li
-              v-for="feature in plan.features"
-              :key="feature.id"
-              class="flex items-start"
-            >
-              <FontAwesomeIcon icon="check" class="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+            <li v-for="feature in plan.features" :key="feature.id" class="flex items-start">
+              <FontAwesomeIcon
+                icon="check"
+                class="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0"
+              />
               <div>
                 <p class="text-sm font-medium text-gray-900">{{ feature.name }}</p>
                 <p class="text-xs text-gray-500">{{ feature.description }}</p>
@@ -103,8 +101,8 @@
           <FontAwesomeIcon icon="check-circle" class="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h3 class="text-lg font-medium text-gray-900 mb-2">Subscription Successful!</h3>
           <p class="text-gray-600 mb-6">
-            You have successfully subscribed to {{ selectedPlan?.name }}.
-            You can view your subscription details in your account.
+            You have successfully subscribed to {{ selectedPlan?.name }}. You can view your
+            subscription details in your account.
           </p>
           <div class="flex space-x-3">
             <button
@@ -162,7 +160,7 @@ const loadPlans = async () => {
     const data = await memberApi.getAvailablePlans()
     plans.value = data.map((plan, index) => ({
       ...plan,
-      popular: index === 1 // Mark second plan as popular for demo
+      popular: index === 1, // Mark second plan as popular for demo
     }))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load plans'

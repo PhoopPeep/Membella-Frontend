@@ -62,7 +62,7 @@
                 <FontAwesomeIcon icon="credit-card" class="w-4 h-4 mr-2" />
                 My Subscription
               </router-link>
-              <hr class="my-1">
+              <hr class="my-1" />
               <button
                 @click="handleLogout"
                 class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -118,7 +118,7 @@ const dropdownRef = ref<HTMLElement>()
 const navigationItems = [
   { name: 'Browse Plans', href: '/browse', icon: 'search' },
   { name: 'My Subscription', href: '/subscription', icon: 'credit-card' },
-  { name: 'Profile', href: '/profile', icon: 'user' }
+  { name: 'Profile', href: '/profile', icon: 'user' },
 ]
 
 const toggleDropdown = () => {

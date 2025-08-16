@@ -19,7 +19,7 @@ api.interceptors.request.use(
     }
     return config
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 )
 
 // Response interceptor
@@ -32,7 +32,7 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export const memberApi = {
@@ -59,21 +59,16 @@ export const memberApi = {
     const response = await api.post('/api/auth/login', {
       email,
       password,
-      role: 'member'
+      role: 'member',
     })
     return response.data
   },
 
-  async register(userData: {
-    email: string
-    password: string
-    fullName: string
-    phone?: string
-  }) {
+  async register(userData: { email: string; password: string; fullName: string; phone?: string }) {
     const response = await api.post('/api/auth/register', {
       ...userData,
-      role: 'member'
+      role: 'member',
     })
     return response.data
-  }
+  },
 }

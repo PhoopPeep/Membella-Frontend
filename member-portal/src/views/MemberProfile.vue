@@ -1,4 +1,3 @@
-// member-portal/src/views/MemberProfile.vue
 <template>
   <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Header -->
@@ -18,12 +17,11 @@
           <div class="flex-1">
             <h2 class="text-xl font-semibold text-gray-900">{{ authStore.user?.fullName }}</h2>
             <p class="text-gray-600">{{ authStore.user?.email }}</p>
-            <p class="text-sm text-gray-500">Member since {{ formatDate(authStore.user?.createdAt) }}</p>
+            <p class="text-sm text-gray-500">
+              Member since {{ formatDate(authStore.user?.createdAt) }}
+            </p>
           </div>
-          <button
-            @click="toggleEdit"
-            class="member-button"
-          >
+          <button @click="toggleEdit" class="member-button">
             <FontAwesomeIcon :icon="isEditing ? 'save' : 'edit'" class="w-4 h-4 mr-2" />
             {{ isEditing ? 'Save' : 'Edit' }}
           </button>
@@ -97,11 +95,7 @@
 
           <!-- Action Buttons (only shown when editing) -->
           <div v-if="isEditing" class="flex space-x-3 pt-6 border-t border-gray-200">
-            <button
-              type="submit"
-              :disabled="isLoading"
-              class="member-button"
-            >
+            <button type="submit" :disabled="isLoading" class="member-button">
               <div v-if="isLoading" class="flex items-center">
                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Saving...
@@ -177,13 +171,13 @@ const successMessage = ref('')
 const profileForm = reactive({
   fullName: '',
   email: '',
-  phone: ''
+  phone: '',
 })
 
 const originalForm = reactive({
   fullName: '',
   email: '',
-  phone: ''
+  phone: '',
 })
 
 const initializeForm = () => {
@@ -229,7 +223,7 @@ const handleSave = async () => {
     console.log('Updating profile:', profileForm)
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Update auth store (mockup)
     const updatedUser = {
@@ -247,7 +241,6 @@ const handleSave = async () => {
     originalForm.fullName = profileForm.fullName
     originalForm.email = profileForm.email
     originalForm.phone = profileForm.phone
-
   } catch (error: unknown) {
     if (error instanceof Error) {
       errorMessage.value = error.message
@@ -274,7 +267,7 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 

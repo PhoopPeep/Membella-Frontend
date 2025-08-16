@@ -1,4 +1,3 @@
-// member-portal/src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -8,6 +7,7 @@ const MySubscription = () => import('@/views/MySubscription.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
 const MemberLogin = () => import('@/views/auth/MemberLogin.vue')
 const MemberRegister = () => import('@/views/auth/MemberRegister.vue')
+const MemberAuthCallback = () => import('@/components/auth/MemberAuthCallback.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +32,14 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         redirectIfAuth: true,
+      },
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: MemberAuthCallback,
+      meta: {
+        requiresAuth: false,
       },
     },
     {
