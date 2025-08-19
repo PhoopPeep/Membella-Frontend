@@ -8,6 +8,10 @@ import './assets/base.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
+  faHome,
+  faBuilding,
+  faEye,
+  faInbox,
   faUser,
   faSearch,
   faCreditCard,
@@ -33,6 +37,10 @@ import {
 
 // Add icons to library
 library.add(
+  faHome,
+  faBuilding,
+  faEye,
+  faInbox,
   faUser,
   faSearch,
   faCreditCard,

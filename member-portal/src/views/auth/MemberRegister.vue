@@ -182,93 +182,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-// Update member-portal/src/api/member.ts
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('member_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error),
-)
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('member_token')
-      localStorage.removeItem('member_user')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  },
-)
-
-export const memberApi = {
-  // Member authentication
-  async register(userData: { fullName: string; email: string; password: string; phone?: string }) {
-    const response = await api.post('/api/member/auth/register', userData)
-    return response.data
-  },
-
-  async login(email: string, password: string) {
-    const response = await api.post('/api/member/auth/login', {
-      email,
-      password,
-    })
-    return response.data
-  },
-
-  async resendVerification(email: string) {
-    const response = await api.post('/api/member/auth/resend-verification', {
-      email,
-    })
-    return response.data
-  },
-
-  async handleAuthCallback(accessToken: string, refreshToken: string) {
-    const response = await api.post('/api/member/auth/callback', {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      type: 'signup',
-    })
-    return response.data
-  },
-
-  // Get available plans (public)
-  async getAvailablePlans() {
-    const response = await api.get('/api/member/plans/available')
-    return response.data
-  },
-
-  // Subscribe to a plan (requires auth)
-  async subscribe(planId: string) {
-    const response = await api.post('/api/member/subscribe', { planId })
-    return response.data
-  },
-
-  // Get member's subscription
-  async getSubscription() {
-    const response = await api.get('/api/member/subscription')
-    return response.data
-  },
-}
+import { memberApi } from '../../api/member'
 
 const router = useRouter()
 
@@ -292,12 +206,12 @@ const showSuccessMessage = ref(false)
 const currentErrorMessage = ref('')
 const currentSuccessMessage = ref('')
 
-// Timer state
+// Timer state - using number instead of NodeJS.Timeout for browser compatibility
 const errorCountdown = ref(15)
-let errorTimer: NodeJS.Timeout | null = null
-let errorCountdownTimer: NodeJS.Timeout | null = null
-let successTimer: NodeJS.Timeout | null = null
-let resendTimer: NodeJS.Timeout | null = null
+let errorTimer: number | null = null
+let errorCountdownTimer: number | null = null
+let successTimer: number | null = null
+let resendTimer: number | null = null
 
 // Error display function (15 seconds)
 const displayError = (message: string) => {
@@ -312,7 +226,7 @@ const displayError = (message: string) => {
   errorCountdown.value = 15
 
   // Start countdown timer (updates every second)
-  errorCountdownTimer = setInterval(() => {
+  errorCountdownTimer = window.setInterval(() => {
     errorCountdown.value--
     console.log('Error countdown:', errorCountdown.value)
 
@@ -322,7 +236,7 @@ const displayError = (message: string) => {
   }, 1000)
 
   // Main timer to clear error after exactly 15 seconds
-  errorTimer = setTimeout(() => {
+  errorTimer = window.setTimeout(() => {
     console.log('Clearing error after 15 seconds')
     clearErrorTimers()
   }, 15000)
@@ -336,11 +250,11 @@ const displayError = (message: string) => {
 // Clear all error timers and reset error state
 const clearErrorTimers = () => {
   if (errorTimer) {
-    clearTimeout(errorTimer)
+    window.clearTimeout(errorTimer)
     errorTimer = null
   }
   if (errorCountdownTimer) {
-    clearInterval(errorCountdownTimer)
+    window.clearInterval(errorCountdownTimer)
     errorCountdownTimer = null
   }
 
@@ -356,13 +270,13 @@ const displaySuccess = (message: string) => {
 
   // Clear existing success timer
   if (successTimer) {
-    clearTimeout(successTimer)
+    window.clearTimeout(successTimer)
   }
 
   currentSuccessMessage.value = message
   showSuccessMessage.value = true
 
-  successTimer = setTimeout(() => {
+  successTimer = window.setTimeout(() => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
   }, 5000) // 5 seconds for success messages
@@ -482,11 +396,13 @@ const handleResendVerification = async () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 60 // 60 seconds cooldown
-  resendTimer = setInterval(() => {
+  resendTimer = window.setInterval(() => {
     resendCooldown.value--
     if (resendCooldown.value <= 0) {
-      clearInterval(resendTimer!)
-      resendTimer = null
+      if (resendTimer) {
+        window.clearInterval(resendTimer)
+        resendTimer = null
+      }
     }
   }, 1000)
 }
@@ -499,7 +415,7 @@ const tryDifferentEmail = () => {
   email.value = ''
   userEmail.value = ''
   if (resendTimer) {
-    clearInterval(resendTimer)
+    window.clearInterval(resendTimer)
     resendTimer = null
     resendCooldown.value = 0
   }
@@ -510,10 +426,10 @@ onUnmounted(() => {
   clearErrorTimers()
 
   if (successTimer) {
-    clearTimeout(successTimer)
+    window.clearTimeout(successTimer)
   }
   if (resendTimer) {
-    clearInterval(resendTimer)
+    window.clearInterval(resendTimer)
   }
 })
 </script>

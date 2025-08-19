@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-// Lazy load components
+const MemberDashboard = () => import('@/views/MemberDashboard.vue')
 const BrowsePlans = () => import('@/views/BrowsePlans.vue')
 const MySubscription = () => import('@/views/MySubscription.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
@@ -14,7 +14,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/browse',
+      redirect: '/dashboard',
     },
     {
       path: '/login',

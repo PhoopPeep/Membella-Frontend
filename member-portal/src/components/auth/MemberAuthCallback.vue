@@ -70,8 +70,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../../stores/auth'
-import { memberApi } from '../../../api/member'
+import { useAuthStore } from '../../stores/auth'
+import { memberApi } from '../../api/member'
 
 const router = useRouter()
 const route = useRoute()
@@ -87,9 +87,9 @@ const showErrorMessage = ref(false)
 const currentErrorMessage = ref('')
 const errorCountdown = ref(15)
 
-// Timer management
-let errorTimer: NodeJS.Timeout | null = null
-let errorCountdownTimer: NodeJS.Timeout | null = null
+// Timer management - using number instead of NodeJS.Timeout for browser compatibility
+let errorTimer: number | null = null
+let errorCountdownTimer: number | null = null
 
 // Robust error display function that GUARANTEES 15 seconds
 const displayError = (message: string) => {
@@ -105,7 +105,7 @@ const displayError = (message: string) => {
   errorCountdown.value = 15
 
   // Start countdown timer (updates every second)
-  errorCountdownTimer = setInterval(() => {
+  errorCountdownTimer = window.setInterval(() => {
     errorCountdown.value--
     console.log('Member Auth Error countdown:', errorCountdown.value)
 
@@ -115,7 +115,7 @@ const displayError = (message: string) => {
   }, 1000)
 
   // Main timer to clear error after exactly 15 seconds
-  errorTimer = setTimeout(() => {
+  errorTimer = window.setTimeout(() => {
     console.log('Clearing member auth error after 15 seconds')
     clearErrorTimers()
   }, 15000)
@@ -129,11 +129,11 @@ const displayError = (message: string) => {
 // Clear all error timers and reset error state
 const clearErrorTimers = () => {
   if (errorTimer) {
-    clearTimeout(errorTimer)
+    window.clearTimeout(errorTimer)
     errorTimer = null
   }
   if (errorCountdownTimer) {
-    clearInterval(errorCountdownTimer)
+    window.clearInterval(errorCountdownTimer)
     errorCountdownTimer = null
   }
 

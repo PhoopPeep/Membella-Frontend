@@ -166,12 +166,12 @@ const showVerificationRequired = ref(false)
 const currentErrorMessage = ref('')
 const currentSuccessMessage = ref('')
 
-// Timer state
+// Timer state - using number instead of NodeJS.Timeout for browser compatibility
 const errorCountdown = ref(15)
-let errorTimer: NodeJS.Timeout | null = null
-let errorCountdownTimer: NodeJS.Timeout | null = null
-let successTimer: NodeJS.Timeout | null = null
-let resendTimer: NodeJS.Timeout | null = null
+let errorTimer: number | null = null
+let errorCountdownTimer: number | null = null
+let successTimer: number | null = null
+let resendTimer: number | null = null
 
 // Login handler
 const handleLogin = async () => {
@@ -245,14 +245,14 @@ const displayError = (message: string) => {
   showErrorMessage.value = true
   errorCountdown.value = 15
 
-  errorCountdownTimer = setInterval(() => {
+  errorCountdownTimer = window.setInterval(() => {
     errorCountdown.value--
     if (errorCountdown.value <= 0) {
       clearErrorTimers()
     }
   }, 1000)
 
-  errorTimer = setTimeout(() => {
+  errorTimer = window.setTimeout(() => {
     clearErrorTimers()
   }, 15000)
 
@@ -264,11 +264,11 @@ const displayError = (message: string) => {
 // Clear all error timers and reset error state
 const clearErrorTimers = () => {
   if (errorTimer) {
-    clearTimeout(errorTimer)
+    window.clearTimeout(errorTimer)
     errorTimer = null
   }
   if (errorCountdownTimer) {
-    clearInterval(errorCountdownTimer)
+    window.clearInterval(errorCountdownTimer)
     errorCountdownTimer = null
   }
 
@@ -282,13 +282,13 @@ const clearErrorTimers = () => {
 // Success message display
 const displaySuccess = (message: string) => {
   if (successTimer) {
-    clearTimeout(successTimer)
+    window.clearTimeout(successTimer)
   }
 
   currentSuccessMessage.value = message
   showSuccessMessage.value = true
 
-  successTimer = setTimeout(() => {
+  successTimer = window.setTimeout(() => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
   }, 5000)
@@ -332,11 +332,13 @@ const handleResendVerification = async () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 60
-  resendTimer = setInterval(() => {
+  resendTimer = window.setInterval(() => {
     resendCooldown.value--
     if (resendCooldown.value <= 0) {
-      clearInterval(resendTimer!)
-      resendTimer = null
+      if (resendTimer) {
+        window.clearInterval(resendTimer)
+        resendTimer = null
+      }
     }
   }, 1000)
 }
@@ -344,10 +346,10 @@ const startResendCooldown = () => {
 onUnmounted(() => {
   clearErrorTimers()
   if (successTimer) {
-    clearTimeout(successTimer)
+    window.clearTimeout(successTimer)
   }
   if (resendTimer) {
-    clearInterval(resendTimer)
+    window.clearInterval(resendTimer)
   }
 })
 </script>
