@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-const MemberDashboard = () => import('@/views/MemberDashboard.vue')
+const MemberHomepage = () => import('@/views/MemberHomepage.vue')
 const BrowsePlans = () => import('@/views/BrowsePlans.vue')
 const MySubscription = () => import('@/views/MySubscription.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
@@ -14,7 +14,19 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard',
+      redirect: '/homepage',
+    },
+    {
+      path: '/homepage',
+      name: 'homepage',
+      component: MemberHomepage,
+      meta: {
+        requiresAuth: false, // Allow guests to view homepage
+      },
+    },
+    {
+      path: '/dashboard', // Keep old route for backward compatibility
+      redirect: '/homepage',
     },
     {
       path: '/login',
@@ -69,7 +81,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      redirect: '/browse',
+      redirect: '/homepage',
     },
   ],
 })
@@ -90,7 +102,7 @@ router.beforeEach((to, from, next) => {
     next('/login')
   } else if (redirectIfAuth && isAuthenticated) {
     // User is authenticated but trying to access login/register
-    next('/browse')
+    next('/homepage')
   } else {
     // Allow navigation
     next()

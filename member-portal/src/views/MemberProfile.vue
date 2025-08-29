@@ -118,7 +118,7 @@
       </div>
     </div>
 
-    <!-- Additional Settings -->
+    <!-- Account Settings -->
     <div class="mt-8 bg-white rounded-lg shadow border border-gray-200">
       <div class="p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Settings</h3>
@@ -138,6 +138,21 @@
             </button>
           </div>
 
+          <!-- Logout -->
+          <div class="flex items-center justify-between py-3 border-b border-gray-200">
+            <div>
+              <h4 class="text-sm font-medium text-gray-900">Sign Out</h4>
+              <p class="text-sm text-gray-500">Sign out from your account</p>
+            </div>
+            <button
+              @click="handleLogout"
+              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+            >
+              <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
+              Logout
+            </button>
+          </div>
+
           <!-- Delete Account -->
           <div class="flex items-center justify-between py-3">
             <div>
@@ -154,19 +169,51 @@
         </div>
       </div>
     </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div
+      v-if="showLogoutModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+    >
+      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+        <div class="text-center">
+          <FontAwesomeIcon icon="sign-out-alt" class="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Logout</h3>
+          <p class="text-gray-600 mb-6">Are you sure you want to sign out from your account?</p>
+          <div class="flex space-x-3">
+            <button
+              @click="cancelLogout"
+              class="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmLogout"
+              class="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+            >
+              <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const isEditing = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const showLogoutModal = ref(false)
 
 const profileForm = reactive({
   fullName: '',
@@ -274,6 +321,24 @@ const formatDate = (dateString?: string) => {
 const changePassword = () => {
   // TODO: Implement change password
   alert('Change password functionality would be implemented here')
+}
+
+const handleLogout = () => {
+  showLogoutModal.value = true
+}
+
+const cancelLogout = () => {
+  showLogoutModal.value = false
+}
+
+const confirmLogout = async () => {
+  try {
+    authStore.clearAuth()
+    showLogoutModal.value = false
+    await router.push('/homepage')
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
 }
 
 const deleteAccount = () => {
