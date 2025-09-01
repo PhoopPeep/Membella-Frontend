@@ -91,13 +91,34 @@
         <div v-if="selectedMethod === 'card'" class="mb-6">
           <h4 class="text-md font-semibold text-gray-900 mb-4">Card Information</h4>
 
-          <!-- Card Form -->
-          <div class="space-y-4">
+          <!-- Card Form using traditional approach -->
+          <form @submit.prevent="processCardPayment" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Cardholder Name
+              </label>
+              <input
+                v-model="cardForm.name"
+                type="text"
+                class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter cardholder name"
+                required
+              />
+            </div>
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Card Number
               </label>
-              <div id="card-number" class="border border-gray-300 rounded-md p-3 min-h-[48px]"></div>
+              <input
+                v-model="cardForm.number"
+                type="text"
+                maxlength="19"
+                class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="1234 5678 9012 3456"
+                @input="formatCardNumber"
+                required
+              />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -105,28 +126,31 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Expiry Date
                 </label>
-                <div id="expiry-date" class="border border-gray-300 rounded-md p-3 min-h-[48px]"></div>
+                <input
+                  v-model="cardForm.expiry"
+                  type="text"
+                  maxlength="5"
+                  class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="MM/YY"
+                  @input="formatExpiry"
+                  required
+                />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Security Code
                 </label>
-                <div id="security-code" class="border border-gray-300 rounded-md p-3 min-h-[48px]"></div>
+                <input
+                  v-model="cardForm.security_code"
+                  type="text"
+                  maxlength="4"
+                  class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="123"
+                  required
+                />
               </div>
             </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Cardholder Name
-              </label>
-              <input
-                v-model="cardholderName"
-                type="text"
-                class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter cardholder name"
-              />
-            </div>
-          </div>
+          </form>
         </div>
 
         <!-- PromptPay QR Code -->
@@ -173,7 +197,7 @@
           </button>
           <button
             @click="processPayment"
-            :disabled="!selectedMethod || isProcessing || (selectedMethod === 'card' && !cardholderName)"
+            :disabled="!selectedMethod || isProcessing || (selectedMethod === 'card' && !isCardFormValid)"
             class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div v-if="isProcessing" class="flex items-center justify-center">
@@ -191,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { paymentApi, type PaymentData } from '../../api/payment'
 
 interface Plan {
@@ -208,6 +232,29 @@ interface Plan {
   }>
 }
 
+// Omise type definitions
+interface OmiseInstance {
+  setPublicKey: (key: string) => void
+  createToken: (type: string, data: CardData, callback: (statusCode: number, response: TokenResponse) => void) => void
+}
+
+interface CardData {
+  name: string
+  number: string
+  expiration_month: number
+  expiration_year: number
+  security_code: string
+}
+
+interface TokenResponse {
+  object: string
+  id?: string
+  message?: string
+  card?: {
+    security_code_check: boolean
+  }
+}
+
 const props = defineProps<{
   plan: Plan
 }>()
@@ -219,16 +266,30 @@ const emit = defineEmits<{
 
 // State
 const selectedMethod = ref<'card' | 'promptpay' | null>(null)
-const cardholderName = ref('')
 const isProcessing = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const qrCodeUrl = ref('')
 const isPollingPayment = ref(false)
 
-// Omise variables
-let omise: any = null
-let card: any = null
+// Card form data
+const cardForm = ref({
+  name: '',
+  number: '',
+  expiry: '',
+  security_code: ''
+})
+
+// Omise instance
+let omise: OmiseInstance | null = null
+
+// Computed for card form validation
+const isCardFormValid = computed(() => {
+  return cardForm.value.name.trim() !== '' &&
+         cardForm.value.number.replace(/\s/g, '').length >= 13 &&
+         cardForm.value.expiry.length === 5 &&
+         cardForm.value.security_code.length >= 3
+})
 
 // Initialize Omise
 const initializeOmise = async () => {
@@ -242,16 +303,16 @@ const initializeOmise = async () => {
     const publicKey = await paymentApi.getOmisePublicKey()
     console.log('Got Omise public key:', publicKey ? 'Yes' : 'No')
 
-    // Initialize Omise with public key
-    omise = (window as any).Omise
+    // Set public key using the traditional approach
+    omise = (window as unknown as { Omise: OmiseInstance }).Omise
     if (!omise) {
       throw new Error('Omise script not loaded properly')
     }
 
-    console.log('Setting Omise public key...')
+    // Use setPublicKey method as per documentation
     omise.setPublicKey(publicKey)
 
-    console.log('Omise initialized successfully with key:', publicKey.substring(0, 20) + '...')
+    console.log('Omise initialized successfully')
   } catch (error) {
     console.error('Failed to initialize Omise:', error)
     errorMessage.value = error instanceof Error ? error.message : 'Failed to initialize payment system'
@@ -262,7 +323,7 @@ const initializeOmise = async () => {
 const loadOmiseScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if already loaded
-    if ((window as any).Omise) {
+    if ((window as unknown as { Omise?: OmiseInstance }).Omise) {
       console.log('Omise script already loaded')
       resolve()
       return
@@ -283,60 +344,34 @@ const loadOmiseScript = (): Promise<void> => {
   })
 }
 
-// Initialize card form - FIXED VERSION
-const initializeCardForm = async () => {
-  if (!omise) {
-    console.error('Omise not initialized')
-    return
-  }
-
-  await nextTick()
-
-  try {
-    console.log('Initializing card form...')
-
-    // Create individual field elements
-    const cardNumberElement = document.getElementById('card-number')
-    const expiryDateElement = document.getElementById('expiry-date')
-    const securityCodeElement = document.getElementById('security-code')
-
-    if (!cardNumberElement || !expiryDateElement || !securityCodeElement) {
-      throw new Error('Card form elements not found')
-    }
-
-    // Initialize individual fields
-    omise.card.fields = {
-      number: omise.card.createNumberField({
-        element: cardNumberElement,
-        placeholder: '4242 4242 4242 4242'
-      }),
-      expiryDate: omise.card.createExpiryDateField({
-        element: expiryDateElement,
-        placeholder: 'MM/YY'
-      }),
-      securityCode: omise.card.createSecurityCodeField({
-        element: securityCodeElement,
-        placeholder: '123'
-      })
-    }
-
-    console.log('Card form initialized successfully')
-  } catch (error) {
-    console.error('Failed to initialize card form:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to initialize card form'
-  }
-}
-
 // Select payment method
 const selectPaymentMethod = async (method: 'card' | 'promptpay') => {
   selectedMethod.value = method
   errorMessage.value = ''
   qrCodeUrl.value = ''
+}
 
-  if (method === 'card') {
-    await nextTick()
-    initializeCardForm()
+// Format card number with spaces
+const formatCardNumber = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = input.value.replace(/\s/g, '').replace(/[^0-9]/g, '')
+
+  // Add spaces every 4 digits
+  value = value.replace(/(.{4})/g, '$1 ').trim()
+
+  cardForm.value.number = value
+}
+
+// Format expiry date
+const formatExpiry = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = input.value.replace(/[^0-9]/g, '')
+
+  if (value.length >= 2) {
+    value = value.substring(0, 2) + '/' + value.substring(2, 4)
   }
+
+  cardForm.value.expiry = value
 }
 
 // Process payment
@@ -349,25 +384,8 @@ const processPayment = async () => {
 
   try {
     if (selectedMethod.value === 'card') {
-      // For card payments, create token first
-      if (!cardholderName.value.trim()) {
-        errorMessage.value = 'Please enter cardholder name'
-        isProcessing.value = false
-        return
-      }
-
-      // Create token using Omise.js
-      omise.createToken('card', {
-        name: cardholderName.value.trim()
-      }, (statusCode: number, response: any) => {
-        if (statusCode === 200) {
-          submitCardPayment(response.id)
-        } else {
-          console.error('Token creation failed:', response)
-          errorMessage.value = response.message || 'Card validation failed'
-          isProcessing.value = false
-        }
-      })
+      // For card payments, create token first using Omise.createToken
+      await processCardPayment()
     } else {
       // PromptPay payment
       await processPromptPayPayment()
@@ -379,7 +397,70 @@ const processPayment = async () => {
   }
 }
 
-// Submit card payment
+// Process card payment using Omise.createToken
+const processCardPayment = async () => {
+  try {
+    if (!omise) {
+      throw new Error('Omise not initialized')
+    }
+
+    if (!isCardFormValid.value) {
+      throw new Error('Please fill in all card details')
+    }
+
+    // Parse expiry date
+    const [expMonth, expYear] = cardForm.value.expiry.split('/')
+    const currentYear = new Date().getFullYear()
+    const fullYear = parseInt('20' + expYear)
+
+    // Prepare card data according to Omise documentation
+    const cardData = {
+      name: cardForm.value.name.trim(),
+      number: cardForm.value.number.replace(/\s/g, ''),
+      expiration_month: parseInt(expMonth),
+      expiration_year: fullYear,
+      security_code: cardForm.value.security_code
+    }
+
+    console.log('Creating token with card data:', {
+      ...cardData,
+      number: cardData.number.replace(/\d(?=\d{4})/g, '*'),
+      security_code: '***'
+    })
+
+    // Create token using Omise.createToken as per documentation
+    omise.createToken('card', cardData, async (statusCode: number, response: any) => {
+      try {
+        if (statusCode === 200 && response.object !== 'error') {
+          console.log('Token created successfully:', response.id)
+
+          // Check security code validation
+          if (!response.card.security_code_check) {
+            errorMessage.value = 'Security code validation failed'
+            isProcessing.value = false
+            return
+          }
+
+          await submitCardPayment(response.id)
+        } else {
+          console.error('Token creation failed:', response)
+          errorMessage.value = response.message || 'Card validation failed'
+          isProcessing.value = false
+        }
+      } catch (error) {
+        console.error('Error in token callback:', error)
+        errorMessage.value = error instanceof Error ? error.message : 'Token processing failed'
+        isProcessing.value = false
+      }
+    })
+  } catch (error) {
+    console.error('Card payment processing error:', error)
+    errorMessage.value = error instanceof Error ? error.message : 'Card payment failed'
+    isProcessing.value = false
+  }
+}
+
+// Submit card payment to backend
 const submitCardPayment = async (token: string) => {
   try {
     const paymentData: PaymentData = {
@@ -387,7 +468,7 @@ const submitCardPayment = async (token: string) => {
       paymentMethod: 'card',
       paymentSource: token,
       customerData: {
-        name: cardholderName.value.trim()
+        name: cardForm.value.name.trim()
       }
     }
 
@@ -463,13 +544,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // Clean up Omise card form
-  if (card) {
-    try {
-      card.destroy()
-    } catch (error) {
-      console.warn('Failed to cleanup card form:', error)
-    }
-  }
+  // Clean up if needed
 })
 </script>

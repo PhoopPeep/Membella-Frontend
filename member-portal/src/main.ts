@@ -34,6 +34,13 @@ import {
   faHeart,
   faStar,
   faQrcode,
+  faReceipt,
+  faDownload,
+  faSyncAlt,
+  faMoneyBillWave,
+  faLayerGroup,
+  faSpinner,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
@@ -63,7 +70,14 @@ library.add(
   faMinus,
   faHeart,
   faStar,
-  faQrcode
+  faQrcode,
+  faReceipt,
+  faDownload,
+  faSyncAlt,
+  faMoneyBillWave,
+  faLayerGroup,
+  faSpinner,
+  faExclamationTriangle
 )
 
 const app = createApp(App)
