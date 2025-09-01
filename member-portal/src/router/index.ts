@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const MemberHomepage = () => import('@/views/MemberHomepage.vue')
+const MySubscription = () => import('@/views/MySubscription.vue')
+const PaymentHistory = () => import('@/views/PaymentHistory.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
 const MemberLogin = () => import('@/views/auth/MemberLogin.vue')
 const MemberRegister = () => import('@/views/auth/MemberRegister.vue')
@@ -23,7 +25,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/dashboard', // Keep old route for backward compatibility
+      path: '/dashboard',
       redirect: '/homepage',
     },
     {
@@ -50,6 +52,22 @@ const router = createRouter({
       component: MemberAuthCallback,
       meta: {
         requiresAuth: false,
+      },
+    },
+    {
+      path: '/subscriptions',
+      name: 'my-subscriptions',
+      component: MySubscription,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/payments',
+      name: 'payment-history',
+      component: PaymentHistory,
+      meta: {
+        requiresAuth: true,
       },
     },
     {

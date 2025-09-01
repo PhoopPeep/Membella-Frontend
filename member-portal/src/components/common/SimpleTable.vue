@@ -129,17 +129,21 @@
 </template>
 
 <script setup lang="ts">
+// Define types
+type TableValue = string | number | boolean | Date | null | undefined
+type TableRecord = Record<string, TableValue>
+
 interface Column {
   key: string
   title: string
   type?: 'text' | 'number' | 'date' | 'currency'
   align?: 'left' | 'center' | 'right'
-  formatter?: (value: any, item: any) => string
+  formatter?: (value: TableValue, item: TableRecord) => string
   width?: string
 }
 
 interface Props {
-  data: any[]
+  data: TableRecord[]
   columns: Column[]
   title?: string
   subtitle?: string
@@ -171,66 +175,85 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [item: any]
-  edit: [item: any]
-  delete: [item: any]
+  view: [item: TableRecord]
+  edit: [item: TableRecord]
+  delete: [item: TableRecord]
   retry: []
-  'row-click': [item: any]
+  'row-click': [item: TableRecord]
 }>()
 
-const getRowKey = (item: any, index: number) => {
-  return item.id || item.key || index
+const getRowKey = (item: TableRecord, index: number): string | number => {
+  return (item.id as string | number) || (item.key as string | number) || index
 }
 
-const getValue = (item: any, key: string) => {
-  return key.split('.').reduce((obj, k) => obj?.[k], item)
+const getValue = (item: TableRecord, key: string): TableValue => {
+  return key.split('.').reduce((obj, k) => {
+    if (obj && typeof obj === 'object' && k in obj) {
+      return ((obj as unknown) as Record<string, TableValue>)[k]
+    }
+    return undefined
+  }, item as unknown as TableValue)
 }
 
-const formatValue = (item: any, column: Column) => {
+const formatValue = (item: TableRecord, column: Column): string => {
   const value = getValue(item, column.key)
 
   if (column.formatter) {
     return column.formatter(value, item)
   }
 
-  return value || '-'
+  return value?.toString() || '-'
 }
 
-const formatDate = (value: any) => {
+const formatDate = (value: TableValue): string => {
   if (!value) return '-'
-  return new Date(value).toLocaleDateString('en-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+
+  try {
+    const date = value instanceof Date ? value : new Date(value as string | number)
+    return date.toLocaleDateString('en-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch {
+    return '-'
+  }
 }
 
-const formatCurrency = (value: any) => {
-  if (!value && value !== 0) return '-'
-  return `฿${Number(value).toLocaleString()}`
+const formatCurrency = (value: TableValue): string => {
+  if (value === null || value === undefined) return '-'
+
+  const numValue = typeof value === 'number' ? value : Number(value)
+  if (isNaN(numValue)) return '-'
+
+  return `฿${numValue.toLocaleString()}`
 }
 
-const formatNumber = (value: any) => {
-  if (!value && value !== 0) return '-'
-  return Number(value).toLocaleString()
+const formatNumber = (value: TableValue): string => {
+  if (value === null || value === undefined) return '-'
+
+  const numValue = typeof value === 'number' ? value : Number(value)
+  if (isNaN(numValue)) return '-'
+
+  return numValue.toLocaleString()
 }
 
-const getHeaderClass = (column: Column) => {
-  const classes = []
+const getHeaderClass = (column: Column): string => {
+  const classes: string[] = []
   if (column.align === 'center') classes.push('text-center')
   else if (column.align === 'right') classes.push('text-right')
   if (column.width) classes.push(`w-${column.width}`)
   return classes.join(' ')
 }
 
-const getCellClass = (column: Column) => {
-  const classes = []
+const getCellClass = (column: Column): string => {
+  const classes: string[] = []
   if (column.align === 'center') classes.push('text-center')
   else if (column.align === 'right') classes.push('text-right')
   return classes.join(' ')
 }
 
-const handleRowClick = (item: any) => {
+const handleRowClick = (item: TableRecord): void => {
   if (props.clickable) {
     emit('row-click', item)
   }

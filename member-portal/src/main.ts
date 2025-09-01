@@ -33,6 +33,7 @@ import {
   faMinus,
   faHeart,
   faStar,
+  faQrcode,
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
@@ -62,6 +63,7 @@ library.add(
   faMinus,
   faHeart,
   faStar,
+  faQrcode
 )
 
 const app = createApp(App)
