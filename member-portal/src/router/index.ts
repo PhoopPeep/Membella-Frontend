@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const MemberHomepage = () => import('@/views/MemberHomepage.vue')
-const BrowsePlans = () => import('@/views/BrowsePlans.vue')
-const MySubscription = () => import('@/views/MySubscription.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
 const MemberLogin = () => import('@/views/auth/MemberLogin.vue')
 const MemberRegister = () => import('@/views/auth/MemberRegister.vue')
@@ -52,22 +50,6 @@ const router = createRouter({
       component: MemberAuthCallback,
       meta: {
         requiresAuth: false,
-      },
-    },
-    {
-      path: '/browse',
-      name: 'browse-plans',
-      component: BrowsePlans,
-      meta: {
-        requiresAuth: false, // Allow guests to browse
-      },
-    },
-    {
-      path: '/subscription',
-      name: 'my-subscription',
-      component: MySubscription,
-      meta: {
-        requiresAuth: true,
       },
     },
     {

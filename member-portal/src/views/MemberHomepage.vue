@@ -2,8 +2,8 @@
   <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Organizations & Plans</h1>
-      <p class="text-gray-600 mb-6">Discover organizations and membership plans</p>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Organizations</h1>
+      <p class="text-gray-600 mb-6">Discover organizations and their available plans</p>
     </div>
 
     <!-- Organizations Table -->
@@ -13,11 +13,11 @@
       :loading="loading"
       :error="error"
       title="Organizations"
-      subtitle="Browse available organizations and their membership plans"
+      subtitle="Browse available organizations and their plans"
       :show-actions="false"
       :clickable="true"
       empty-title="No Organizations Found"
-      empty-message="There are currently no organizations with membership plans."
+      empty-message="There are currently no organizations with plans."
       empty-icon="building"
       @row-click="viewOwnerDetails"
       @retry="loadOwners"
@@ -49,7 +49,7 @@
         </div>
       </template>
 
-      <!-- Custom Description Column (แสดงแต่ description) -->
+      <!-- Custom Description Column -->
       <template #column-description="{ item }">
         <div class="max-w-xs">
           <p
@@ -61,7 +61,7 @@
         </div>
       </template>
 
-      <!-- Custom Plans Column (แสดงแต่จำนวน plans) -->
+      <!-- Custom Plans Column -->
       <template #column-planCount="{ item }">
         <div class="text-center">
           <div class="text-lg font-bold text-blue-600">{{ item.planCount }}</div>
@@ -209,12 +209,11 @@
               :columns="plansTableColumns"
               :loading="loadingPlans"
               :error="plansError"
-              :show-actions="true"
+              :show-actions="false"
               :clickable="false"
               empty-title="No Plans Available"
-              empty-message="This organization doesn't have any membership plans yet."
+              empty-message="This organization doesn't have any plans yet."
               empty-icon="inbox"
-              @subscribe="subscribeToPlan"
             >
               <!-- Custom Plan Name Column -->
               <template #column-planInfo="{ item }">
@@ -247,50 +246,8 @@
                   <div class="text-xs text-gray-500">Total Price</div>
                 </div>
               </template>
-
-              <!-- Custom Actions for Plans -->
-              <template #actions="{ item }">
-                <div class="flex items-center justify-end">
-                  <button
-                    @click="subscribeToPlan(item)"
-                    :disabled="subscribing === item.id"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-                  >
-                    <div v-if="subscribing === item.id" class="flex items-center">
-                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Subscribing...
-                    </div>
-                    <span v-else>
-                      <FontAwesomeIcon icon="credit-card" class="w-4 h-4 mr-2" />
-                      Subscribe
-                    </span>
-                  </button>
-                </div>
-              </template>
             </SimpleTable>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Success Modal -->
-    <div
-      v-if="showSuccessModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-    >
-      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
-        <div class="text-center">
-          <FontAwesomeIcon icon="check-circle" class="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Subscription Successful!</h3>
-          <p class="text-gray-600 mb-6">
-            You have successfully subscribed to the {{ selectedPlan?.name }} plan.
-          </p>
-          <button
-            @click="closeSuccessModal"
-            class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>
@@ -332,15 +289,12 @@ interface Plan {
 const owners = ref<Owner[]>([])
 const ownerPlans = ref<Plan[]>([])
 const selectedOwner = ref<Owner | null>(null)
-const selectedPlan = ref<Plan | null>(null)
 
 const loading = ref(false)
 const loadingPlans = ref(false)
 const error = ref('')
 const plansError = ref('')
-const subscribing = ref<string | null>(null)
 const showOwnerModal = ref(false)
-const showSuccessModal = ref(false)
 
 // Main Table Configuration
 const tableColumns = [
@@ -394,7 +348,6 @@ const plansTableColumns = [
   }
 ]
 
-// Fixed error handling for images
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement | null
   if (target) {
@@ -459,40 +412,11 @@ const retryLoadPlans = () => {
   }
 }
 
-// const quickSubscribe = (owner: Owner) => {
-//   if (owner.planCount === 0) {
-//     return
-//   }
-
-//   // Quick subscribe - open modal to show plans
-//   viewOwnerDetails(owner)
-// }
-
 const closeOwnerModal = () => {
   showOwnerModal.value = false
   selectedOwner.value = null
   ownerPlans.value = []
   plansError.value = ''
-}
-
-const subscribeToPlan = async (plan: Plan) => {
-  try {
-    subscribing.value = plan.id
-    await memberApi.subscribe(plan.id)
-    selectedPlan.value = plan
-    showSuccessModal.value = true
-    closeOwnerModal()
-  } catch (err) {
-    console.error('Failed to subscribe:', err)
-    error.value = err instanceof Error ? err.message : 'Unable to subscribe to plan'
-  } finally {
-    subscribing.value = null
-  }
-}
-
-const closeSuccessModal = () => {
-  showSuccessModal.value = false
-  selectedPlan.value = null
 }
 
 const formatDate = (dateString: string) => {

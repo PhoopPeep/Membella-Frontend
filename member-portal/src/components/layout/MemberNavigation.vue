@@ -15,14 +15,12 @@
         <!-- Navigation Links -->
         <div class="hidden md:flex items-center space-x-8">
           <router-link
-            v-for="item in navigationItems"
-            :key="item.name"
-            :to="item.href"
+            to="/homepage"
             class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             active-class="text-blue-600 bg-blue-50"
           >
-            <FontAwesomeIcon :icon="item.icon" class="w-4 h-4 mr-2" />
-            {{ item.name }}
+            <FontAwesomeIcon icon="home" class="w-4 h-4 mr-2" />
+            Organizations
           </router-link>
         </div>
 
@@ -74,15 +72,13 @@
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
           <!-- Navigation items -->
           <router-link
-            v-for="item in navigationItems"
-            :key="item.name"
-            :to="item.href"
+            to="/homepage"
             class="text-gray-500 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
             active-class="text-blue-600 bg-blue-50"
             @click="closeMobileMenu"
           >
-            <FontAwesomeIcon :icon="item.icon" class="w-4 h-4 mr-2" />
-            {{ item.name }}
+            <FontAwesomeIcon icon="home" class="w-4 h-4 mr-2" />
+            Organizations
           </router-link>
 
           <!-- Auth items for mobile -->
@@ -120,27 +116,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
 
 const showMobileMenu = ref(false)
-
-// Dynamic navigation items based on auth status
-const navigationItems = computed(() => {
-  if (authStore.isAuthenticated) {
-    return [
-      { name: 'Homepage', href: '/homepage', icon: 'home' },
-      { name: 'My Subscription', href: '/subscription', icon: 'credit-card' },
-    ]
-  } else {
-    return [
-      { name: 'Homepage', href: '/homepage', icon: 'home' },
-      { name: 'Browse Plans', href: '/browse', icon: 'search' },
-    ]
-  }
-})
 
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value

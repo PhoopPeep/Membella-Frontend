@@ -50,15 +50,15 @@
           </div>
           <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
           <p class="text-gray-600">
-            Your member account has been successfully verified. You're being redirected to browse
-            plans...
+            Your member account has been successfully verified. You're being redirected to the
+            homepage...
           </p>
           <div class="mt-4">
             <button
-              @click="redirectToBrowse"
+              @click="redirectToHomepage"
               class="w-full h-10 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
             >
-              Browse Plans
+              Go to Homepage
             </button>
           </div>
         </div>
@@ -176,9 +176,9 @@ const processAuthCallback = async () => {
           authStore.setAuth(response.token, response.user)
           success.value = true
 
-          // Redirect to browse plans after a short delay
+          // Redirect to homepage after a short delay
           setTimeout(() => {
-            redirectToBrowse()
+            redirectToHomepage()
           }, 2000)
         } else {
           throw new Error('Backend did not return member authentication data')
@@ -203,8 +203,8 @@ const redirectToLogin = () => {
   router.push('/login')
 }
 
-const redirectToBrowse = () => {
-  router.push('/browse')
+const redirectToHomepage = () => {
+  router.push('/homepage')
 }
 
 const retryVerification = () => {

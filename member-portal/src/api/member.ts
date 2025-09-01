@@ -215,7 +215,7 @@ export const memberApi = {
     }
   },
 
-  // Get plans of a specific owner - IMPROVED VERSION
+  // Get plans of a specific owner
   async getOwnerPlans(ownerId: string) {
     try {
       console.log('Getting plans for owner:', ownerId)
@@ -272,69 +272,6 @@ export const memberApi = {
           throw new Error('Unable to connect to server. Please check if the backend is running.')
         } else if (error.code === 'ETIMEDOUT') {
           throw new Error('Request timeout. Please try again.')
-        }
-      }
-
-      throw handleApiError(error)
-    }
-  },
-
-  // Get available plans (public)
-  async getAvailablePlans() {
-    try {
-      console.log('Getting available plans...')
-      const response = await api.get('/api/member/plans/available')
-
-      if (Array.isArray(response.data)) {
-        return response.data
-      } else {
-        console.warn('API returned non-array data for available plans:', response.data)
-        return []
-      }
-    } catch (error: unknown) {
-      console.error('Failed to get available plans:', error)
-      throw handleApiError(error)
-    }
-  },
-
-  // Subscribe to a plan (requires auth)
-  async subscribe(planId: string) {
-    try {
-      console.log('Subscribing to plan:', planId)
-
-      if (!planId || planId.trim() === '') {
-        throw new Error('Plan ID is required')
-      }
-
-      const response = await api.post('/api/member/subscribe', { planId })
-      return response.data
-    } catch (error: unknown) {
-      console.error('Failed to subscribe:', error)
-
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Please login to subscribe to plans.')
-        } else if (error.response?.status === 404) {
-          throw new Error('Plan not found or no longer available.')
-        }
-      }
-
-      throw handleApiError(error)
-    }
-  },
-
-  // Get member's subscription status (mockup)
-  async getSubscription() {
-    try {
-      console.log('Getting member subscription...')
-      const response = await api.get('/api/member/subscription')
-      return response.data
-    } catch (error: unknown) {
-      console.error('Failed to get subscription:', error)
-
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Please login to view your subscription.')
         }
       }
 
