@@ -6,6 +6,28 @@
       <p class="text-gray-600">View all your payment transactions and receipts</p>
     </div>
 
+    <!-- Auto-refresh indicator -->
+    <div v-if="autoRefreshActive" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+      <div class="flex items-center">
+        <div class="animate-pulse w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+        <span class="text-sm text-blue-700">Auto-refresh active - monitoring payment status updates</span>
+        <button
+          @click="toggleAutoRefresh"
+          class="ml-auto text-blue-600 hover:text-blue-700 text-sm underline"
+        >
+          Stop monitoring
+        </button>
+      </div>
+    </div>
+
+    <!-- Connection status indicator -->
+    <div v-if="!isOnline" class="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+      <div class="flex items-center">
+        <FontAwesomeIcon icon="exclamation-triangle" class="w-4 h-4 text-yellow-600 mr-2" />
+        <span class="text-sm text-yellow-700">You're offline. Payment status may not be up to date.</span>
+      </div>
+    </div>
+
     <!-- Filter Controls -->
     <div class="mb-6 bg-white rounded-lg shadow border border-gray-200 p-4">
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -49,19 +71,21 @@
           </div>
         </div>
 
-        <!-- Refresh Button -->
-        <button
-          @click="refreshPayments"
-          :disabled="loading"
-          class="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          <FontAwesomeIcon
-            :icon="loading ? 'spinner' : 'sync-alt'"
-            :class="{ 'animate-spin': loading }"
-            class="w-4 h-4"
-          />
-          <span>Refresh</span>
-        </button>
+        <!-- Refresh -->
+        <div class="flex items-center space-x-2">
+          <button
+            @click="refreshPayments"
+            :disabled="loading"
+            class="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            <FontAwesomeIcon
+              :icon="loading ? 'spinner' : 'sync-alt'"
+              :class="{ 'animate-spin': loading }"
+              class="w-4 h-4"
+            />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -95,6 +119,9 @@
             <p class="text-sm text-gray-500 mt-1">
               {{ pagination.total }} transaction{{ pagination.total === 1 ? '' : 's' }} found
               {{ selectedStatus ? `(${selectedStatus} only)` : '' }}
+              <span v-if="autoRefreshActive" class="text-blue-600 ml-2">
+                • Auto-updating every {{ autoRefreshInterval / 1000 }}s
+              </span>
             </p>
           </div>
           <div class="text-sm text-gray-500">
@@ -125,7 +152,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Subscription
               </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -135,6 +162,7 @@
               v-for="payment in payments"
               :key="payment.id"
               class="hover:bg-gray-50 transition-colors"
+              :class="{ 'bg-blue-50 border-l-4 border-l-blue-400': recentlyUpdatedPayments.includes(payment.id) }"
             >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div>
@@ -176,6 +204,11 @@
                   ]"
                 >
                   {{ formatStatus(payment.status) }}
+                  <FontAwesomeIcon
+                    v-if="recentlyUpdatedPayments.includes(payment.id)"
+                    icon="sync-alt"
+                    class="w-3 h-3 ml-1 text-blue-600 animate-spin"
+                  />
                 </span>
               </td>
 
@@ -200,8 +233,11 @@
                 </div>
               </td>
 
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end space-x-2">
+              <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                <div
+                  class="flex space-x-2"
+                  :class="getActionButtonsAlignment(payment)"
+                >
                   <button
                     @click="viewPaymentDetails(payment)"
                     class="text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-50 transition-colors"
@@ -216,6 +252,20 @@
                     title="Download Receipt"
                   >
                     <FontAwesomeIcon icon="download" class="w-4 h-4" />
+                  </button>
+                  <!-- Manual refresh button for pending payments -->
+                  <button
+                    v-if="payment.status === 'pending'"
+                    @click="refreshSinglePayment(payment.id)"
+                    :disabled="refreshingPayments.includes(payment.id)"
+                    class="text-orange-600 hover:text-orange-700 p-2 rounded-md hover:bg-orange-50 transition-colors disabled:opacity-50"
+                    title="Check Status"
+                  >
+                    <FontAwesomeIcon
+                      :icon="refreshingPayments.includes(payment.id) ? 'spinner' : 'refresh'"
+                      :class="{ 'animate-spin': refreshingPayments.includes(payment.id) }"
+                      class="w-4 h-4"
+                    />
                   </button>
                 </div>
               </td>
@@ -318,14 +368,29 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Status:</span>
-                <span
-                  :class="[
-                    'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
-                    getStatusColor(selectedPayment.status)
-                  ]"
-                >
-                  {{ formatStatus(selectedPayment.status) }}
-                </span>
+                <div class="flex items-center space-x-2">
+                  <span
+                    :class="[
+                      'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                      getStatusColor(selectedPayment.status)
+                    ]"
+                  >
+                    {{ formatStatus(selectedPayment.status) }}
+                  </span>
+                  <button
+                    v-if="selectedPayment.status === 'pending'"
+                    @click="refreshSinglePayment(selectedPayment.id)"
+                    :disabled="refreshingPayments.includes(selectedPayment.id)"
+                    class="text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                    title="Check latest status"
+                  >
+                    <FontAwesomeIcon
+                      :icon="refreshingPayments.includes(selectedPayment.id) ? 'spinner' : 'refresh'"
+                      :class="{ 'animate-spin': refreshingPayments.includes(selectedPayment.id) }"
+                      class="w-3 h-3"
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -429,11 +494,63 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast notifications -->
+    <div v-if="notifications.length > 0" class="fixed bottom-4 right-4 z-50 space-y-2">
+      <div
+        v-for="notification in notifications"
+        :key="notification.id"
+        :class="[
+          'p-4 rounded-lg shadow-lg border max-w-sm',
+          notification.type === 'success' ? 'bg-green-50 border-green-200' :
+          notification.type === 'error' ? 'bg-red-50 border-red-200' :
+          'bg-blue-50 border-blue-200'
+        ]"
+      >
+        <div class="flex items-start">
+          <FontAwesomeIcon
+            :icon="notification.type === 'success' ? 'check-circle' :
+                   notification.type === 'error' ? 'exclamation-circle' : 'info-circle'"
+            :class="[
+              'w-5 h-5 mt-0.5 mr-3',
+              notification.type === 'success' ? 'text-green-600' :
+              notification.type === 'error' ? 'text-red-600' :
+              'text-blue-600'
+            ]"
+          />
+          <div class="flex-1">
+            <p :class="[
+              'text-sm font-medium',
+              notification.type === 'success' ? 'text-green-800' :
+              notification.type === 'error' ? 'text-red-800' :
+              'text-blue-800'
+            ]">{{ notification.title }}</p>
+            <p :class="[
+              'text-sm mt-1',
+              notification.type === 'success' ? 'text-green-700' :
+              notification.type === 'error' ? 'text-red-700' :
+              'text-blue-700'
+            ]">{{ notification.message }}</p>
+          </div>
+          <button
+            @click="removeNotification(notification.id)"
+            :class="[
+              'ml-2 text-xs hover:opacity-75',
+              notification.type === 'success' ? 'text-green-600' :
+              notification.type === 'error' ? 'text-red-600' :
+              'text-blue-600'
+            ]"
+          >
+            <FontAwesomeIcon icon="times" class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { paymentApi, type PaymentHistory } from '../api/payment'
 
@@ -446,6 +563,23 @@ const payments = ref<PaymentHistory[]>([])
 const selectedPayment = ref<PaymentHistory | null>(null)
 const showDetailsModal = ref(false)
 
+// Auto-refresh state
+const autoRefreshActive = ref(false)
+const autoRefreshInterval = ref(30000) // 30 seconds
+const refreshingPayments = ref<string[]>([])
+const recentlyUpdatedPayments = ref<string[]>([])
+const isOnline = ref(navigator.onLine)
+
+// Notification system
+interface Notification {
+  id: string
+  type: 'success' | 'error' | 'info'
+  title: string
+  message: string
+}
+
+const notifications = ref<Notification[]>([])
+
 // Filters and Pagination
 const selectedStatus = ref('')
 const pageLimit = ref(25)
@@ -456,8 +590,33 @@ const pagination = ref({
   hasMore: false
 })
 
-// Methods
-const loadPaymentHistory = async (resetOffset = false) => {
+// Timers
+let autoRefreshTimer: number | null = null
+let highlightTimers: Map<string, number> = new Map()
+
+// Function to determine action button alignment
+const getActionButtonsAlignment = (payment: PaymentHistory) => {
+  const buttonCount = getVisibleButtonCount(payment)
+  return buttonCount === 1 ? 'justify-center' : 'justify-end'
+}
+
+// Function to count visible buttons for a payment
+const getVisibleButtonCount = (payment: PaymentHistory) => {
+  let count = 1 // View details button is always visible
+
+  if (payment.status === 'successful') {
+    count++ // Download receipt button
+  }
+
+  if (payment.status === 'pending') {
+    count++ // Refresh status button
+  }
+
+  return count
+}
+
+// Enhanced payment loading with change detection
+const loadPaymentHistory = async (resetOffset = false, detectChanges = true) => {
   try {
     loading.value = true
     error.value = ''
@@ -465,12 +624,6 @@ const loadPaymentHistory = async (resetOffset = false) => {
     if (resetOffset) {
       pagination.value.offset = 0
     }
-
-    console.log('Loading payment history with options:', {
-      limit: pageLimit.value,
-      offset: pagination.value.offset,
-      status: selectedStatus.value || undefined
-    })
 
     const options: Record<string, string | number> = {
       limit: pageLimit.value,
@@ -483,13 +636,15 @@ const loadPaymentHistory = async (resetOffset = false) => {
 
     const data = await paymentApi.getPaymentHistory(options)
 
+    // Store previous payments for change detection
+    const previousPayments = payments.value
     payments.value = data.data
     pagination.value = data.pagination
 
-    console.log('Payment history loaded:', {
-      payments: data.data.length,
-      pagination: data.pagination
-    })
+    // Detect changes if this is an auto-refresh
+    if (detectChanges && previousPayments.length > 0) {
+      detectPaymentChanges(previousPayments, data.data)
+    }
 
   } catch (err) {
     console.error('Failed to load payment history:', err)
@@ -499,31 +654,224 @@ const loadPaymentHistory = async (resetOffset = false) => {
   }
 }
 
+// Detect changes in payment status
+const detectPaymentChanges = (oldPayments: PaymentHistory[], newPayments: PaymentHistory[]) => {
+  const oldPaymentMap = new Map(oldPayments.map(p => [p.id, p]))
+
+  newPayments.forEach(newPayment => {
+    const oldPayment = oldPaymentMap.get(newPayment.id)
+
+    if (oldPayment && oldPayment.status !== newPayment.status) {
+      console.log(`Payment status changed: ${newPayment.id} ${oldPayment.status} -> ${newPayment.status}`)
+
+      // Highlight the changed payment
+      highlightPaymentUpdate(newPayment.id)
+
+      // Show notification
+      addNotification({
+        type: newPayment.status === 'successful' ? 'success' :
+              newPayment.status === 'failed' ? 'error' : 'info',
+        title: `Payment ${formatStatus(newPayment.status)}`,
+        message: `${newPayment.planName} payment status updated to ${newPayment.status}`
+      })
+    }
+  })
+}
+
+// Highlight payment update
+const highlightPaymentUpdate = (paymentId: string) => {
+  if (!recentlyUpdatedPayments.value.includes(paymentId)) {
+    recentlyUpdatedPayments.value.push(paymentId)
+  }
+
+  // Clear existing timer for this payment
+  const existingTimer = highlightTimers.get(paymentId)
+  if (existingTimer) {
+    clearTimeout(existingTimer)
+  }
+
+  // Set new timer to remove highlight after 5 seconds
+  const timer = window.setTimeout(() => {
+    const index = recentlyUpdatedPayments.value.indexOf(paymentId)
+    if (index > -1) {
+      recentlyUpdatedPayments.value.splice(index, 1)
+    }
+    highlightTimers.delete(paymentId)
+  }, 5000)
+
+  highlightTimers.set(paymentId, timer)
+}
+
+// Refresh single payment status
+const refreshSinglePayment = async (paymentId: string) => {
+  if (refreshingPayments.value.includes(paymentId)) return
+
+  try {
+    refreshingPayments.value.push(paymentId)
+
+    console.log('Refreshing single payment:', paymentId)
+    const status = await paymentApi.getPaymentStatus(paymentId)
+
+    // Find and update the payment in our local list
+    const paymentIndex = payments.value.findIndex(p => p.id === paymentId)
+    if (paymentIndex !== -1) {
+      const oldStatus = payments.value[paymentIndex].status
+
+      // Update the payment data
+      payments.value[paymentIndex] = {
+        ...payments.value[paymentIndex],
+        ...status,
+        amount: status.amount,
+        currency: status.currency,
+        paymentMethod: status.paymentMethod,
+        status: status.status,
+        subscription: status.subscription,
+        updatedAt: status.updatedAt
+      }
+
+      // Show notification if status changed
+      if (oldStatus !== status.status) {
+        highlightPaymentUpdate(paymentId)
+        addNotification({
+          type: status.status === 'successful' ? 'success' :
+                status.status === 'failed' ? 'error' : 'info',
+          title: 'Status Updated',
+          message: `Payment status changed from ${oldStatus} to ${status.status}`
+        })
+
+        // If modal is open and showing this payment, update it
+        if (selectedPayment.value && selectedPayment.value.id === paymentId) {
+          selectedPayment.value = { ...payments.value[paymentIndex] }
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error('Failed to refresh payment status:', err)
+    addNotification({
+      type: 'error',
+      title: 'Refresh Failed',
+      message: 'Could not check payment status'
+    })
+  } finally {
+    const index = refreshingPayments.value.indexOf(paymentId)
+    if (index > -1) {
+      refreshingPayments.value.splice(index, 1)
+    }
+  }
+}
+
+// Auto-refresh functionality
+const toggleAutoRefresh = () => {
+  autoRefreshActive.value = !autoRefreshActive.value
+
+  if (autoRefreshActive.value) {
+    startAutoRefresh()
+    addNotification({
+      type: 'info',
+      title: 'Auto-refresh Started',
+      message: `Monitoring payment status every ${autoRefreshInterval.value / 1000} seconds`
+    })
+  } else {
+    stopAutoRefresh()
+    addNotification({
+      type: 'info',
+      title: 'Auto-refresh Stopped',
+      message: 'Payment monitoring has been disabled'
+    })
+  }
+}
+
+const startAutoRefresh = () => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+  }
+
+  autoRefreshTimer = window.setInterval(async () => {
+    if (payments.value.length > 0 && isOnline.value) {
+      console.log('Auto-refreshing payment history...')
+      await loadPaymentHistory(false, true)
+    }
+  }, autoRefreshInterval.value)
+}
+
+const stopAutoRefresh = () => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
+}
+
+// Notification system
+const addNotification = (notification: Omit<Notification, 'id'>) => {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2)
+
+  notifications.value.push({
+    id,
+    ...notification
+  })
+
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    removeNotification(id)
+  }, 5000)
+}
+
+const removeNotification = (id: string) => {
+  const index = notifications.value.findIndex(n => n.id === id)
+  if (index > -1) {
+    notifications.value.splice(index, 1)
+  }
+}
+
+// Network status monitoring
+const handleOnlineStatus = () => {
+  isOnline.value = navigator.onLine
+
+  if (isOnline.value && autoRefreshActive.value) {
+    // Resume auto-refresh when back online
+    startAutoRefresh()
+    addNotification({
+      type: 'success',
+      title: 'Back Online',
+      message: 'Payment monitoring resumed'
+    })
+  } else if (!isOnline.value) {
+    // Pause auto-refresh when offline
+    stopAutoRefresh()
+    addNotification({
+      type: 'info',
+      title: 'Offline',
+      message: 'Payment monitoring paused'
+    })
+  }
+}
+
 const refreshPayments = () => {
-  loadPaymentHistory(true)
+  loadPaymentHistory(true, false)
 }
 
 const applyFilters = () => {
-  loadPaymentHistory(true)
+  loadPaymentHistory(true, false)
 }
 
 const clearFilters = () => {
   selectedStatus.value = ''
   pageLimit.value = 25
-  loadPaymentHistory(true)
+  loadPaymentHistory(true, false)
 }
 
 const nextPage = () => {
   if (pagination.value.hasMore && !loading.value) {
     pagination.value.offset += pageLimit.value
-    loadPaymentHistory()
+    loadPaymentHistory(false, false)
   }
 }
 
 const previousPage = () => {
   if (pagination.value.offset > 0 && !loading.value) {
     pagination.value.offset = Math.max(0, pagination.value.offset - pageLimit.value)
-    loadPaymentHistory()
+    loadPaymentHistory(false, false)
   }
 }
 
@@ -556,7 +904,11 @@ const downloadReceipt = async (payment: PaymentHistory) => {
     URL.revokeObjectURL(url)
   } catch (err) {
     console.error('Failed to download receipt:', err)
-    error.value = 'Failed to download receipt'
+    addNotification({
+      type: 'error',
+      title: 'Download Failed',
+      message: 'Failed to download receipt'
+    })
   }
 }
 
@@ -652,8 +1004,32 @@ const getPaymentMethodIconColor = (method: string) => {
   return colorMap[method] || 'text-gray-600'
 }
 
+// Lifecycle hooks
 onMounted(() => {
   loadPaymentHistory()
+
+  // Add online/offline event listeners
+  window.addEventListener('online', handleOnlineStatus)
+  window.addEventListener('offline', handleOnlineStatus)
+
+  // Start auto-refresh by default for pending payments
+  const hasPendingPayments = payments.value.some(p => p.status === 'pending')
+  if (hasPendingPayments) {
+    autoRefreshActive.value = true
+    startAutoRefresh()
+  }
+})
+
+onUnmounted(() => {
+  stopAutoRefresh()
+
+  // Clear all highlight timers
+  highlightTimers.forEach(timer => clearTimeout(timer))
+  highlightTimers.clear()
+
+  // Remove event listeners
+  window.removeEventListener('online', handleOnlineStatus)
+  window.removeEventListener('offline', handleOnlineStatus)
 })
 </script>
 
@@ -673,5 +1049,24 @@ onMounted(() => {
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Animation for newly updated rows */
+.bg-blue-50 {
+  animation: highlight 2s ease-in-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: #dbeafe;
+    transform: scale(1.01);
+  }
+  50% {
+    background-color: #bfdbfe;
+  }
+  100% {
+    background-color: #dbeafe;
+    transform: scale(1);
+  }
 }
 </style>
