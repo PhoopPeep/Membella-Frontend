@@ -91,7 +91,7 @@
         <div v-if="selectedMethod === 'card'" class="mb-6">
           <h4 class="text-md font-semibold text-gray-900 mb-4">Card Information</h4>
 
-          <!-- Card Form using traditional approach -->
+          <!-- Card Form -->
           <form @submit.prevent="processCardPayment" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -103,6 +103,7 @@
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter cardholder name"
                 required
+                :disabled="isProcessing"
               />
             </div>
 
@@ -118,6 +119,7 @@
                 placeholder="1234 5678 9012 3456"
                 @input="formatCardNumber"
                 required
+                :disabled="isProcessing"
               />
             </div>
 
@@ -134,11 +136,12 @@
                   placeholder="MM/YY"
                   @input="formatExpiry"
                   required
+                  :disabled="isProcessing"
                 />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Security Code
+                  Security Code (CVV)
                 </label>
                 <input
                   v-model="cardForm.security_code"
@@ -147,6 +150,7 @@
                   class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="123"
                   required
+                  :disabled="isProcessing"
                 />
               </div>
             </div>
@@ -178,12 +182,18 @@
 
         <!-- Error Message -->
         <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ errorMessage }}</p>
+          <div class="flex items-center">
+            <FontAwesomeIcon icon="exclamation-circle" class="w-4 h-4 text-red-500 mr-2" />
+            <p class="text-sm text-red-600">{{ errorMessage }}</p>
+          </div>
         </div>
 
         <!-- Success Message -->
         <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600">{{ successMessage }}</p>
+          <div class="flex items-center">
+            <FontAwesomeIcon icon="check-circle" class="w-4 h-4 text-green-500 mr-2" />
+            <p class="text-sm text-green-600">{{ successMessage }}</p>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -202,7 +212,7 @@
           >
             <div v-if="isProcessing" class="flex items-center justify-center">
               <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {{ selectedMethod === 'promptpay' ? 'Generating QR Code...' : 'Processing...' }}
+              {{ selectedMethod === 'promptpay' ? 'Generating QR Code...' : 'Processing Payment...' }}
             </div>
             <span v-else>
               {{ selectedMethod === 'promptpay' ? 'Generate QR Code' : 'Pay Now' }}
@@ -294,28 +304,27 @@ const isCardFormValid = computed(() => {
 // Initialize Omise
 const initializeOmise = async () => {
   try {
-    console.log('Starting Omise initialization...')
+    console.log('Initializing Omise for card payments...')
 
-    // Load Omise script first
+    // Load Omise script
     await loadOmiseScript()
 
     // Get public key from backend
     const publicKey = await paymentApi.getOmisePublicKey()
-    console.log('Got Omise public key:', publicKey ? 'Yes' : 'No')
+    console.log('Retrieved Omise public key')
 
-    // Set public key using the traditional approach
-    omise = (window as unknown as { Omise: OmiseInstance }).Omise
+    // Initialize Omise instance
+    omise = (window as any).Omise
     if (!omise) {
       throw new Error('Omise script not loaded properly')
     }
 
-    // Use setPublicKey method as per documentation
+    // Set public key
     omise.setPublicKey(publicKey)
-
     console.log('Omise initialized successfully')
   } catch (error) {
     console.error('Failed to initialize Omise:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to initialize payment system'
+    errorMessage.value = 'Failed to initialize payment system. Please refresh and try again.'
   }
 }
 
@@ -323,8 +332,7 @@ const initializeOmise = async () => {
 const loadOmiseScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if already loaded
-    if ((window as unknown as { Omise?: OmiseInstance }).Omise) {
-      console.log('Omise script already loaded')
+    if ((window as any).Omise) {
       resolve()
       return
     }
@@ -337,7 +345,6 @@ const loadOmiseScript = (): Promise<void> => {
       resolve()
     }
     script.onerror = () => {
-      console.error('Failed to load Omise script')
       reject(new Error('Failed to load Omise script'))
     }
     document.head.appendChild(script)
@@ -345,9 +352,10 @@ const loadOmiseScript = (): Promise<void> => {
 }
 
 // Select payment method
-const selectPaymentMethod = async (method: 'card' | 'promptpay') => {
+const selectPaymentMethod = (method: 'card' | 'promptpay') => {
   selectedMethod.value = method
   errorMessage.value = ''
+  successMessage.value = ''
   qrCodeUrl.value = ''
 }
 
@@ -358,7 +366,6 @@ const formatCardNumber = (event: Event) => {
 
   // Add spaces every 4 digits
   value = value.replace(/(.{4})/g, '$1 ').trim()
-
   cardForm.value.number = value
 }
 
@@ -384,10 +391,8 @@ const processPayment = async () => {
 
   try {
     if (selectedMethod.value === 'card') {
-      // For card payments, create token first using Omise.createToken
       await processCardPayment()
     } else {
-      // PromptPay payment
       await processPromptPayPayment()
     }
   } catch (error) {
@@ -401,20 +406,30 @@ const processPayment = async () => {
 const processCardPayment = async () => {
   try {
     if (!omise) {
-      throw new Error('Omise not initialized')
+      throw new Error('Payment system not initialized. Please refresh and try again.')
     }
 
     if (!isCardFormValid.value) {
-      throw new Error('Please fill in all card details')
+      throw new Error('Please fill in all card details correctly')
     }
+
+    console.log('Creating card token...')
 
     // Parse expiry date
     const [expMonth, expYear] = cardForm.value.expiry.split('/')
-    const currentYear = new Date().getFullYear()
     const fullYear = parseInt('20' + expYear)
 
-    // Prepare card data according to Omise documentation
-    const cardData = {
+    // Validate expiry date
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+
+    if (fullYear < currentYear || (fullYear === currentYear && parseInt(expMonth) < currentMonth)) {
+      throw new Error('Card has expired. Please check the expiry date.')
+    }
+
+    // Prepare card data for Omise
+    const cardData: CardData = {
       name: cardForm.value.name.trim(),
       number: cardForm.value.number.replace(/\s/g, ''),
       expiration_month: parseInt(expMonth),
@@ -422,47 +437,51 @@ const processCardPayment = async () => {
       security_code: cardForm.value.security_code
     }
 
-    console.log('Creating token with card data:', {
+    console.log('Card data prepared:', {
       ...cardData,
       number: cardData.number.replace(/\d(?=\d{4})/g, '*'),
       security_code: '***'
     })
 
-    // Create token using Omise.createToken as per documentation
-    omise.createToken('card', cardData, async (statusCode: number, response: any) => {
-      try {
-        if (statusCode === 200 && response.object !== 'error') {
-          console.log('Token created successfully:', response.id)
+    // Create token using Omise.createToken
+    await new Promise<void>((resolve, reject) => {
+      omise!.createToken('card', cardData, async (statusCode: number, response: TokenResponse) => {
+        try {
+          console.log('Token creation response:', { statusCode, object: response.object })
 
-          // Check security code validation
-          if (!response.card.security_code_check) {
-            errorMessage.value = 'Security code validation failed'
-            isProcessing.value = false
-            return
+          if (statusCode === 200 && response.object !== 'error' && response.id) {
+            console.log('Token created successfully:', response.id)
+
+            // Check security code validation
+            if (response.card && !response.card.security_code_check) {
+              reject(new Error('Security code validation failed. Please check your CVV.'))
+              return
+            }
+
+            // Submit payment with token
+            await submitCardPayment(response.id)
+            resolve()
+          } else {
+            console.error('Token creation failed:', response)
+            reject(new Error(response.message || 'Card validation failed. Please check your card details.'))
           }
-
-          await submitCardPayment(response.id)
-        } else {
-          console.error('Token creation failed:', response)
-          errorMessage.value = response.message || 'Card validation failed'
-          isProcessing.value = false
+        } catch (error) {
+          console.error('Error in token callback:', error)
+          reject(error instanceof Error ? error : new Error('Token processing failed'))
         }
-      } catch (error) {
-        console.error('Error in token callback:', error)
-        errorMessage.value = error instanceof Error ? error.message : 'Token processing failed'
-        isProcessing.value = false
-      }
+      })
     })
   } catch (error) {
     console.error('Card payment processing error:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Card payment failed'
-    isProcessing.value = false
+    throw error
   }
 }
 
 // Submit card payment to backend
 const submitCardPayment = async (token: string) => {
   try {
+    console.log('Submitting card payment with token')
+
     const paymentData: PaymentData = {
       planId: props.plan.id,
       paymentMethod: 'card',
@@ -476,21 +495,30 @@ const submitCardPayment = async (token: string) => {
 
     if (result.status === 'successful') {
       successMessage.value = 'Payment successful! Subscription activated.'
+
+      // Clear form
+      cardForm.value = {
+        name: '',
+        number: '',
+        expiry: '',
+        security_code: ''
+      }
+
       setTimeout(() => {
         emit('success', result.paymentId)
       }, 2000)
     } else {
-      errorMessage.value = `Payment ${result.status}. Please try again.`
+      throw new Error(`Payment ${result.status}. Please try again.`)
     }
   } catch (error) {
     console.error('Card payment submission failed:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Payment failed'
+    throw error instanceof Error ? error : new Error('Payment failed')
   } finally {
     isProcessing.value = false
   }
 }
 
-// Process PromptPay payment
+// Process PromptPay payment (unchanged)
 const processPromptPayPayment = async () => {
   try {
     const paymentData: PaymentData = {
@@ -512,12 +540,11 @@ const processPromptPayPayment = async () => {
     }
   } catch (error) {
     console.error('PromptPay payment failed:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'PromptPay payment failed'
-    isProcessing.value = false
+    throw error instanceof Error ? error : new Error('PromptPay payment failed')
   }
 }
 
-// Start payment polling for PromptPay
+// Start payment polling for PromptPay (unchanged)
 const startPaymentPolling = async (paymentId: string) => {
   try {
     const result = await paymentApi.pollPaymentStatus(paymentId)
@@ -544,6 +571,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // Clean up if needed
+  // Clear any sensitive form data
+  cardForm.value = {
+    name: '',
+    number: '',
+    expiry: '',
+    security_code: ''
+  }
 })
 </script>

@@ -217,14 +217,6 @@
                   >
                     <FontAwesomeIcon icon="download" class="w-4 h-4" />
                   </button>
-                  <button
-                    v-if="payment.subscription"
-                    @click="viewSubscription(payment.subscription.id)"
-                    class="text-purple-600 hover:text-purple-700 p-2 rounded-md hover:bg-purple-50 transition-colors"
-                    title="View Subscription"
-                  >
-                    <FontAwesomeIcon icon="layer-group" class="w-4 h-4" />
-                  </button>
                 </div>
               </td>
             </tr>
