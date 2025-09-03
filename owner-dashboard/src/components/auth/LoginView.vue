@@ -155,6 +155,7 @@ import { ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { login, resendVerification } from '../../service/authService'
 import { useAuthStore } from '../../stores/auth'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
 const authStore = useAuthStore()

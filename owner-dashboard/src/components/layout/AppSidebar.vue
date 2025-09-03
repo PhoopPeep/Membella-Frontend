@@ -200,7 +200,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -235,9 +235,10 @@ const menuItems = [
     url: '/features',
     icon: 'cog',
   },
+
 ]
 
-// Methods - ย้ายมาก่อน watch
+// Methods - move to before watch
 const updateProfileImage = (logoUrl: string | undefined | null) => {
   const newUrl = logoUrl || ''
 
@@ -245,7 +246,7 @@ const updateProfileImage = (logoUrl: string | undefined | null) => {
     console.log('Sidebar: Updating profile image:', { from: profileImageUrl.value, to: newUrl })
 
     profileImageUrl.value = newUrl
-    imageKey.value++ // Force re-render
+    imageKey.value++
     isImageLoading.value = !!newUrl
     imageError.value = false
   }
@@ -307,12 +308,14 @@ const initSidebarState = () => {
 
 // Watch for changes in user logo - ย้ายมาหลัง methods
 watch(
-  () => authStore.user?.logo,
-  (newLogo) => {
-    console.log('Sidebar: User logo changed:', newLogo)
-    updateProfileImage(newLogo)
+  () => authStore.user,
+  (newUser) => {
+    console.log('Sidebar: User changed:', newUser)
+    if (newUser && 'logo' in newUser && newUser.logo) {
+      updateProfileImage(newUser.logo as string)
+    }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 
 // Initialize on component mount
@@ -321,8 +324,8 @@ onMounted(() => {
   initSidebarState()
 
   // Initialize profile image
-  if (authStore.user?.logo) {
-    updateProfileImage(authStore.user.logo)
+  if (authStore.user && 'logo' in authStore.user && authStore.user.logo) {
+    updateProfileImage(authStore.user.logo as string)
   }
 })
 </script>

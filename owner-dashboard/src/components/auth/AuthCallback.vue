@@ -72,6 +72,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../router/api'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
 const route = useRoute()

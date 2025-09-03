@@ -26,90 +26,163 @@
 
     <!-- Dashboard Content -->
     <div v-else>
-      <!-- Stats Cards -->
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Total Revenue"
-          :value="totalRevenue"
-          description="Last 12 months"
-          icon="baht-sign"
-          prefix="฿"
-          :format-value="(value) => Number(value).toLocaleString()"
-        />
-
-        <StatCard
-          title="Total Members"
-          :value="totalMembers"
-          description="Active subscribers"
+      <!-- Empty State for No Members -->
+      <div v-if="totalMembers === 0 && totalRevenue === 0" class="text-center py-12">
+        <EmptyState
+          title="Welcome to your Dashboard!"
+          description="You haven't had any members yet. Create your first plan and start attracting members to see your analytics here."
+          size="lg"
           icon="users"
-        />
-
-        <StatCard
-          title="Active Plans"
-          :value="activePlans"
-          description="Available plans"
-          icon="credit-card"
-        />
+        >
+          <template #actions>
+            <router-link
+              to="/plans/create"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+            >
+              Create Your First Plan
+            </router-link>
+          </template>
+        </EmptyState>
       </div>
 
-      <!-- Charts Section -->
-      <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7 mt-4">
-        <!-- Revenue Chart -->
-        <Card
-          title="Revenue Overview"
-          subtitle="Last 12 months revenue data"
-          card-class="col-span-4"
-        >
-          <div class="w-full h-350">
-            <canvas ref="revenueChart" class="w-full h-full"></canvas>
-          </div>
-        </Card>
+      <!-- Dashboard Content with Data -->
+      <div v-else>
+        <!-- Stats Cards -->
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            title="Total Revenue"
+            :value="totalRevenue"
+            description="Last 12 months"
+            icon="baht-sign"
+            prefix="฿"
+            :format-value="(value) => Number(value).toLocaleString()"
+          />
 
-        <!-- Members by Plan -->
-        <Card
-          title="Members by Plan"
-          subtitle="Distribution of members across plans"
-          card-class="col-span-3"
-        >
-          <div class="space-y-4">
-            <div v-for="plan in membersByPlan" :key="plan.planName" class="flex items-center">
-              <div class="w-2 h-2 rounded-full bg-blue-600 mr-3"></div>
-              <div class="flex-1">
-                <p class="text-sm font-medium">{{ plan.planName }}</p>
-                <p class="text-xs text-gray-500">{{ plan.memberCount }} members</p>
-              </div>
-              <div class="text-sm font-medium">{{ plan.memberCount }}</div>
+          <StatCard
+            title="Total Members"
+            :value="totalMembers"
+            description="Active subscribers"
+            icon="users"
+          />
+
+          <StatCard
+            title="Active Plans"
+            :value="activePlans"
+            description="Available plans"
+            icon="credit-card"
+          />
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7 mt-4">
+          <!-- Revenue Chart -->
+          <Card
+            title="Revenue Overview"
+            subtitle="Last 12 months revenue data"
+            card-class="col-span-4"
+          >
+            <div v-if="revenueData.length > 0" class="w-full h-350">
+              <canvas ref="revenueChart" class="w-full h-full"></canvas>
             </div>
-
             <EmptyState
-              v-if="plans.length === 0"
-              title="No plans created"
-              description="Create your first plan to see member distribution"
+              v-else
+              title="No Revenue Data"
+              description="Revenue data will appear here once you have paying members"
               size="sm"
               container-class="py-8"
-              icon="credit-card"
+              icon="baht-sign"
             />
-          </div>
-        </Card>
+          </Card>
+
+          <!-- Members by Plan -->
+          <Card
+            title="Members by Plan"
+            subtitle="Distribution of members across plans"
+            card-class="col-span-3"
+          >
+            <div v-if="membersByPlan.length > 0" class="space-y-4">
+              <div
+                v-for="plan in membersByPlan"
+                :key="plan.planName"
+                class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                @click="viewPlanMembers(plan)"
+              >
+                <div class="w-2 h-2 rounded-full bg-blue-600 mr-3"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">{{ plan.planName }}</p>
+                  <p class="text-xs text-gray-500">{{ plan.memberCount }} members</p>
+                </div>
+                <div class="text-sm font-medium">{{ plan.memberCount }}</div>
+                <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-400 ml-2" />
+              </div>
+            </div>
+            <EmptyState
+              v-else
+              title="No Members Yet"
+              description="Member distribution will appear here once you have subscribers"
+              size="sm"
+              container-class="py-8"
+              icon="users"
+            />
+          </Card>
+        </div>
+
+        <!-- Recent Members Section -->
+        <div v-if="members.length > 0" class="mt-6">
+          <Card
+            title="Recent Members"
+            subtitle="Latest members who joined your plans"
+            card-class="col-span-full"
+          >
+            <div class="space-y-3">
+              <div
+                v-for="member in members.slice(0, 5)"
+                :key="member.id"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <FontAwesomeIcon icon="user" class="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium">{{ member.email }}</p>
+                    <p class="text-xs text-gray-500">ID: {{ member.id }}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-medium">{{ member.status }}</p>
+                  <p class="text-xs text-gray-500">{{ formatDate(member.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
+
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { dashboardService } from '../../service/dashboardService'
-import type { Plan, Member, RevenueData, DashboardStats } from '../../type'
+import type { Plan, RevenueData, DashboardStats } from '../../type'
+import type { Member } from '../../service/dashboardService'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 // Import reusable components
-import PageHeader from '../../components/common/PageHeader.vue'
-import Card from '../../components/common/Card.vue'
-import StatCard from '../../components/common/StatCard.vue'
-import EmptyState from '../../components/common/EmptyState.vue'
-import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
+
+const PageHeader = defineAsyncComponent(() => import('../../components/common/PageHeader.vue'))
+const Card = defineAsyncComponent(() => import('../../components/common/Card.vue'))
+const StatCard = defineAsyncComponent(() => import('../../components/common/StatCard.vue'))
+const EmptyState = defineAsyncComponent(() => import('../../components/common/EmptyState.vue'))
+const LoadingSpinner = defineAsyncComponent(() => import('../../components/common/LoadingSpinner.vue'))
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 // Reactive data
 const plans = ref<Plan[]>([])
@@ -120,6 +193,8 @@ const dashboardStats = ref<DashboardStats | null>(null)
 const loading = ref(true)
 const error = ref('')
 const revenueChart = ref<HTMLCanvasElement>()
+
+
 
 // Computed properties
 const totalRevenue = computed(() => {
@@ -139,6 +214,28 @@ const membersByPlan = computed(() => {
 })
 
 // Methods
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+const viewPlanMembers = (plan: { planId: string; planName: string; memberCount: number }) => {
+  router.push({
+    name: 'plan-members',
+    params: { planId: plan.planId },
+    query: {
+      planName: plan.planName,
+      memberCount: plan.memberCount.toString()
+    }
+  })
+}
+
+
+
 const loadDashboardData = async () => {
   try {
     loading.value = true
@@ -152,7 +249,7 @@ const loadDashboardData = async () => {
       dashboardService.getMembersByPlan(),
     ])
 
-    dashboardStats.value = statsData
+    dashboardStats.value = statsData as DashboardStats
     revenueData.value = revenueResponse
     members.value = membersResponse
     membersByPlanData.value = membersByPlanResponse

@@ -16,8 +16,8 @@
         </div>
 
         <!-- Success Message -->
-        <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600">{{ successMessage }}</p>
+        <div v-if="successMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ successMessage }}</p>
         </div>
 
         <!-- Rate Limited Message -->
@@ -26,14 +26,6 @@
             <Clock class="w-5 h-5 text-yellow-600 mr-2" />
             <div>
               <h3 class="text-sm font-medium text-yellow-800">Email Rate Limit Reached</h3>
-              <p class="text-sm text-yellow-600 mt-1">
-                Supabase development mode allows only 2-3 emails per hour. Please wait and try again
-                later.
-              </p>
-              <p class="text-xs text-yellow-600 mt-2">
-                <strong>For production:</strong> Set up custom SMTP (SendGrid, Resend, etc.) to
-                increase limits.
-              </p>
             </div>
           </div>
         </div>
@@ -57,9 +49,6 @@
                 <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
                 <p>• The email may take a few minutes to arrive</p>
                 <p>• Click the verification link to activate your account</p>
-                <p>
-                  • <strong>Note:</strong> Development version has a limit of 2-3 emails per hour
-                </p>
               </div>
             </div>
           </div>
@@ -76,12 +65,6 @@
                     ? `Resend in ${resendCooldown}s`
                     : 'Resend verification email'
               }}
-            </button>
-            <button
-              @click="tryDifferentEmail"
-              class="text-sm text-gray-600 hover:text-gray-700 underline"
-            >
-              Try different email
             </button>
           </div>
         </div>

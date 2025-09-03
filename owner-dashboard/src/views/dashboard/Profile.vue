@@ -60,29 +60,7 @@
             </div>
           </div>
 
-          <!-- Debug Info (Development Only)
-          <div v-if="isDev" class="text-xs text-gray-500 space-y-1 p-2 bg-gray-50 rounded">
-            <p class="font-mono break-all">Current: {{ currentImageUrl || 'None' }}</p>
-            <p class="font-mono break-all">Store: {{ authStore.user?.logo || 'None' }}</p>
-            <p class="flex items-center justify-center gap-2">
-              Status:
-              <span
-                v-if="!isImageLoading && !imageLoadError && currentImageUrl"
-                class="text-green-600"
-                >✅ Loaded</span
-              >
-              <span v-else-if="imageLoadError" class="text-red-600">❌ Failed</span>
-              <span v-else-if="isImageLoading" class="text-yellow-600">⏳ Loading</span>
-              <span v-else class="text-gray-600">⚪ No Image</span>
-            </p>
-            <button
-              v-if="currentImageUrl"
-              @click="testImageDirectly"
-              class="text-blue-600 hover:text-blue-700 underline text-xs"
-            >
-              Test URL in new tab
-            </button>
-          </div> -->
+
 
           <!-- Error Message -->
           <div
@@ -265,8 +243,9 @@
                   id="email"
                   v-model="profileForm.email"
                   type="email"
-                  :disabled="isUpdatingProfile"
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled
+                  readonly
+                  class="flex h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -453,11 +432,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { profileService } from '../../service/profileService'
-import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
+
+const ConfirmationModal = defineAsyncComponent(() => import('../../components/common/ConfirmationModal.vue'))
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -470,7 +450,7 @@ const imageLoadError = ref(false)
 const imageKey = ref(0) // Force refresh image
 const lastKnownImageUrl = ref('')
 
-const isDev = computed(() => import.meta.env.DEV)
+// const isDev = computed(() => import.meta.env.DEV)
 
 // Modal states
 const isEditingProfile = ref(false)
@@ -701,7 +681,7 @@ const handleUpdateProfile = async () => {
 
     const updateData = {
       org_name: profileForm.value.organizationName.trim(),
-      email: profileForm.value.email.trim(),
+      // Email is intentionally excluded from updates for security reasons
       description: profileForm.value.description.trim() || undefined,
       contact_info: JSON.stringify({
         phone: profileForm.value.phone.trim(),

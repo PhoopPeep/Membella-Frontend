@@ -83,9 +83,6 @@
             <p>• The email may take a few minutes to arrive</p>
             <p>• The reset link will expire in 1 hour</p>
           </div>
-          <button @click="tryAgain" class="text-sm text-blue-600 hover:text-blue-700 underline">
-            Try with different email
-          </button>
         </div>
 
         <!-- Back to Login -->
@@ -103,6 +100,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted, nextTick } from 'vue'
 import { forgotPassword } from '../../service/authService'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 // Form state
 const email = ref('')

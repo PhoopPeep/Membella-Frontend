@@ -79,4 +79,10 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/dashboard/Profile.vue'),
     meta: { requireAuth: true },
   },
+  {
+    path: '/plans/:planId/members',
+    name: 'plan-members',
+    component: () => import('@/views/members/PlanMembers.vue'),
+    meta: { requiresAuth: true },
+  },
 ]

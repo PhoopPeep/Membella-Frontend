@@ -127,7 +127,7 @@
           </router-link>
         </div>
 
-        <!-- Back to Login (always show) -->
+        <!-- Back to Login -->
         <div v-if="!passwordReset" class="mt-4 text-center text-sm">
           Remember your password?
           <router-link to="/login" class="text-blue-600 hover:underline ml-1">
@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { verifyResetToken, resetPassword } from '../../service/authService'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 // State
 const isVerifying = ref(true)

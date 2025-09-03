@@ -15,10 +15,12 @@ export interface Plan {
 export interface Member {
   id: string
   email: string
+  fullName?: string
+  phone?: string
   planId: string
   status: 'active' | 'inactive' | 'cancelled'
   subscriptionStart: string
-  subscriptionEnd: string
+  subscriptionEnd: string | null
   createdAt: string
 }
 
@@ -118,13 +120,11 @@ export const dashboardService = {
       } else if (response.data.data && Array.isArray(response.data.data)) {
         return response.data.data
       } else {
-        // For now, return empty array as members are not implemented
         return []
       }
     } catch (error: any) {
       console.error('Members error:', error)
-      // Don't throw for members as it's not fully implemented
-      console.warn('Members endpoint not fully implemented, returning empty array')
+      // Return empty array if no members found
       return []
     }
   },
@@ -147,8 +147,28 @@ export const dashboardService = {
       }
     } catch (error: any) {
       console.error('Members by plan error:', error)
-      // Don't throw for member distribution as it's simulated
-      console.warn('Members by plan endpoint returning simulated data')
+      // Return empty array if no data found
+      return []
+    }
+  },
+
+  // Get members for a specific plan
+  async getPlanMembers(planId: string): Promise<Member[]> {
+    try {
+      console.log('Fetching members for plan:', planId)
+      const response = await api.get(`/api/dashboard/plans/${planId}/members`)
+      console.log('Plan members response:', response.data)
+
+      if (Array.isArray(response.data)) {
+        return response.data
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      } else {
+        return []
+      }
+    } catch (error: any) {
+      console.error('Plan members error:', error)
+      // Return empty array if no data found
       return []
     }
   },

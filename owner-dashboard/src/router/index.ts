@@ -13,6 +13,7 @@ import CreatePlan from '../views/plans/CreatePlan.vue'
 import PlanDetails from '../views/plans/PlanDetails.vue'
 import EditPlan from '../views/plans/EditPlan.vue'
 import Profile from '../views/dashboard/Profile.vue'
+import PlanMembers from '../views/members/PlanMembers.vue'
 import ForgotPassword from '@/components/auth/ForgotPassword.vue'
 import ResetPassword from '@/components/auth/ResetPassword.vue'
 
@@ -144,6 +145,14 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/plans/:planId/members',
+      name: 'plan-members',
+      component: PlanMembers,
       meta: {
         requiresAuth: true,
       },
