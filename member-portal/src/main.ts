@@ -40,7 +40,10 @@ import {
   faMoneyBillWave,
   faLayerGroup,
   faSpinner,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faEyeSlash,
+  faKey,
+  faLock
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
@@ -77,7 +80,10 @@ library.add(
   faMoneyBillWave,
   faLayerGroup,
   faSpinner,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faEyeSlash,
+  faKey,
+  faLock
 )
 
 const app = createApp(App)

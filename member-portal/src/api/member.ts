@@ -278,4 +278,106 @@ export const memberApi = {
       throw handleApiError(error)
     }
   },
+
+  // Get plan details with features
+  async getPlanDetails(planId: string) {
+    try {
+      console.log('Getting plan details for:', planId)
+
+      if (!planId || planId.trim() === '') {
+        throw new Error('Plan ID is required')
+      }
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidRegex.test(planId.trim())) {
+        throw new Error('Invalid plan ID format')
+      }
+
+      const cleanPlanId = planId.trim()
+      const requestUrl = `/api/member/plans/${cleanPlanId}`
+
+      console.log('Request URL:', `${API_BASE_URL}${requestUrl}`)
+      console.log('Plan ID being sent:', cleanPlanId)
+
+      const response = await api.get(requestUrl)
+      console.log('Plan details API response status:', response.status)
+      console.log('Plan details API response data:', response.data)
+
+      if (response.data.success) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.message || 'Failed to get plan details')
+      }
+    } catch (error: unknown) {
+      console.error('Failed to get plan details:', error)
+
+      // Provide more specific error messages
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url
+        })
+
+        if (error.response?.status === 404) {
+          throw new Error('Plan not found or no longer available.')
+        } else if (error.response?.status === 400) {
+          const message = error.response.data?.message || 'Invalid plan ID provided.'
+          throw new Error(message)
+        } else if (error.response?.status === 500) {
+          const message = error.response.data?.message || 'Server error while fetching plan details.'
+          throw new Error(message)
+        } else if (error.code === 'ECONNREFUSED') {
+          throw new Error('Unable to connect to server. Please check if the backend is running.')
+        } else if (error.code === 'ETIMEDOUT') {
+          throw new Error('Request timeout. Please try again.')
+        }
+      }
+
+      throw handleApiError(error)
+    }
+  },
+
+  // Change Password
+  async changePassword(currentPassword: string, newPassword: string) {
+    try {
+      console.log('Attempting member password change');
+
+      if (!currentPassword || !newPassword) {
+        throw new Error('Current password and new password are required');
+      }
+
+      if (newPassword.length < 8) {
+        throw new Error('New password must be at least 8 characters long');
+      }
+
+      const response = await api.put('/api/member/auth/change-password', {
+        currentPassword,
+        newPassword,
+      })
+
+      console.log('Password change response:', {
+        success: response.data.success,
+        message: response.data.message
+      });
+
+      return response.data
+    } catch (error: unknown) {
+      console.error('Member password change failed:', error)
+
+      if (axios.isAxiosError(error) && error.response?.data) {
+        console.error('Backend error response:', error.response.data)
+        const message = typeof error.response.data === 'object' &&
+                       error.response.data !== null &&
+                       'message' in error.response.data
+                       ? String(error.response.data.message)
+                       : 'Password change failed'
+        throw new Error(message)
+      }
+
+      throw handleApiError(error)
+    }
+  },
 }

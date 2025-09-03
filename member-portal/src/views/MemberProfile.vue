@@ -131,7 +131,7 @@
               <p class="text-sm text-gray-500">Change your account password</p>
             </div>
             <button
-              @click="changePassword"
+              @click="openChangePasswordModal"
               class="text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
               Change Password
@@ -170,6 +170,144 @@
       </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div
+      v-if="showChangePasswordModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      @click.self="closeChangePasswordModal"
+    >
+      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="mb-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Change Password</h3>
+          <p class="text-sm text-gray-600">Enter your current password and choose a new one</p>
+        </div>
+
+        <!-- Password Change Error -->
+        <div v-if="passwordChangeError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ passwordChangeError }}</p>
+        </div>
+
+        <!-- Password Change Success -->
+        <div v-if="passwordChangeSuccess" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <p class="text-sm text-green-600">{{ passwordChangeSuccess }}</p>
+        </div>
+
+        <form @submit.prevent="handleChangePassword" class="space-y-4">
+          <!-- Current Password -->
+          <div class="space-y-2">
+            <label for="currentPassword" class="text-sm font-medium text-gray-700">Current Password</label>
+            <div class="relative">
+              <input
+                id="currentPassword"
+                v-model="passwordForm.currentPassword"
+                :type="showCurrentPassword ? 'text' : 'password'"
+                :disabled="isChangingPassword"
+                class="member-input pr-10"
+                placeholder="Enter your current password"
+                required
+              />
+              <button
+                type="button"
+                @click="showCurrentPassword = !showCurrentPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                :disabled="isChangingPassword"
+              >
+                <FontAwesomeIcon :icon="showCurrentPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <!-- New Password -->
+          <div class="space-y-2">
+            <label for="newPassword" class="text-sm font-medium text-gray-700">New Password</label>
+            <div class="relative">
+              <input
+                id="newPassword"
+                v-model="passwordForm.newPassword"
+                :type="showNewPassword ? 'text' : 'password'"
+                :disabled="isChangingPassword"
+                class="member-input pr-10"
+                placeholder="Enter your new password"
+                required
+              />
+              <button
+                type="button"
+                @click="showNewPassword = !showNewPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                :disabled="isChangingPassword"
+              >
+                <FontAwesomeIcon :icon="showNewPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
+              </button>
+            </div>
+          <!-- Confirm New Password -->
+          <div class="space-y-2">
+            <label for="confirmPassword" class="text-sm font-medium text-gray-700">Confirm New Password</label>
+            <div class="relative">
+              <input
+                id="confirmPassword"
+                v-model="passwordForm.confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                :disabled="isChangingPassword"
+                class="member-input pr-10"
+                :class="{ 'border-red-300': passwordForm.confirmPassword && !passwordsMatch }"
+                placeholder="Confirm your new password"
+                required
+              />
+              <button
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                :disabled="isChangingPassword"
+              >
+                <FontAwesomeIcon :icon="showConfirmPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
+              </button>
+            </div>
+            <div v-if="passwordForm.confirmPassword && !passwordsMatch" class="text-xs text-red-600">
+              Passwords do not match
+            </div>
+          </div>
+
+          <!-- Password Requirements -->
+            <div class="text-xs text-gray-500 space-y-1">
+              <p>Password must:</p>
+              <ul class="ml-4 space-y-0.5">
+                <li :class="passwordRequirements.length ? 'text-green-600' : 'text-gray-500'">
+                  <FontAwesomeIcon :icon="passwordRequirements.length ? 'check' : 'times'" class="w-3 h-3 mr-1" />
+                  Be at least 8 characters long
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex space-x-3 pt-4">
+            <button
+              type="button"
+              @click="closeChangePasswordModal"
+              :disabled="isChangingPassword"
+              class="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="isChangingPassword || !isPasswordFormValid"
+              class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div v-if="isChangingPassword" class="flex items-center justify-center">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Changing...
+              </div>
+              <span v-else>
+                <FontAwesomeIcon icon="key" class="w-4 h-4 mr-2" />
+                Change Password
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Logout Confirmation Modal -->
     <div
       v-if="showLogoutModal"
@@ -202,9 +340,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { memberApi } from '../api/member'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -215,16 +354,52 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const showLogoutModal = ref(false)
 
+// Change Password State
+const showChangePasswordModal = ref(false)
+const isChangingPassword = ref(false)
+const passwordChangeError = ref('')
+const passwordChangeSuccess = ref('')
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
 const profileForm = reactive({
   fullName: '',
   email: '',
   phone: '',
 })
 
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
 const originalForm = reactive({
   fullName: '',
   email: '',
   phone: '',
+})
+
+// Password validation computed properties
+const passwordRequirements = computed(() => ({
+  length: passwordForm.newPassword.length >= 8
+}))
+
+const passwordsMatch = computed(() => {
+  return passwordForm.newPassword === passwordForm.confirmPassword
+})
+
+const isPasswordFormValid = computed(() => {
+  return passwordForm.currentPassword &&
+         passwordForm.newPassword &&
+         passwordForm.confirmPassword &&
+         passwordRequirements.value.length &&
+         passwordRequirements.value.uppercase &&
+         passwordRequirements.value.lowercase &&
+         passwordRequirements.value.number &&
+         passwordsMatch.value &&
+         passwordForm.currentPassword !== passwordForm.newPassword
 })
 
 const initializeForm = () => {
@@ -309,18 +484,90 @@ const cancelEdit = () => {
   errorMessage.value = ''
 }
 
+// Change Password Functions
+const openChangePasswordModal = () => {
+  showChangePasswordModal.value = true
+  passwordChangeError.value = ''
+  passwordChangeSuccess.value = ''
+
+  // Reset form
+  passwordForm.currentPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
+
+  // Reset visibility
+  showCurrentPassword.value = false
+  showNewPassword.value = false
+  showConfirmPassword.value = false
+}
+
+const closeChangePasswordModal = () => {
+  showChangePasswordModal.value = false
+  isChangingPassword.value = false
+  passwordChangeError.value = ''
+  passwordChangeSuccess.value = ''
+
+  // Reset form
+  passwordForm.currentPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
+}
+
+const handleChangePassword = async () => {
+  try {
+    isChangingPassword.value = true
+    passwordChangeError.value = ''
+    passwordChangeSuccess.value = ''
+
+    // Additional validation
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      passwordChangeError.value = 'New password must be different from current password'
+      return
+    }
+
+    if (!isPasswordFormValid.value) {
+      passwordChangeError.value = 'Please ensure all password requirements are met'
+      return
+    }
+
+    console.log('Attempting to change password...')
+
+    const result = await memberApi.changePassword(
+      passwordForm.currentPassword,
+      passwordForm.newPassword
+    )
+
+    if (result.success) {
+      passwordChangeSuccess.value = result.message || 'Password changed successfully!'
+
+      // Clear form after success
+      setTimeout(() => {
+        closeChangePasswordModal()
+      }, 2000)
+    } else {
+      passwordChangeError.value = result.message || 'Failed to change password'
+    }
+
+  } catch (error: unknown) {
+    console.error('Password change error:', error)
+
+    if (error instanceof Error) {
+      passwordChangeError.value = error.message
+    } else {
+      passwordChangeError.value = 'An unexpected error occurred while changing password'
+    }
+  } finally {
+    isChangingPassword.value = false
+  }
+}
+
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'Recently'
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
-}
-
-const changePassword = () => {
-  // TODO: Implement change password
-  alert('Change password functionality would be implemented here')
 }
 
 const handleLogout = () => {
@@ -341,13 +588,7 @@ const confirmLogout = async () => {
   }
 }
 
-const deleteAccount = () => {
-  // TODO: Implement delete account
-  if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-    alert('Delete account functionality would be implemented here')
-  }
-}
-
+// Initialize form data when component mounts
 onMounted(() => {
   initializeForm()
 })
