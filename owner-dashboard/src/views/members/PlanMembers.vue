@@ -207,7 +207,66 @@
             </div>
           </div>
         </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end p-6 border-t border-gray-200 bg-gray-50">
+          <button
+            @click="confirmDeleteMember"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+            :disabled="isDeleting"
+          >
+            <FontAwesomeIcon icon="trash" class="w-4 h-4 mr-2" />
+            {{ isDeleting ? 'Deleting...' : 'Delete Member' }}
+          </button>
+        </div>
       </div>
+      </div>
+    </Transition>
+
+    <!-- Delete Confirmation Modal -->
+    <Transition name="modal">
+      <div v-if="showDeleteConfirmModal" class="fixed inset-0 bg-gray-100 bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50" @click="closeDeleteConfirmModal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out scale-100" @click.stop>
+          <div class="p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                <FontAwesomeIcon icon="exclamation-triangle" class="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Delete Member</h3>
+                <p class="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <p class="text-gray-700">
+                Are you sure you want to delete
+                <span class="font-semibold">{{ selectedMember?.fullName || selectedMember?.email }}</span>?
+              </p>
+              <p class="text-sm text-gray-500 mt-2">
+                This will permanently remove the member and all their subscription data.
+              </p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+              <button
+                @click="closeDeleteConfirmModal"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                :disabled="isDeleting"
+              >
+                Cancel
+              </button>
+              <button
+                @click="deleteMember"
+                class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                :disabled="isDeleting"
+              >
+                <FontAwesomeIcon v-if="isDeleting" icon="spinner" class="w-4 h-4 mr-2 animate-spin" />
+                {{ isDeleting ? 'Deleting...' : 'Delete Member' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </Transition>
   </div>
@@ -237,7 +296,9 @@ const searchQuery = ref('')
 
 // Modal states
 const showMemberDetailsModal = ref(false)
+const showDeleteConfirmModal = ref(false)
 const selectedMember = ref<Member | null>(null)
+const isDeleting = ref(false)
 
 // Computed
 const filteredMembers = computed(() => {
@@ -297,6 +358,42 @@ const viewMemberDetails = (member: Member) => {
 const closeMemberDetailsModal = () => {
   showMemberDetailsModal.value = false
   selectedMember.value = null
+}
+
+const confirmDeleteMember = () => {
+  showDeleteConfirmModal.value = true
+}
+
+const closeDeleteConfirmModal = () => {
+  showDeleteConfirmModal.value = false
+}
+
+const deleteMember = async () => {
+  if (!selectedMember.value) return
+
+  try {
+    isDeleting.value = true
+
+    // Call delete member API
+    await dashboardService.deleteMember(selectedMember.value.id)
+
+    // Remove member from local list
+    planMembers.value = planMembers.value.filter(member => member.id !== selectedMember.value!.id)
+
+    // Close modals
+    showDeleteConfirmModal.value = false
+    showMemberDetailsModal.value = false
+    selectedMember.value = null
+
+    // Show success message (you can add a toast notification here)
+    console.log('Member deleted successfully')
+
+  } catch (err) {
+    console.error('Error deleting member:', err)
+    error.value = 'Failed to delete member'
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 const goBack = () => {

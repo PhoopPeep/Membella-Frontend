@@ -171,6 +171,12 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const redirectIfAuth = to.meta.redirectIfAuth
 
+  // Allow reset password page without authentication (it has its own token verification)
+  if (to.name === 'reset-password') {
+    next()
+    return
+  }
+
   if (requiresAuth && !isAuthenticated) {
     // Route requires auth but user is not authenticated
     next('/login')

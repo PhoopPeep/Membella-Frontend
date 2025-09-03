@@ -380,4 +380,113 @@ export const memberApi = {
       throw handleApiError(error)
     }
   },
+
+  // Forgot Password
+  async forgotPassword(email: string) {
+    try {
+      console.log('Sending member forgot password request for:', email);
+
+      // Client-side validation
+      if (!email?.trim()) {
+        throw new Error('Email is required');
+      }
+
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const response = await api.post('/api/member/auth/forgot-password', {
+        email: email.trim().toLowerCase(),
+      });
+
+      console.log('Forgot password response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Member forgot password service error:', error);
+
+      if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
+        return {
+          success: false,
+          message: 'Too many password reset attempts. Please wait at least 60 seconds and try again.',
+          rateLimited: true,
+        };
+      }
+
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to send password reset email.',
+        rateLimited:
+          error instanceof Error &&
+          (error.message.includes('rate limit') || error.message.includes('Too many')),
+      };
+    }
+  },
+
+  // Reset Password
+  async resetPassword(accessToken: string, password: string) {
+    try {
+      console.log('Sending member reset password request');
+
+      // Client-side validation
+      if (!accessToken?.trim()) {
+        throw new Error('Invalid reset link');
+      }
+
+      if (!password?.trim()) {
+        throw new Error('Password is required');
+      }
+
+      if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+
+      const response = await api.post('/api/member/auth/reset-password', {
+        access_token: accessToken,
+        password: password,
+      });
+
+      console.log('Reset password response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Member reset password service error:', error);
+
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to reset password.',
+        rateLimited:
+          error instanceof Error &&
+          (error.message.includes('rate limit') || error.message.includes('Too many')),
+      };
+    }
+  },
+
+  // Verify Reset Token
+  async verifyResetToken(accessToken: string) {
+    try {
+      console.log('Verifying member reset token');
+
+      if (!accessToken?.trim()) {
+        throw new Error('Access token is required');
+      }
+
+      const response = await api.post('/api/member/auth/verify-reset-token', {
+        access_token: accessToken,
+      });
+
+      console.log('Verify reset token response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Member verify reset token service error:', error);
+
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to verify reset token.',
+        rateLimited:
+          error instanceof Error &&
+          (error.message.includes('rate limit') || error.message.includes('Too many')),
+      };
+    }
+  },
 }

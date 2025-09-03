@@ -152,20 +152,6 @@
               Logout
             </button>
           </div>
-
-          <!-- Delete Account -->
-          <div class="flex items-center justify-between py-3">
-            <div>
-              <h4 class="text-sm font-medium text-gray-900">Delete Account</h4>
-              <p class="text-sm text-gray-500">Permanently delete your account and all data</p>
-            </div>
-            <button
-              @click="deleteAccount"
-              class="text-red-600 hover:text-red-700 text-sm font-medium"
-            >
-              Delete Account
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -239,6 +225,8 @@
                 <FontAwesomeIcon :icon="showNewPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
               </button>
             </div>
+          </div>
+
           <!-- Confirm New Password -->
           <div class="space-y-2">
             <label for="confirmPassword" class="text-sm font-medium text-gray-700">Confirm New Password</label>
@@ -268,15 +256,14 @@
           </div>
 
           <!-- Password Requirements -->
-            <div class="text-xs text-gray-500 space-y-1">
-              <p>Password must:</p>
-              <ul class="ml-4 space-y-0.5">
-                <li :class="passwordRequirements.length ? 'text-green-600' : 'text-gray-500'">
-                  <FontAwesomeIcon :icon="passwordRequirements.length ? 'check' : 'times'" class="w-3 h-3 mr-1" />
-                  Be at least 8 characters long
-                </li>
-              </ul>
-            </div>
+          <div class="text-xs text-gray-500 space-y-1">
+            <p>Password must:</p>
+            <ul class="ml-4 space-y-0.5">
+              <li :class="passwordRequirements.length ? 'text-green-600' : 'text-gray-500'">
+                <FontAwesomeIcon :icon="passwordRequirements.length ? 'check' : 'times'" class="w-3 h-3 mr-1" />
+                Be at least 8 characters long
+              </li>
+            </ul>
           </div>
 
           <!-- Action Buttons -->
@@ -395,9 +382,6 @@ const isPasswordFormValid = computed(() => {
          passwordForm.newPassword &&
          passwordForm.confirmPassword &&
          passwordRequirements.value.length &&
-         passwordRequirements.value.uppercase &&
-         passwordRequirements.value.lowercase &&
-         passwordRequirements.value.number &&
          passwordsMatch.value &&
          passwordForm.currentPassword !== passwordForm.newPassword
 })
@@ -441,7 +425,7 @@ const handleSave = async () => {
       return
     }
 
-    // TODO: Call API to update profile
+    // Call API to update profile
     console.log('Updating profile:', profileForm)
 
     // Simulate API call
@@ -588,8 +572,54 @@ const confirmLogout = async () => {
   }
 }
 
+const deleteAccount = () => {
+  // Implement delete account functionality
+  console.log('Delete account clicked')
+}
+
 // Initialize form data when component mounts
 onMounted(() => {
   initializeForm()
 })
 </script>
+
+<style scoped>
+/* Member-specific styles */
+.member-button {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.member-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.member-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.member-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  outline: none;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.member-input:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.member-input:disabled {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+}
+</style>

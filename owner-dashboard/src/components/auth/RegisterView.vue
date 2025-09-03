@@ -136,7 +136,7 @@
         <div class="mt-4 text-center text-sm">
           Already have an account?
           <router-link to="/login" class="text-blue-600 hover:underline ml-1">
-            Sign in
+            Log in
           </router-link>
         </div>
       </div>

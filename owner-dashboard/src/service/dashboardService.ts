@@ -172,4 +172,16 @@ export const dashboardService = {
       return []
     }
   },
+
+  // Delete a member
+  async deleteMember(memberId: string): Promise<void> {
+    try {
+      console.log('Deleting member:', memberId)
+      const response = await api.delete(`/api/dashboard/members/${memberId}`)
+      console.log('Delete member response:', response.data)
+    } catch (error: any) {
+      console.error('Delete member error:', error)
+      throw error
+    }
+  },
 }

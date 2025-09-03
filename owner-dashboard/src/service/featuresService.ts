@@ -90,8 +90,8 @@ export const featuresService = {
       if (data.name.trim().length < 2) {
         throw new Error('Feature name must be at least 2 characters long')
       }
-      if (data.description.trim().length < 10) {
-        throw new Error('Feature description must be at least 10 characters long')
+      if (data.description.trim().length < 1) {
+        throw new Error('Feature description must be at least 1 character long')
       }
 
       const response = await api.post('/api/features', {
@@ -122,8 +122,8 @@ export const featuresService = {
       if (data.name.trim().length < 2) {
         throw new Error('Feature name must be at least 2 characters long')
       }
-      if (data.description.trim().length < 10) {
-        throw new Error('Feature description must be at least 10 characters long')
+      if (data.description.trim().length < 1) {
+        throw new Error('Feature description must be at least 1 character long')
       }
 
       const response = await api.put(`/api/features/${id}`, {

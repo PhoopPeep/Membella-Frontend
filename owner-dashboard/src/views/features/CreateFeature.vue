@@ -43,7 +43,7 @@
           v-model="formData.description"
           type="textarea"
           label="Description"
-          placeholder="Enter feature description (at least 10 characters)"
+          placeholder="Enter feature description (at least 1 character)"
           :rows="4"
           required
           :disabled="isLoading"
@@ -66,17 +66,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { featuresService, type CreateFeatureData } from '../../service/featuresService'
 import { useErrorHandler } from '../../composables/useErrorHandler'
 
 // Import reusable components
-import PageHeader from '../../components/common/PageHeader.vue'
-import Card from '../../components/common/Card.vue'
-import FormInput from '../../components/common/FormInput.vue'
-import ActionButtons, { type ActionButton } from '../../components/common/ActionButtons.vue'
-import ErrorToast from '../../components/common/ErrorToast.vue'
+const PageHeader = defineAsyncComponent(() => import('../../components/common/PageHeader.vue'))
+const Card = defineAsyncComponent(() => import('../../components/common/Card.vue'))
+const FormInput = defineAsyncComponent(() => import('../../components/common/FormInput.vue'))
+const ActionButtons = defineAsyncComponent(() => import('../../components/common/ActionButtons.vue'))
+import type { ActionButton } from '../../components/common/ActionButtons.vue'
+const ErrorToast = defineAsyncComponent(() => import('../../components/common/ErrorToast.vue'))
 
 const router = useRouter()
 
@@ -110,7 +111,7 @@ const successMessage = ref({ title: '', text: '' })
 const isFormValid = computed(() => {
   return (
     formData.value.name.trim().length >= 2 &&
-    formData.value.description.trim().length >= 10 &&
+    formData.value.description.trim().length >= 1 &&
     !hasErrors.value
   )
 })
@@ -162,7 +163,7 @@ const validateDescription = () => {
   const description = formData.value.description.trim()
 
   if (!validateRequired(description, 'Description')) return false
-  if (!validateMinLength(description, 10, 'Description')) return false
+  if (!validateMinLength(description, 1, 'Description')) return false
   if (!validateMaxLength(description, 1000, 'Description')) return false
 
   return true

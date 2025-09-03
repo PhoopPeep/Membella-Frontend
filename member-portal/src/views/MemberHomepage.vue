@@ -16,7 +16,7 @@
               class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
               <FontAwesomeIcon icon="sign-in-alt" class="w-4 h-4 mr-2" />
-              Sign In
+              Log In
             </router-link>
             <router-link
               to="/register"
@@ -26,10 +26,6 @@
               Create Account
             </router-link>
           </div>
-          <p class="text-sm text-gray-500 mt-4">
-            Already have an account?
-            <router-link to="/login" class="text-blue-600 hover:underline">Sign in here</router-link>
-          </p>
         </div>
       </div>
     </div>

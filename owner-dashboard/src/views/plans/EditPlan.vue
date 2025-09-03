@@ -314,8 +314,8 @@ const validateDescription = () => {
   const description = formData.value.description?.trim()
   if (!description) {
     descriptionError.value = 'Description is required'
-  } else if (description.length < 10) {
-    descriptionError.value = 'Description must be at least 10 characters'
+  } else if (description.length < 1) {
+    descriptionError.value = 'Description must be at least 1 character'
   } else if (description.length > 500) {
     descriptionError.value = 'Description must be less than 500 characters'
   }

@@ -122,17 +122,6 @@
             <p class="text-xs text-gray-500">We'll send a verification link to this email</p>
           </div>
           <div class="space-y-2">
-            <label for="phone" class="text-sm font-medium leading-none">Phone (Optional)</label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              v-model="phone"
-              :disabled="isLoading"
-              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          <div class="space-y-2">
             <label for="password" class="text-sm font-medium leading-none">Password *</label>
             <input
               id="password"
@@ -171,7 +160,7 @@
         <div class="mt-4 text-center text-sm">
           Already have an account?
           <router-link to="/login" class="text-blue-600 hover:underline ml-1">
-            Sign in
+            Log In
           </router-link>
         </div>
       </div>

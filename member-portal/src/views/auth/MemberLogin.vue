@@ -118,21 +118,21 @@
             :disabled="isLoading"
             class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {{ isLoading ? 'Signing In...' : 'Sign In' }}
+            {{ isLoading ? 'Logging In...' : 'Log In' }}
           </button>
         </form>
+
+        <!-- Forgot Password Link -->
+        <div class="mt-4 text-center text-sm">
+          <router-link to="/forgot-password" class="text-blue-600 hover:underline">
+            Forgot your password?
+          </router-link>
+        </div>
 
         <div class="mt-4 text-center text-sm">
           Don't have an account?
           <router-link to="/register" class="text-blue-600 hover:underline ml-1">
             Create account
-          </router-link>
-        </div>
-
-        <!-- Browse as Guest -->
-        <div class="mt-4 text-center">
-          <router-link to="/browse" class="text-sm text-gray-500 hover:text-gray-700 underline">
-            Browse plans as guest
           </router-link>
         </div>
       </div>

@@ -101,8 +101,8 @@ export const plansService = {
       if (data.name.trim().length < 2) {
         throw new Error('Plan name must be at least 2 characters long')
       }
-      if (data.description.trim().length < 10) {
-        throw new Error('Plan description must be at least 10 characters long')
+      if (data.description.trim().length < 1) {
+        throw new Error('Plan description must be at least 1 character long')
       }
       if (data.price > 999999) {
         throw new Error('Price cannot exceed $999,999')
@@ -153,8 +153,8 @@ export const plansService = {
       if (data.name.trim().length < 2) {
         throw new Error('Plan name must be at least 2 characters long')
       }
-      if (data.description.trim().length < 10) {
-        throw new Error('Plan description must be at least 10 characters long')
+      if (data.description.trim().length < 1) {
+        throw new Error('Plan description must be at least 1 character long')
       }
       if (data.price > 999999) {
         throw new Error('Price cannot exceed $999,999')

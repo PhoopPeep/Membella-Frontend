@@ -7,6 +7,8 @@ const PaymentHistory = () => import('@/views/PaymentHistory.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
 const MemberLogin = () => import('@/views/auth/MemberLogin.vue')
 const MemberRegister = () => import('@/views/auth/MemberRegister.vue')
+const MemberForgotPassword = () => import('@/views/auth/MemberForgotPassword.vue')
+const MemberResetPassword = () => import('@/views/auth/MemberResetPassword.vue')
 const MemberAuthCallback = () => import('@/components/auth/MemberAuthCallback.vue')
 
 const router = createRouter({
@@ -41,6 +43,24 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: MemberRegister,
+      meta: {
+        requiresAuth: false,
+        redirectIfAuth: true,
+      },
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: MemberForgotPassword,
+      meta: {
+        requiresAuth: false,
+        redirectIfAuth: true,
+      },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: MemberResetPassword,
       meta: {
         requiresAuth: false,
         redirectIfAuth: true,
@@ -96,6 +116,12 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = authStore.isAuthenticated
   const requiresAuth = to.meta.requiresAuth
   const redirectIfAuth = to.meta.redirectIfAuth
+
+  // Allow reset password page without authentication (it has its own token verification)
+  if (to.name === 'reset-password') {
+    next()
+    return
+  }
 
   if (requiresAuth && !isAuthenticated) {
     // Route requires auth but user is not authenticated

@@ -77,8 +77,8 @@
         <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-7 mt-4">
           <!-- Revenue Chart -->
           <Card
-            title="Revenue Overview"
-            subtitle="Last 12 months revenue data"
+            title="Revenue Trend"
+            subtitle="Monthly revenue data for the last 12 months"
             card-class="col-span-4"
           >
             <div v-if="revenueData.length > 0" class="w-full h-350">
@@ -165,13 +165,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
 import { dashboardService } from '../../service/dashboardService'
-import type { Plan, RevenueData, DashboardStats } from '../../type'
+import type { RevenueData, DashboardStats } from '../../type'
 import type { Member } from '../../service/dashboardService'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import type { Chart } from 'chart.js'
 
 // Import reusable components
 
@@ -181,11 +181,9 @@ const StatCard = defineAsyncComponent(() => import('../../components/common/Stat
 const EmptyState = defineAsyncComponent(() => import('../../components/common/EmptyState.vue'))
 const LoadingSpinner = defineAsyncComponent(() => import('../../components/common/LoadingSpinner.vue'))
 
-const authStore = useAuthStore()
 const router = useRouter()
 
 // Reactive data
-const plans = ref<Plan[]>([])
 const members = ref<Member[]>([])
 const revenueData = ref<RevenueData[]>([])
 const membersByPlanData = ref<Array<{ planId: string; planName: string; memberCount: number }>>([])
@@ -193,6 +191,7 @@ const dashboardStats = ref<DashboardStats | null>(null)
 const loading = ref(true)
 const error = ref('')
 const revenueChart = ref<HTMLCanvasElement>()
+const chartInstance = ref<Chart | null>(null)
 
 
 
@@ -281,36 +280,101 @@ const initializeChart = async () => {
     const ctx = revenueChart.value.getContext('2d')
     if (!ctx) return
 
-    new Chart(ctx, {
-      type: 'bar',
+    // Destroy existing chart if it exists
+    if (chartInstance.value) {
+      chartInstance.value.destroy()
+    }
+
+    chartInstance.value = new Chart(ctx, {
+      type: 'line',
       data: {
         labels: revenueData.value.map((item) => item.month),
         datasets: [
           {
-            label: 'Revenue',
+            label: 'Revenue (฿)',
             data: revenueData.value.map((item) => item.revenue),
-            backgroundColor: '#3b82f6',
             borderColor: '#3b82f6',
-            borderWidth: 1,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointHoverBackgroundColor: '#2563eb',
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 3,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
         plugins: {
           legend: {
-            display: false,
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 12,
+                weight: 'bold',
+              },
+            },
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return `Revenue: ฿${context.parsed.y.toLocaleString()}`
+              }
+            }
           },
         },
         scales: {
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              font: {
+                size: 11,
+              },
+              color: '#6b7280',
+            },
+          },
           y: {
             beginAtZero: true,
+            grid: {
+              color: 'rgba(107, 114, 128, 0.1)',
+            },
             ticks: {
+              font: {
+                size: 11,
+              },
+              color: '#6b7280',
               callback: function (value) {
-                return '' + value.toLocaleString()
+                return '฿' + value.toLocaleString()
               },
             },
+          },
+        },
+        elements: {
+          point: {
+            hoverBackgroundColor: '#2563eb',
           },
         },
       },
@@ -324,5 +388,12 @@ const initializeChart = async () => {
 onMounted(async () => {
   await loadDashboardData()
   await initializeChart()
+})
+
+onUnmounted(() => {
+  // Clean up chart instance to prevent memory leaks
+  if (chartInstance.value) {
+    chartInstance.value.destroy()
+  }
 })
 </script>
