@@ -11,6 +11,26 @@
           <h2 class="text-xl font-semibold">Verifying your email...</h2>
           <p class="text-gray-600">Please wait while we confirm your member account.</p>
         </div>
+        <div v-else-if="success" class="space-y-4">
+          <div
+            class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <FontAwesomeIcon icon="check-circle" class="w-6 h-6 text-green-600" />
+          </div>
+          <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
+          <p class="text-gray-600">
+            Your member account has been successfully verified. You're being redirected to the
+            homepage...
+          </p>
+          <div class="mt-4">
+            <button
+              @click="redirectToHomepage"
+              class="w-full h-10 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+            >
+              Go to Homepage
+            </button>
+          </div>
+        </div>
 
         <div v-else-if="showErrorMessage" class="space-y-4">
           <div
@@ -38,27 +58,6 @@
               class="w-full h-10 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
               Try Again
-            </button>
-          </div>
-        </div>
-
-        <div v-else-if="success" class="space-y-4">
-          <div
-            class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
-          >
-            <FontAwesomeIcon icon="check-circle" class="w-6 h-6 text-green-600" />
-          </div>
-          <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
-          <p class="text-gray-600">
-            Your member account has been successfully verified. You're being redirected to the
-            homepage...
-          </p>
-          <div class="mt-4">
-            <button
-              @click="redirectToHomepage"
-              class="w-full h-10 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-            >
-              Go to Homepage
             </button>
           </div>
         </div>
@@ -148,6 +147,8 @@ const processAuthCallback = async () => {
     console.log('Starting member auth callback processing')
     console.log('Current URL:', window.location.href)
     console.log('Route query:', route.query)
+    console.log('Window location search:', window.location.search)
+    console.log('Window location hash:', window.location.hash)
 
     // Check if we have URL parameters for auth
     const urlParams = new URLSearchParams(window.location.search)
@@ -155,19 +156,46 @@ const processAuthCallback = async () => {
     const refreshToken = urlParams.get('refresh_token')
     const type = urlParams.get('type')
 
-    console.log('Member URL tokens found:', {
+    // Also check hash parameters (Supabase sometimes uses hash)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const hashAccessToken = hashParams.get('access_token')
+    const hashRefreshToken = hashParams.get('refresh_token')
+    const hashType = hashParams.get('type')
+
+    console.log('Member URL tokens found (search params):', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
       type,
+      accessToken: accessToken ? accessToken.substring(0, 20) + '...' : null,
+      refreshToken: refreshToken ? refreshToken.substring(0, 20) + '...' : null
     })
 
-    if (accessToken && refreshToken) {
+    console.log('Member URL tokens found (hash params):', {
+      hasAccessToken: !!hashAccessToken,
+      hasRefreshToken: !!hashRefreshToken,
+      type: hashType,
+      accessToken: hashAccessToken ? hashAccessToken.substring(0, 20) + '...' : null,
+      refreshToken: hashRefreshToken ? hashRefreshToken.substring(0, 20) + '...' : null
+    })
+
+    // Use tokens from either search params or hash params
+    const finalAccessToken = accessToken || hashAccessToken
+    const finalRefreshToken = refreshToken || hashRefreshToken
+    const finalType = type || hashType
+
+    console.log('Final tokens to use:', {
+      hasAccessToken: !!finalAccessToken,
+      hasRefreshToken: !!finalRefreshToken,
+      type: finalType
+    })
+
+    if (finalAccessToken && finalRefreshToken) {
       // This is a URL-based callback (email verification link)
       console.log('Processing member email verification callback')
 
       try {
         console.log('Calling member backend auth callback...')
-        const response = await memberApi.handleAuthCallback(accessToken, refreshToken)
+        const response = await memberApi.handleAuthCallback(finalAccessToken, finalRefreshToken)
 
         console.log('Member backend callback successful:', response)
 
@@ -181,6 +209,7 @@ const processAuthCallback = async () => {
             redirectToHomepage()
           }, 2000)
         } else {
+          console.error('Member backend response missing required data:', response)
           throw new Error('Backend did not return member authentication data')
         }
       } catch (backendError) {
@@ -188,7 +217,15 @@ const processAuthCallback = async () => {
         throw new Error('Member email verification failed on backend')
       }
     } else {
-      throw new Error('No valid member authentication session found. Please try logging in again.')
+      // No tokens found in URL
+      console.log('No tokens found in URL parameters')
+      console.log('This usually means:')
+      console.log('1. The email verification link is not properly formatted')
+      console.log('2. Supabase redirect URL is not configured correctly')
+      console.log('3. The verification link has expired or been used already')
+
+      // Show more helpful error message
+      throw new Error('Email verification link is invalid or expired. Please try registering again or contact support.')
     }
   } catch (err) {
     console.error('Member auth callback error:', err)

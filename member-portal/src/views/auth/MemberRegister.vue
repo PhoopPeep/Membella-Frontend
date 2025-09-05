@@ -66,9 +66,6 @@
                 <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
                 <p>• The email may take a few minutes to arrive</p>
                 <p>• Click the verification link to activate your account</p>
-                <p>
-                  • <strong>Note:</strong> Development version has a limit of 2-3 emails per hour
-                </p>
               </div>
             </div>
           </div>
@@ -85,12 +82,6 @@
                     ? `Resend in ${resendCooldown}s`
                     : 'Resend verification email'
               }}
-            </button>
-            <button
-              @click="tryDifferentEmail"
-              class="text-sm text-gray-600 hover:text-gray-700 underline"
-            >
-              Try different email
             </button>
           </div>
         </div>

@@ -198,7 +198,7 @@ const processAuthCallback = async () => {
 
         console.log('Backend callback successful:', response.data)
 
-        if (response.data.token && response.data.user) {
+        if (response.data.success && response.data.token && response.data.user) {
           // Store auth data
           authStore.setAuth(response.data.token, response.data.user)
           success.value = true
@@ -208,6 +208,7 @@ const processAuthCallback = async () => {
             redirectToDashboard()
           }, 2000)
         } else {
+          console.error('Backend response missing required data:', response.data)
           throw new Error('Backend did not return authentication data')
         }
       } catch (backendError) {
@@ -217,7 +218,12 @@ const processAuthCallback = async () => {
         // we can try to get user data directly
         if (session.user.email_confirmed_at) {
           console.log('Attempting direct user lookup...')
-          await handleDirectAuth(session)
+          try {
+            await handleDirectAuth(session)
+          } catch (directAuthError) {
+            console.error('Direct auth also failed:', directAuthError)
+            throw new Error('Email verification failed. Please try logging in again.')
+          }
         } else {
           throw new Error('Email verification failed on backend')
         }
@@ -256,22 +262,25 @@ const handleDirectAuth = async (session: any) => {
     console.log('Handling direct auth with session')
 
     // Try to get user from our backend using the session
-    const { data: profileResponse } = await api.get('/api/auth/profile', {
+    const response = await api.get('/api/auth/profile', {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
     })
 
-    if (profileResponse.user) {
+    console.log('Profile response:', response.data)
+
+    if (response.data && response.data.user) {
       // Create a JWT token for this session (this should ideally come from backend)
       // For now, we'll use the Supabase access token
-      authStore.setAuth(session.access_token, profileResponse.user)
+      authStore.setAuth(session.access_token, response.data.user)
       success.value = true
 
       setTimeout(() => {
         redirectToDashboard()
       }, 2000)
     } else {
+      console.error('Profile response missing user data:', response.data)
       throw new Error('User profile not found')
     }
   } catch (directAuthError) {
