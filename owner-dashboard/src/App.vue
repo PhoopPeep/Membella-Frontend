@@ -1,40 +1,57 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+  <div id="app" class="min-h-screen bg-gradient-soft">
     <!-- Show loading state while initializing auth -->
     <div v-if="isInitializing" class="min-h-screen flex items-center justify-center">
-      <div class="text-center">
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
-        ></div>
-        <p class="text-gray-600">Loading...</p>
+      <div class="text-center animate-fade-in">
+        <div class="relative">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-500 mx-auto mb-4"
+          ></div>
+          <div
+            class="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-secondary-500 animate-pulse-soft"
+          ></div>
+        </div>
+        <p class="text-neutral-600 font-medium">Loading Membella...</p>
+        <div class="mt-2 w-32 h-1 bg-primary-100 rounded-full mx-auto">
+          <div class="h-1 bg-gradient-primary rounded-full animate-pulse"></div>
+        </div>
       </div>
     </div>
 
     <!-- Main app content -->
     <div v-else>
-      <!-- Show sidebar and main content for authenticated users -->
-      <div v-if="authStore.isAuthenticated" class="flex h-screen">
-        <AppSidebar />
-        <main class="flex-1 overflow-auto">
-          <router-view />
-        </main>
+      <!-- Show full-screen auth pages for auth callback and non-authenticated users -->
+      <div v-if="isAuthCallbackPage || !authStore.isAuthenticated" class="min-h-screen bg-gradient-soft">
+        <router-view />
       </div>
 
-      <!-- Show full-screen auth pages for non-authenticated users -->
-      <div v-else>
-        <router-view />
+      <!-- Show sidebar and main content for authenticated users (except auth callback) -->
+      <div v-else class="flex h-screen bg-gradient-soft">
+        <AppSidebar />
+        <main class="flex-1 overflow-auto bg-gradient-soft">
+          <div class="min-h-full">
+            <router-view />
+          </div>
+        </main>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import AppSidebar from './components/layout/AppSidebar.vue'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const isInitializing = ref(true)
+
+// Check if current page is auth callback
+const isAuthCallbackPage = computed(() => {
+  return route.path.includes('/auth/callback')
+})
 
 onMounted(async () => {
   try {

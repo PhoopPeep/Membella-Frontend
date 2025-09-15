@@ -22,7 +22,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
 // Response interceptor
@@ -35,7 +35,7 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export interface Feature {
@@ -163,7 +163,7 @@ export const subscriptionApi = {
       console.log('Cancelling subscription:', subscriptionId)
 
       const response = await api.patch(`/api/subscriptions/${subscriptionId}/status`, {
-        status: 'cancelled'
+        status: 'cancelled',
       })
 
       if (!response.data.success) {

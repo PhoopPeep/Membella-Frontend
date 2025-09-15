@@ -1,163 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '@/components/auth/LoginView.vue'
-import RegisterView from '@/components/auth/RegisterView.vue'
-import AuthCallback from '@/components/auth/AuthCallback.vue'
-import DashboardView from '@/views/dashboard/Dashboard.vue'
 import { useAuthStore } from '@/stores/auth'
-import Features from '../views/features/Features.vue'
-import CreateFeature from '../views/features/CreateFeature.vue'
-import FeatureDetails from '@/views/features/FeatureDetails.vue'
-import EditFeature from '@/views/features/EditFeature.vue'
-import Plans from '../views/plans/Plans.vue'
-import CreatePlan from '../views/plans/CreatePlan.vue'
-import PlanDetails from '../views/plans/PlanDetails.vue'
-import EditPlan from '../views/plans/EditPlan.vue'
-import Profile from '../views/dashboard/Profile.vue'
-import PlanMembers from '../views/members/PlanMembers.vue'
-import ForgotPassword from '@/components/auth/ForgotPassword.vue'
-import ResetPassword from '@/components/auth/ResetPassword.vue'
+import { routes } from './routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      redirect: '/dashboard',
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginView,
-      meta: {
-        requiresAuth: false,
-        redirectIfAuth: true, // Redirect to dashboard if already authenticated
-      },
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: RegisterView,
-      meta: {
-        requiresAuth: false,
-        redirectIfAuth: true, // Redirect to dashboard if already authenticated
-      },
-    },
-    {
-      path: '/forgot-password',
-      name: 'forgot-password',
-      component: ForgotPassword,
-      meta: {
-        requiresAuth: false,
-        redirectIfAuth: true, // Redirect to dashboard if already authenticated
-      },
-    },
-    {
-      path: '/reset-password',
-      name: 'reset-password',
-      component: ResetPassword,
-      meta: {
-        requiresAuth: false,
-        redirectIfAuth: true, // Redirect to dashboard if already authenticated
-      },
-    },
-    {
-      path: '/auth/callback',
-      name: 'auth-callback',
-      component: AuthCallback,
-      meta: {
-        requiresAuth: false,
-      },
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/features',
-      name: 'features',
-      component: Features,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/features/create',
-      name: 'create-feature',
-      component: CreateFeature,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/features/:id',
-      name: 'feature-details',
-      component: FeatureDetails,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/features/:id/edit',
-      name: 'edit-feature',
-      component: EditFeature,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    // Plans routes
-    {
-      path: '/plans',
-      name: 'plans',
-      component: Plans,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/plans/create',
-      name: 'create-plan',
-      component: CreatePlan,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/plans/:id',
-      name: 'plan-details',
-      component: PlanDetails,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/plans/:id/edit',
-      name: 'edit-plan',
-      component: EditPlan,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: Profile,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/plans/:planId/members',
-      name: 'plan-members',
-      component: PlanMembers,
-      meta: {
-        requiresAuth: true,
-      },
-    },
-  ],
+  routes,
 })
 
 // Navigation guard for authentication
@@ -171,20 +18,36 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const redirectIfAuth = to.meta.redirectIfAuth
 
-  // Allow reset password page without authentication (it has its own token verification)
-  if (to.name === 'reset-password') {
+  console.log('🔧 Navigation Guard Debug:', {
+    to: to.name,
+    path: to.path,
+    fullPath: to.fullPath,
+    query: to.query,
+    hash: to.hash,
+    isAuthenticated,
+    requiresAuth,
+    redirectIfAuth
+  })
+
+  // Allow reset password, test reset password, and auth callback pages without authentication
+  // They have their own token verification
+  if (to.name === 'reset-password' || to.name === 'test-reset-password' || to.name === 'auth-callback') {
+    console.log('🔧 Allowing auth page access:', to.name)
     next()
     return
   }
 
   if (requiresAuth && !isAuthenticated) {
     // Route requires auth but user is not authenticated
+    console.log('🔧 Redirecting to login - requires auth but not authenticated')
     next('/login')
   } else if (redirectIfAuth && isAuthenticated) {
     // User is authenticated but trying to access login/register
+    console.log('🔧 Redirecting to dashboard - authenticated user accessing auth page')
     next('/dashboard')
   } else {
     // Allow navigation
+    console.log('🔧 Allowing navigation')
     next()
   }
 })

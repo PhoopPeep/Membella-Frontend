@@ -1,152 +1,280 @@
 <template>
-  <div class="flex-1 space-y-4 p-4 md:p-8 pt-6">
-    <div class="flex items-center space-x-2">
-      <button
-        @click="goBack"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3 mr-2"
-      >
-        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
-        Back
-      </button>
-      <h1 class="text-3xl font-bold tracking-tight">Create Plan</h1>
+  <div class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20">
+    <!-- Hero Header Section -->
+    <div
+      class="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 px-6 py-12 md:px-8"
+    >
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+      <div
+        class="absolute top-0 right-0 w-96 h-96 bg-secondary-400/20 rounded-full -translate-y-48 translate-x-48"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 w-64 h-64 bg-primary-300/20 rounded-full translate-y-32 -translate-x-32"
+      ></div>
+
+      <div class="relative max-w-7xl mx-auto">
+        <div class="text-center">
+          <h1 class="text-3xl md:text-4xl font-black text-white mb-4 drop-shadow-lg">
+            Create New Plan ✨
+          </h1>
+          <p class="text-lg text-white/90 font-medium max-w-2xl mx-auto">
+            Design your perfect subscription plan
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div class="max-w-2xl rounded-lg border bg-white shadow-sm">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-lg font-semibold">Plan Details</h2>
-      </div>
-      <div class="p-6">
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ errorMessage }}</p>
+    <div class="max-w-4xl mx-auto px-6 md:px-8 -mt-4 relative z-10">
+      <!-- Page Header -->
+      <div class="flex items-center justify-between mb-8 mt-8">
+        <div class="flex items-center space-x-4">
+          <button
+            @click="goBack"
+            class="p-3 text-primary-600 hover:text-primary-700 hover:bg-primary-100 rounded-xl transition-all duration-200"
+            title="Back to Plans"
+          >
+            <FontAwesomeIcon icon="arrow-left" class="w-5 h-5" />
+          </button>
+          <div>
+            <h2 class="text-xl font-bold text-primary-700">Plan Details</h2>
+            <p class="text-primary-600 text-sm">Fill in the information for your new plan</p>
+          </div>
         </div>
+      </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div class="space-y-2">
-            <label for="name" class="text-sm font-medium leading-none">Plan Name *</label>
-            <input
-              id="name"
-              v-model="formData.name"
-              type="text"
-              placeholder="Enter plan name"
-              required
-              :disabled="isLoading"
-              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="description" class="text-sm font-medium leading-none">Description *</label>
-            <textarea
-              id="description"
-              v-model="formData.description"
-              placeholder="Enter plan description"
-              rows="3"
-              required
-              :disabled="isLoading"
-              class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label for="price" class="text-sm font-medium leading-none">Price *</label>
-              <input
-                id="price"
-                v-model.number="formData.price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                required
-                :disabled="isLoading"
-                @input="validatePrice"
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-                :class="{ 'border-red-300 focus:ring-red-500': priceError }"
-              />
-              <p v-if="priceError" class="text-xs text-red-600">{{ priceError }}</p>
-            </div>
-
-            <div class="space-y-2">
-              <label for="duration" class="text-sm font-medium leading-none"
-                >Duration (days) *</label
-              >
-              <input
-                id="duration"
-                v-model.number="formData.duration"
-                type="number"
-                min="1"
-                placeholder="30"
-                required
-                :disabled="isLoading"
-                @input="validateDuration"
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-                :class="{ 'border-red-300 focus:ring-red-500': durationError }"
-              />
-              <p v-if="durationError" class="text-xs text-red-600">{{ durationError }}</p>
+      <div class="bg-white rounded-2xl border border-primary-200 shadow-soft overflow-hidden">
+        <div
+          class="p-8 border-b border-primary-100 bg-gradient-to-r from-primary-50/50 to-secondary-50/50"
+        >
+          <h3 class="text-lg font-bold text-primary-700 flex items-center">
+            <FontAwesomeIcon icon="credit-card" class="w-5 h-5 mr-3 text-secondary-500" />
+            Plan Information
+          </h3>
+          <p class="text-primary-600 mt-1 text-sm">Configure your subscription plan details</p>
+        </div>
+        <div class="p-8">
+          <!-- Error Message -->
+          <div v-if="errorMessage" class="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl">
+            <div class="flex items-center">
+              <FontAwesomeIcon icon="exclamation-triangle" class="w-5 h-5 text-error-500 mr-3" />
+              <p class="text-sm text-error-600 font-medium">{{ errorMessage }}</p>
             </div>
           </div>
 
-          <div class="space-y-4">
-            <label class="text-sm font-medium leading-none">Features *</label>
-            <div
-              v-if="features.length > 0"
-              class="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3"
-              :class="{ 'border-red-300': featuresError }"
-            >
-              <div
-                v-for="feature in features"
-                :key="feature.feature_id"
-                class="flex items-center space-x-2"
+          <form @submit.prevent="handleSubmit" class="space-y-8">
+            <!-- Plan Name -->
+            <div class="space-y-3">
+              <label for="name" class="text-sm font-semibold text-primary-700 flex items-center">
+                <FontAwesomeIcon icon="tag" class="w-4 h-4 mr-2 text-secondary-500" />
+                Plan Name *
+              </label>
+              <input
+                id="name"
+                v-model="formData.name"
+                type="text"
+                placeholder="e.g., Premium Membership, Basic Plan, Pro Package"
+                required
+                :disabled="isLoading"
+                class="w-full h-12 px-4 py-3 text-primary-700 placeholder-primary-400 bg-white border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p class="text-xs text-primary-500">Choose a clear, descriptive name for your plan</p>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-3">
+              <label
+                for="description"
+                class="text-sm font-semibold text-primary-700 flex items-center"
               >
-                <input
-                  :id="feature.feature_id"
-                  v-model="selectedFeatures"
-                  :value="feature.feature_id"
-                  type="checkbox"
-                  @change="validateFeatures"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label :for="feature.feature_id" class="text-sm font-normal cursor-pointer">
-                  <div>
-                    <p class="font-medium">{{ feature.name }}</p>
-                    <p class="text-xs text-gray-500">{{ feature.description }}</p>
-                  </div>
+                <FontAwesomeIcon icon="align-left" class="w-4 h-4 mr-2 text-secondary-500" />
+                Description *
+              </label>
+              <textarea
+                id="description"
+                v-model="formData.description"
+                placeholder="Describe what this plan includes and who it's for..."
+                rows="4"
+                required
+                :disabled="isLoading"
+                class="w-full px-4 py-3 text-primary-700 placeholder-primary-400 bg-white border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 resize-vertical disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p class="text-xs text-primary-500">
+                Help customers understand what they'll get with this plan
+              </p>
+            </div>
+
+            <!-- Price and Duration -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Price -->
+              <div class="space-y-3">
+                <label for="price" class="text-sm font-semibold text-primary-700 flex items-center">
+                  <FontAwesomeIcon icon="dollar-sign" class="w-4 h-4 mr-2 text-secondary-500" />
+                  Price (฿) *
                 </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span class="text-primary-500 font-medium">฿</span>
+                  </div>
+                  <input
+                    id="price"
+                    v-model.number="formData.price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    required
+                    :disabled="isLoading"
+                    @input="validatePrice"
+                    class="w-full h-12 pl-8 pr-4 py-3 text-primary-700 placeholder-primary-400 bg-white border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="{
+                      'border-error-300 focus:border-error-500 focus:ring-error-100': priceError,
+                    }"
+                  />
+                </div>
+                <p v-if="priceError" class="text-xs text-error-600 flex items-center">
+                  <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
+                  {{ priceError }}
+                </p>
+                <p v-else class="text-xs text-primary-500">
+                  Set the price for this subscription plan
+                </p>
+              </div>
+
+              <!-- Duration -->
+              <div class="space-y-3">
+                <label
+                  for="duration"
+                  class="text-sm font-semibold text-primary-700 flex items-center"
+                >
+                  <FontAwesomeIcon icon="calendar" class="w-4 h-4 mr-2 text-secondary-500" />
+                  Duration (days) *
+                </label>
+                <input
+                  id="duration"
+                  v-model.number="formData.duration"
+                  type="number"
+                  min="1"
+                  placeholder="30"
+                  required
+                  :disabled="isLoading"
+                  @input="validateDuration"
+                  class="w-full h-12 px-4 py-3 text-primary-700 placeholder-primary-400 bg-white border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  :class="{
+                    'border-error-300 focus:border-error-500 focus:ring-error-100': durationError,
+                  }"
+                />
+                <p v-if="durationError" class="text-xs text-error-600 flex items-center">
+                  <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
+                  {{ durationError }}
+                </p>
+                <p v-else class="text-xs text-primary-500">How long does this subscription last?</p>
               </div>
             </div>
-            <div v-else class="text-sm text-gray-500 bg-gray-50 p-4 rounded-md">
-              No features available. <br />
+
+            <!-- Features Selection -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-sm font-semibold text-primary-700 flex items-center">
+                  <FontAwesomeIcon icon="star" class="w-4 h-4 mr-2 text-secondary-500" />
+                  Features *
+                  <span class="text-xs text-primary-500 font-normal ml-2"
+                    >(Select at least one)</span
+                  >
+                </div>
+                <span class="text-xs text-primary-500 font-medium">
+                  {{ selectedFeatures.length }} selected
+                </span>
+              </div>
+
+              <div
+                v-if="features.length > 0"
+                class="space-y-3 max-h-64 overflow-y-auto border-2 border-primary-200 rounded-xl p-4 bg-primary-50/30"
+                :class="{ 'border-error-300 bg-error-50/30': featuresError }"
+              >
+                <div
+                  v-for="feature in features"
+                  :key="feature.feature_id"
+                  class="flex items-start space-x-3 p-3 bg-white rounded-xl border border-primary-100 hover:border-primary-300 transition-all duration-200"
+                >
+                  <input
+                    :id="feature.feature_id"
+                    v-model="selectedFeatures"
+                    :value="feature.feature_id"
+                    type="checkbox"
+                    @change="validateFeatures"
+                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded mt-1"
+                  />
+                  <label :for="feature.feature_id" class="flex-1 cursor-pointer">
+                    <div>
+                      <p class="font-semibold text-primary-700">{{ feature.name }}</p>
+                      <p class="text-sm text-primary-600 mt-1">{{ feature.description }}</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="text-center py-8 bg-primary-50 rounded-xl border-2 border-primary-200"
+              >
+                <div
+                  class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <FontAwesomeIcon icon="cog" class="w-8 h-8 text-primary-500" />
+                </div>
+                <p class="text-primary-600 font-medium mb-2">No features available</p>
+                <p class="text-sm text-primary-500 mb-4">
+                  Create features first to assign them to plans
+                </p>
+                <button
+                  type="button"
+                  @click="navigateToCreateFeature"
+                  class="inline-flex items-center justify-center bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-lg font-medium hover:from-primary-600 hover:to-secondary-600 transition-all duration-200"
+                >
+                  <FontAwesomeIcon icon="plus" class="w-4 h-4 mr-2" />
+                  Create Features
+                </button>
+              </div>
+
+              <p v-if="featuresError" class="text-xs text-error-600 flex items-center">
+                <FontAwesomeIcon icon="exclamation-circle" class="w-3 h-3 mr-1" />
+                {{ featuresError }}
+              </p>
+            </div>
+
+            <!-- Form Actions -->
+            <div
+              class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-8 border-t border-primary-100"
+            >
               <button
                 type="button"
-                @click="navigateToCreateFeature"
-                class="text-blue-600 hover:text-blue-700 underline"
+                @click="goBack"
+                :disabled="isLoading"
+                class="inline-flex items-center justify-center px-6 py-3 text-primary-600 bg-white border-2 border-primary-200 rounded-xl font-semibold hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create features first
+                <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-2" />
+                Cancel
               </button>
-              to assign them to plans.
+              <button
+                type="submit"
+                :disabled="isLoading || hasValidationErrors"
+                class="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-bold text-lg hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <div v-if="isLoading" class="flex items-center">
+                  <div
+                    class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"
+                  ></div>
+                  Creating Plan...
+                </div>
+                <div v-else class="flex items-center">
+                  <FontAwesomeIcon icon="plus" class="w-5 h-5 mr-2" />
+                  Create Plan
+                </div>
+              </button>
             </div>
-            <p v-if="featuresError" class="text-xs text-red-600">{{ featuresError }}</p>
-          </div>
-
-          <div class="flex space-x-2 pt-4">
-            <button
-              type="submit"
-              :disabled="isLoading || hasValidationErrors"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
-            >
-              {{ isLoading ? 'Creating...' : 'Create Plan' }}
-            </button>
-            <button
-              type="button"
-              @click="goBack"
-              :disabled="isLoading"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>

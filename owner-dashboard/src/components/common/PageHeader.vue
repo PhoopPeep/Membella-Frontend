@@ -1,35 +1,37 @@
 <template>
-  <div class="flex items-center justify-between">
+  <div
+    class="flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-primary-200"
+  >
     <!-- Left side - Title and optional back button -->
-    <div class="flex items-center space-x-2">
+    <div class="flex items-center space-x-4">
       <!-- Back Button -->
       <button
         v-if="showBackButton"
         @click="handleBackClick"
         :disabled="backDisabled"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-9 px-3"
+        class="inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary-200 bg-white/80 hover:bg-primary-50 hover:border-primary-300 h-10 px-4 text-neutral-700 hover:text-primary-700"
         :class="backButtonClass"
       >
-        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-1" />
+        <FontAwesomeIcon icon="arrow-left" class="w-4 h-4 mr-2" />
         {{ backText }}
       </button>
 
       <!-- Title Section -->
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">{{ title }}</h1>
-        <p v-if="subtitle" class="text-gray-600 mt-1">{{ subtitle }}</p>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-800">{{ title }}</h1>
+        <p v-if="subtitle" class="text-neutral-600 mt-1 font-medium">{{ subtitle }}</p>
       </div>
     </div>
 
     <!-- Right side - Actions -->
-    <div v-if="$slots.actions || primaryAction" class="flex items-center space-x-2">
+    <div v-if="$slots.actions || primaryAction" class="flex items-center space-x-3">
       <slot name="actions">
         <!-- Primary Action Button -->
         <button
           v-if="primaryAction"
           @click="handlePrimaryAction"
           :disabled="primaryAction.disabled"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+          class="inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-11 px-6 shadow-medium hover:shadow-glow"
           :class="getPrimaryActionClass()"
         >
           <FontAwesomeIcon
@@ -101,9 +103,11 @@ const getPrimaryActionClass = (): string => {
   const variant = props.primaryAction?.variant || 'primary'
 
   const classes = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700',
-    danger: 'bg-red-600 text-white hover:bg-red-700',
+    primary: 'bg-gradient-primary text-white hover:bg-gradient-secondary',
+    secondary:
+      'border border-primary-200 bg-white/80 hover:bg-primary-50 text-neutral-700 hover:text-primary-700',
+    danger:
+      'bg-gradient-to-r from-error-500 to-error-600 text-white hover:from-error-600 hover:to-error-700',
   }
 
   return classes[variant]

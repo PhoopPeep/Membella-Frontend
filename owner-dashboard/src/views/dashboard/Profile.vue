@@ -1,432 +1,528 @@
 <template>
-  <div class="flex-1 space-y-4 p-4 md:p-8 pt-6">
-    <div class="flex items-center space-x-2">
-      <h1 class="text-3xl font-bold tracking-tight">Profile</h1>
+  <div class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20">
+    <!-- Hero Header Section -->
+    <div
+      class="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 px-6 py-16 md:px-8"
+    >
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+      <div
+        class="absolute top-0 right-0 w-64 h-64 bg-secondary-400/20 rounded-full -translate-y-32 translate-x-32"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 w-48 h-48 bg-primary-300/20 rounded-full translate-y-24 -translate-x-24"
+      ></div>
+
+      <div class="relative max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
+          Your Profile 👤
+        </h1>
+        <p class="text-xl text-white/90 font-medium max-w-2xl mx-auto">
+          Manage your account settings and business information
+        </p>
+      </div>
     </div>
 
-    <div class="grid gap-6 md:grid">
-      <!-- Profile Image Section - FIXED -->
-      <div class="rounded-lg border bg-white shadow-sm">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold flex items-center">
-            <FontAwesomeIcon icon="user" class="w-5 h-5 mr-2" />
-            Profile Image
-          </h2>
-        </div>
-        <div class="p-6 text-center space-y-4">
-          <!-- Image Display Container -->
+    <div class="max-w-6xl mx-auto px-6 md:px-8 -mt-4 relative z-10 pb-12">
+      <div class="space-y-8">
+        <!-- Profile Image Section -->
+        <div class="bg-white rounded-2xl border border-primary-200 shadow-soft overflow-hidden">
           <div
-            class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-200 relative"
+            class="p-6 border-b border-primary-100 bg-gradient-to-r from-primary-50/50 to-secondary-50/50"
           >
-            <!-- Loading State -->
-            <div v-if="isUploading || isRemoving" class="flex flex-col items-center">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-              <span class="text-xs text-gray-500">
-                {{ isUploading ? 'Uploading...' : 'Removing...' }}
-              </span>
-            </div>
-
-            <!-- Profile Image or Fallback -->
-            <div v-else class="w-full h-full relative">
-              <!-- Image Loading State -->
+            <h2 class="text-xl font-bold text-primary-700 flex items-center">
+              <FontAwesomeIcon icon="camera" class="w-5 h-5 mr-3 text-secondary-500" />
+              Profile Image
+            </h2>
+            <p class="text-primary-600 mt-1 text-sm">Update your profile picture</p>
+          </div>
+          <div class="p-6 text-center space-y-6">
+            <!-- Image Display Container -->
+            <div
+              class="w-32 h-32 mx-auto bg-gradient-to-br from-primary-100 to-secondary-100 rounded-3xl flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl relative"
+            >
+              <!-- Loading State -->
               <div
-                v-if="isImageLoading && currentImageUrl"
-                class="absolute inset-0 flex items-center justify-center bg-gray-100"
+                v-if="isUploading || isRemoving"
+                class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-3xl"
               >
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
-              </div>
-
-              <!-- Actual Profile Image -->
-              <img
-                v-if="currentImageUrl && !imageLoadError"
-                :src="currentImageUrl"
-                :alt="authStore.user?.org_name || 'Profile'"
-                class="w-full h-full object-cover transition-opacity duration-300"
-                :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
-                @load="onImageLoad"
-                @error="onImageError"
-                :key="imageKey"
-              />
-
-              <!-- Fallback: Initials -->
-              <div
-                v-if="!currentImageUrl || imageLoadError"
-                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-              >
-                <span class="text-xl font-semibold">
-                  {{ getInitials(authStore.user?.org_name || 'ORG') }}
+                <div
+                  class="animate-spin rounded-full h-8 w-8 border-4 border-primary-200 border-t-primary-500 mb-3"
+                ></div>
+                <span class="text-sm font-semibold text-primary-700">
+                  {{ isUploading ? 'Uploading...' : 'Removing...' }}
                 </span>
               </div>
+
+              <!-- Profile Image or Fallback -->
+              <div v-else class="w-full h-full relative">
+                <!-- Image Loading State -->
+                <div
+                  v-if="isImageLoading && currentImageUrl"
+                  class="absolute inset-0 flex items-center justify-center bg-gray-100"
+                >
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+                </div>
+
+                <!-- Actual Profile Image -->
+                <img
+                  v-if="currentImageUrl && !imageLoadError"
+                  :src="currentImageUrl"
+                  :alt="authStore.user?.org_name || 'Profile'"
+                  class="w-full h-full object-cover transition-opacity duration-300"
+                  :class="{ 'opacity-0': isImageLoading, 'opacity-100': !isImageLoading }"
+                  @load="onImageLoad"
+                  @error="onImageError"
+                  :key="imageKey"
+                />
+
+                <!-- Fallback: Initials -->
+                <div
+                  v-if="!currentImageUrl || imageLoadError"
+                  class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                >
+                  <span class="text-xl font-semibold">
+                    {{ getInitials(authStore.user?.org_name || 'ORG') }}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            <!-- Error Message -->
+            <div
+              v-if="imageLoadError && !isUploading && !isRemoving && currentImageUrl"
+              class="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-3"
+            >
+              <p class="font-medium">Image failed to load</p>
+              <p class="mt-1">
+                The image file may not be accessible or the bucket might not be public.
+              </p>
+              <button
+                @click="refreshImage"
+                class="mt-2 text-blue-600 hover:text-blue-700 underline text-xs"
+              >
+                Try to reload image
+              </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-3">
+              <button
+                @click="triggerFileInput"
+                :disabled="isUploading || isRemoving"
+                class="inline-flex items-center justify-center bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <FontAwesomeIcon icon="camera" class="w-4 h-4 mr-2" />
+                {{ isUploading ? 'Uploading...' : 'Upload' }}
+              </button>
+
+              <button
+                v-if="currentImageUrl && !isUploading"
+                @click="handleRemoveImage"
+                :disabled="isRemoving"
+                class="inline-flex items-center justify-center bg-gradient-to-r from-error-500 to-error-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:from-error-600 hover:to-error-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <FontAwesomeIcon icon="trash" class="w-4 h-4 mr-2" />
+                {{ isRemoving ? 'Removing...' : 'Remove' }}
+              </button>
+            </div>
+
+            <!-- File Input -->
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              @change="handleImageUpload"
+              class="hidden"
+            />
           </div>
+        </div>
 
-
-
-          <!-- Error Message -->
+        <!-- Profile Information Display -->
+        <div class="bg-white rounded-2xl border border-primary-200 shadow-soft overflow-hidden">
           <div
-            v-if="imageLoadError && !isUploading && !isRemoving && currentImageUrl"
-            class="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-3"
+            class="p-6 border-b border-primary-100 bg-gradient-to-r from-primary-50/50 to-secondary-50/50"
           >
-            <p class="font-medium">Image failed to load</p>
-            <p class="mt-1">
-              The image file may not be accessible or the bucket might not be public.
+            <h2 class="text-xl font-bold text-primary-700 flex items-center">
+              <FontAwesomeIcon icon="building" class="w-5 h-5 mr-3 text-secondary-500" />
+              Organization Information
+            </h2>
+            <p class="text-primary-600 mt-1 text-sm">
+              Your business details and contact information
             </p>
-            <button
-              @click="refreshImage"
-              class="mt-2 text-blue-600 hover:text-blue-700 underline text-xs"
-            >
-              Try to reload image
-            </button>
           </div>
-
-          <!-- Action Buttons -->
-          <div class="flex justify-center space-x-2">
-            <button
-              @click="triggerFileInput"
-              :disabled="isUploading || isRemoving"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 py-2"
-            >
-              <FontAwesomeIcon icon="camera" class="w-4 h-4 mr-2" />
-              {{ isUploading ? 'Uploading...' : 'Upload' }}
-            </button>
-
-            <button
-              v-if="currentImageUrl && !isUploading"
-              @click="handleRemoveImage"
-              :disabled="isRemoving"
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-300 bg-white text-red-600 hover:bg-red-50 h-10 px-4 py-2"
-            >
-              {{ isRemoving ? 'Removing...' : 'Remove' }}
-            </button>
-          </div>
-
-          <!-- File Input -->
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-            @change="handleImageUpload"
-            class="hidden"
-          />
-        </div>
-      </div>
-
-      <!-- Profile Information Display -->
-      <div class="rounded-lg border bg-white shadow-sm">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold">Organization Information</h2>
-        </div>
-        <div class="p-6">
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="space-y-4">
-              <div class="flex items-center space-x-3">
-                <FontAwesomeIcon icon="building" class="w-5 h-5 text-gray-500" />
-                <div>
-                  <p class="text-sm text-gray-500">Organization</p>
-                  <p class="font-medium">{{ authStore.user?.org_name || 'Not specified' }}</p>
+          <div class="p-6">
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div class="bg-primary-50 rounded-xl p-4">
+                <div class="flex items-center space-x-3 mb-2">
+                  <FontAwesomeIcon icon="building" class="w-5 h-5 text-primary-600" />
+                  <h5 class="font-semibold text-primary-700 text-sm">Organization</h5>
                 </div>
+                <p class="text-primary-600 text-base font-medium">
+                  {{ authStore.user?.org_name || 'Not specified' }}
+                </p>
               </div>
 
-              <div class="flex items-center space-x-3">
-                <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-gray-500" />
-                <div>
-                  <p class="text-sm text-gray-500">Email</p>
-                  <p class="font-medium">{{ authStore.user?.email || 'Not specified' }}</p>
+              <div class="bg-primary-50 rounded-xl p-4">
+                <div class="flex items-center space-x-3 mb-2">
+                  <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-primary-600" />
+                  <h5 class="font-semibold text-primary-700 text-sm">Email</h5>
                 </div>
+                <p class="text-primary-600 text-base font-medium">
+                  {{ authStore.user?.email || 'Not specified' }}
+                </p>
               </div>
 
-              <div v-if="contactInfo?.phone" class="flex items-center space-x-3">
-                <FontAwesomeIcon icon="phone" class="w-5 h-5 text-gray-500" />
-                <div>
-                  <p class="text-sm text-gray-500">Phone</p>
-                  <p class="font-medium">{{ contactInfo.phone }}</p>
+              <div v-if="contactInfo?.phone" class="bg-secondary-50 rounded-xl p-4">
+                <div class="flex items-center space-x-3 mb-2">
+                  <FontAwesomeIcon icon="phone" class="w-5 h-5 text-secondary-600" />
+                  <h5 class="font-semibold text-secondary-700 text-sm">Phone</h5>
                 </div>
+                <p class="text-secondary-600 text-base font-medium">{{ contactInfo.phone }}</p>
+              </div>
+
+              <div v-if="contactInfo?.website" class="bg-primary-50 rounded-xl p-4">
+                <div class="flex items-center space-x-3 mb-2">
+                  <FontAwesomeIcon icon="globe" class="w-5 h-5 text-primary-600" />
+                  <h5 class="font-semibold text-primary-700 text-sm">Website</h5>
+                </div>
+                <p class="text-primary-600 text-base font-medium">{{ contactInfo.website }}</p>
+              </div>
+
+              <div
+                v-if="contactInfo?.address"
+                class="bg-secondary-50 rounded-xl p-4 md:col-span-2 lg:col-span-1"
+              >
+                <div class="flex items-start space-x-3 mb-2">
+                  <FontAwesomeIcon icon="map-marker-alt" class="w-5 h-5 text-secondary-600 mt-1" />
+                  <h5 class="font-semibold text-secondary-700 text-sm">Address</h5>
+                </div>
+                <p class="text-secondary-600 text-base font-medium">{{ contactInfo.address }}</p>
               </div>
             </div>
 
-            <div class="space-y-4">
-              <div v-if="contactInfo?.website" class="flex items-center space-x-3">
-                <FontAwesomeIcon icon="globe" class="w-5 h-5 text-gray-500" />
-                <div>
-                  <p class="text-sm text-gray-500">Website</p>
-                  <p class="font-medium">{{ contactInfo.website }}</p>
-                </div>
-              </div>
-
-              <div v-if="contactInfo?.address" class="flex items-start space-x-3">
-                <FontAwesomeIcon icon="map-marker-alt" class="w-5 h-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p class="text-sm text-gray-500">Address</p>
-                  <p class="font-medium">{{ contactInfo.address }}</p>
-                </div>
+            <div v-if="authStore.user?.description" class="mt-8 pt-6 border-t border-primary-100">
+              <h5 class="text-base font-semibold text-primary-700 mb-3 flex items-center">
+                <FontAwesomeIcon icon="align-left" class="w-4 h-4 mr-2 text-secondary-500" />
+                Description
+              </h5>
+              <div class="bg-primary-50 rounded-xl p-4">
+                <p class="text-primary-600 leading-relaxed text-base">
+                  {{ authStore.user.description }}
+                </p>
               </div>
             </div>
           </div>
+        </div>
 
-          <div v-if="authStore.user?.description" class="mt-6 pt-6 border-t">
-            <p class="text-sm text-gray-500 mb-2">Description</p>
-            <p class="text-gray-700">{{ authStore.user.description }}</p>
+        <!-- Account Actions -->
+        <div class="bg-white rounded-2xl border border-primary-200 shadow-soft overflow-hidden">
+          <div
+            class="p-6 border-b border-primary-100 bg-gradient-to-r from-primary-50/50 to-secondary-50/50"
+          >
+            <h2 class="text-xl font-bold text-primary-700 flex items-center">
+              <FontAwesomeIcon icon="cog" class="w-5 h-5 mr-3 text-secondary-500" />
+              Account Actions
+            </h2>
+            <p class="text-primary-600 mt-1 text-sm">Manage your account settings and security</p>
+          </div>
+          <div class="p-6 space-y-4">
+            <button
+              @click="openEditProfile"
+              class="w-full flex items-center justify-start px-5 py-3 text-base font-semibold text-primary-700 bg-gradient-to-r from-primary-50 to-secondary-50 border-2 border-primary-200 rounded-xl hover:from-primary-100 hover:to-secondary-100 hover:border-primary-300 focus:outline-none focus:ring-4 focus:ring-primary-100 transition-all duration-200 transform hover:scale-105"
+            >
+              <FontAwesomeIcon icon="edit" class="w-5 h-5 mr-3 text-primary-600" />
+              Edit Profile
+            </button>
+
+            <button
+              @click="openChangePassword"
+              class="w-full flex items-center justify-start px-5 py-3 text-base font-semibold text-secondary-700 bg-gradient-to-r from-secondary-50 to-primary-50 border-2 border-secondary-200 rounded-xl hover:from-secondary-100 hover:to-primary-100 hover:border-secondary-300 focus:outline-none focus:ring-4 focus:ring-secondary-100 transition-all duration-200 transform hover:scale-105"
+            >
+              <FontAwesomeIcon icon="lock" class="w-5 h-5 mr-3 text-secondary-600" />
+              Change Password
+            </button>
+
+            <button
+              @click="confirmLogout"
+              :disabled="isLoggingOut"
+              class="w-full flex items-center justify-start px-5 py-3 text-base font-semibold text-white bg-gradient-to-r from-error-500 to-error-600 rounded-xl hover:from-error-600 hover:to-error-700 focus:outline-none focus:ring-4 focus:ring-error-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:transform-none"
+            >
+              <FontAwesomeIcon icon="sign-out-alt" class="w-5 h-5 mr-3" />
+              {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Account Actions -->
-      <div class="rounded-lg border bg-white shadow-sm">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold">Account Actions</h2>
-        </div>
-        <div class="p-6 space-y-4">
-          <button
-            @click="openEditProfile"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            <FontAwesomeIcon icon="edit" class="w-4 h-4 mr-2" />
-            Edit Profile
-          </button>
-
-          <button
-            @click="openChangePassword"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            <FontAwesomeIcon icon="lock" class="w-4 h-4 mr-2" />
-            Change Password
-          </button>
-
-          <button
-            @click="confirmLogout"
-            :disabled="isLoggingOut"
-            class="w-full flex items-center justify-start px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
-            {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Profile Modal -->
-    <div
-      v-if="isEditingProfile"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-    >
+      <!-- Edit Profile Modal -->
       <div
-        class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white"
+        v-if="isEditingProfile"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
       >
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Profile</h3>
-          <p class="text-sm text-gray-500 mb-6">
-            Update your organization information and contact details.
-          </p>
+        <div
+          class="relative top-20 mx-auto p-8 border w-11/12 max-w-2xl shadow-2xl rounded-2xl bg-white"
+        >
+          <div class="mt-3">
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center mr-4"
+              >
+                <FontAwesomeIcon icon="edit" class="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold text-primary-700">Edit Profile</h3>
+                <p class="text-primary-600">
+                  Update your organization information and contact details
+                </p>
+              </div>
+            </div>
 
-          <!-- Error Message -->
-          <div v-if="profileError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p class="text-sm text-red-600">{{ profileError }}</p>
-          </div>
+            <!-- Error Message -->
+            <div
+              v-if="profileError"
+              class="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl"
+            >
+              <div class="flex items-center">
+                <FontAwesomeIcon icon="exclamation-triangle" class="w-5 h-5 text-error-500 mr-3" />
+                <p class="text-sm text-error-600 font-medium">{{ profileError }}</p>
+              </div>
+            </div>
 
-          <form @submit.prevent="handleUpdateProfile" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+            <form @submit.prevent="handleUpdateProfile" class="space-y-6">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <label for="orgName" class="text-sm font-medium leading-none"
+                    >Organization Name</label
+                  >
+                  <input
+                    id="orgName"
+                    v-model="profileForm.organizationName"
+                    type="text"
+                    :disabled="isUpdatingProfile"
+                    class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label for="email" class="text-sm font-medium leading-none">Email Address</label>
+                  <input
+                    id="email"
+                    v-model="profileForm.email"
+                    type="email"
+                    disabled
+                    readonly
+                    class="flex h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
               <div class="space-y-2">
-                <label for="orgName" class="text-sm font-medium leading-none"
-                  >Organization Name</label
+                <label for="description" class="text-sm font-medium leading-none"
+                  >Description</label
+                >
+                <textarea
+                  id="description"
+                  v-model="profileForm.description"
+                  placeholder="Tell us about your organization"
+                  rows="3"
+                  :disabled="isUpdatingProfile"
+                  class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <label for="phone" class="text-sm font-medium leading-none">Phone</label>
+                  <input
+                    id="phone"
+                    v-model="profileForm.phone"
+                    type="text"
+                    placeholder="+1 (555) 123-4567"
+                    :disabled="isUpdatingProfile"
+                    class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label for="website" class="text-sm font-medium leading-none">Website</label>
+                  <input
+                    id="website"
+                    v-model="profileForm.website"
+                    type="text"
+                    placeholder="https://example.com"
+                    :disabled="isUpdatingProfile"
+                    class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="address" class="text-sm font-medium leading-none">Address</label>
+                <textarea
+                  id="address"
+                  v-model="profileForm.address"
+                  placeholder="Your business address"
+                  rows="2"
+                  :disabled="isUpdatingProfile"
+                  class="flex min-h-16 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div class="flex justify-end space-x-4 pt-6 border-t border-primary-100">
+                <button
+                  type="button"
+                  @click="cancelProfileEdit"
+                  :disabled="isUpdatingProfile"
+                  class="px-6 py-3 text-primary-600 bg-white border-2 border-primary-200 rounded-xl font-bold hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  :disabled="isUpdatingProfile"
+                  class="px-8 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-bold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  <div v-if="isUpdatingProfile" class="flex items-center">
+                    <div
+                      class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"
+                    ></div>
+                    Saving...
+                  </div>
+                  <div v-else class="flex items-center">
+                    <FontAwesomeIcon icon="save" class="w-4 h-4 mr-2" />
+                    Save Changes
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Modal -->
+      <div
+        v-if="isChangingPassword"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
+      >
+        <div
+          class="relative top-20 mx-auto p-8 border w-11/12 max-w-md shadow-2xl rounded-2xl bg-white"
+        >
+          <div class="mt-3">
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-r from-secondary-500 to-primary-500 rounded-xl flex items-center justify-center mr-4"
+              >
+                <FontAwesomeIcon icon="lock" class="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold text-primary-700">Change Password</h3>
+                <p class="text-primary-600">Enter your current password and choose a new one</p>
+              </div>
+            </div>
+
+            <!-- Error Message -->
+            <div
+              v-if="passwordError"
+              class="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl"
+            >
+              <div class="flex items-center">
+                <FontAwesomeIcon icon="exclamation-triangle" class="w-5 h-5 text-error-500 mr-3" />
+                <p class="text-sm text-error-600 font-medium">{{ passwordError }}</p>
+              </div>
+            </div>
+
+            <form @submit.prevent="handleChangePassword" class="space-y-6">
+              <div class="space-y-2">
+                <label for="currentPassword" class="text-sm font-medium leading-none"
+                  >Current Password</label
                 >
                 <input
-                  id="orgName"
-                  v-model="profileForm.organizationName"
-                  type="text"
-                  :disabled="isUpdatingProfile"
+                  id="currentPassword"
+                  v-model="passwordForm.currentPassword"
+                  type="password"
+                  required
+                  :disabled="isChangingPasswordLoading"
                   class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div class="space-y-2">
-                <label for="email" class="text-sm font-medium leading-none">Email Address</label>
+                <label for="newPassword" class="text-sm font-medium leading-none"
+                  >New Password</label
+                >
                 <input
-                  id="email"
-                  v-model="profileForm.email"
-                  type="email"
-                  disabled
-                  readonly
-                  class="flex h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label for="description" class="text-sm font-medium leading-none">Description</label>
-              <textarea
-                id="description"
-                v-model="profileForm.description"
-                placeholder="Tell us about your organization"
-                rows="3"
-                :disabled="isUpdatingProfile"
-                class="flex min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label for="phone" class="text-sm font-medium leading-none">Phone</label>
-                <input
-                  id="phone"
-                  v-model="profileForm.phone"
-                  type="text"
-                  placeholder="+1 (555) 123-4567"
-                  :disabled="isUpdatingProfile"
+                  id="newPassword"
+                  v-model="passwordForm.newPassword"
+                  type="password"
+                  required
+                  :disabled="isChangingPasswordLoading"
                   class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div class="space-y-2">
-                <label for="website" class="text-sm font-medium leading-none">Website</label>
+                <label for="confirmPassword" class="text-sm font-medium leading-none"
+                  >Confirm New Password</label
+                >
                 <input
-                  id="website"
-                  v-model="profileForm.website"
-                  type="text"
-                  placeholder="https://example.com"
-                  :disabled="isUpdatingProfile"
+                  id="confirmPassword"
+                  v-model="passwordForm.confirmPassword"
+                  type="password"
+                  required
+                  :disabled="isChangingPasswordLoading"
                   class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-            </div>
-
-            <div class="space-y-2">
-              <label for="address" class="text-sm font-medium leading-none">Address</label>
-              <textarea
-                id="address"
-                v-model="profileForm.address"
-                placeholder="Your business address"
-                rows="2"
-                :disabled="isUpdatingProfile"
-                class="flex min-h-16 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-4">
-              <button
-                type="button"
-                @click="cancelProfileEdit"
-                :disabled="isUpdatingProfile"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="isUpdatingProfile"
-                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              >
-                {{ isUpdatingProfile ? 'Saving...' : 'Save Changes' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div
-      v-if="isChangingPassword"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-    >
-      <div
-        class="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white"
-      >
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-          <p class="text-sm text-gray-500 mb-6">
-            Enter your current password and choose a new one.
-          </p>
-
-          <!-- Error Message -->
-          <div v-if="passwordError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p class="text-sm text-red-600">{{ passwordError }}</p>
+              <div class="flex justify-end space-x-4 pt-6 border-t border-primary-100">
+                <button
+                  type="button"
+                  @click="cancelPasswordChange"
+                  :disabled="isChangingPasswordLoading"
+                  class="px-6 py-3 text-primary-600 bg-white border-2 border-primary-200 rounded-xl font-bold hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  :disabled="isChangingPasswordLoading"
+                  class="px-8 py-3 bg-gradient-to-r from-secondary-500 to-primary-500 text-white rounded-xl font-bold hover:from-secondary-600 hover:to-primary-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  <div v-if="isChangingPasswordLoading" class="flex items-center">
+                    <div
+                      class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"
+                    ></div>
+                    Changing...
+                  </div>
+                  <div v-else class="flex items-center">
+                    <FontAwesomeIcon icon="lock" class="w-4 h-4 mr-2" />
+                    Change Password
+                  </div>
+                </button>
+              </div>
+            </form>
           </div>
-
-          <form @submit.prevent="handleChangePassword" class="space-y-4">
-            <div class="space-y-2">
-              <label for="currentPassword" class="text-sm font-medium leading-none"
-                >Current Password</label
-              >
-              <input
-                id="currentPassword"
-                v-model="passwordForm.currentPassword"
-                type="password"
-                required
-                :disabled="isChangingPasswordLoading"
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-            <div class="space-y-2">
-              <label for="newPassword" class="text-sm font-medium leading-none">New Password</label>
-              <input
-                id="newPassword"
-                v-model="passwordForm.newPassword"
-                type="password"
-                required
-                :disabled="isChangingPasswordLoading"
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-            <div class="space-y-2">
-              <label for="confirmPassword" class="text-sm font-medium leading-none"
-                >Confirm New Password</label
-              >
-              <input
-                id="confirmPassword"
-                v-model="passwordForm.confirmPassword"
-                type="password"
-                required
-                :disabled="isChangingPasswordLoading"
-                class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-            <div class="flex justify-end space-x-2 pt-4">
-              <button
-                type="button"
-                @click="cancelPasswordChange"
-                :disabled="isChangingPasswordLoading"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="isChangingPasswordLoading"
-                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              >
-                {{ isChangingPasswordLoading ? 'Changing...' : 'Change Password' }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
-    </div>
 
-    <!-- Logout Confirmation Modal -->
-    <ConfirmationModal
-      :show="showLogoutModal"
-      type="warning"
-      title="Confirm Logout"
-      message="Are you sure you want to logout? You will need to sign in again to access your account."
-      confirm-text="Logout"
-      cancel-text="Stay Logged In"
-      loading-text="Logging out..."
-      :loading="isLoggingOut"
-      @confirm="handleLogout"
-      @cancel="cancelLogout"
-    />
+      <!-- Logout Confirmation Modal -->
+      <ConfirmationModal
+        :show="showLogoutModal"
+        type="warning"
+        title="Confirm Logout"
+        message="Are you sure you want to logout? You will need to sign in again to access your account. Any unsaved changes will be lost."
+        confirm-text="Yes, Logout"
+        cancel-text="Stay Logged In"
+        loading-text="Logging out..."
+        :loading="isLoggingOut"
+        @confirm="handleLogout"
+        @cancel="cancelLogout"
+      />
 
-    <!-- Success Toast -->
-    <div
-      v-if="showToast"
-      class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-md p-4 z-50"
-    >
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <FontAwesomeIcon icon="check-circle" class="h-5 w-5 text-green-400" />
-        </div>
-        <div class="ml-3">
-          <p class="text-sm font-medium text-green-800">{{ toastMessage }}</p>
-        </div>
-      </div>
+      <!-- Toast Notification -->
+      <Toast
+        :show="showToast"
+        :type="toastType"
+        :title="toastTitle"
+        :message="toastMessage"
+        @close="showToast = false"
+      />
     </div>
   </div>
 </template>
@@ -436,8 +532,16 @@ import { ref, computed, onMounted, watch, nextTick, defineAsyncComponent } from 
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { profileService } from '../../service/profileService'
+import Toast from '../../components/common/Toast.vue'
 
-const ConfirmationModal = defineAsyncComponent(() => import('../../components/common/ConfirmationModal.vue'))
+// Define component name
+defineOptions({
+  name: 'ProfileView',
+})
+
+const ConfirmationModal = defineAsyncComponent(
+  () => import('../../components/common/ConfirmationModal.vue'),
+)
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -469,6 +573,8 @@ const passwordError = ref('')
 
 // Toast state
 const showToast = ref(false)
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
+const toastTitle = ref('')
 const toastMessage = ref('')
 
 // Logout confirmation state
@@ -636,15 +742,15 @@ const handleImageUpload = async (event: Event) => {
       await nextTick()
       updateImageUrl(response.user.logo)
 
-      showSuccessToast('Profile image removed successfully')
+      showSuccessToast('Success!', 'Profile image uploaded successfully')
     } else {
-      throw new Error('Remove succeeded but no user data returned')
+      throw new Error('Upload succeeded but no user data returned')
     }
   } catch (error: any) {
-    console.error('Error removing profile image:', error)
-    showErrorToast(error.message || 'Failed to remove profile image')
+    console.error('Error uploading profile image:', error)
+    showErrorToast('Upload Failed', error.message || 'Failed to upload profile image')
   } finally {
-    isRemoving.value = false
+    isUploading.value = false
   }
 }
 
@@ -703,7 +809,7 @@ const handleUpdateProfile = async () => {
     }
 
     isEditingProfile.value = false
-    showSuccessToast('Profile updated successfully')
+    showSuccessToast('Success!', 'Profile updated successfully')
   } catch (error: any) {
     console.error('Profile update error:', error)
     profileError.value = error.message || 'Failed to update profile'
@@ -736,7 +842,7 @@ const handleChangePassword = async () => {
 
     isChangingPassword.value = false
     resetPasswordForm()
-    showSuccessToast('Password changed successfully')
+    showSuccessToast('Success!', 'Password changed successfully')
   } catch (error: any) {
     console.error('Password change error:', error)
     passwordError.value = error.message || 'Failed to change password'
@@ -779,12 +885,16 @@ const handleLogout = async () => {
     // Close modal
     showLogoutModal.value = false
 
-    // Small delay
+    // Show success toast
+    showSuccessToast('Logged Out', 'You have been successfully logged out')
+
+    // Small delay before redirect
     setTimeout(() => {
       router.push('/login')
-    }, 500)
+    }, 1000)
   } catch (error) {
     console.error('❌ Logout error:', error)
+    showErrorToast('Logout Failed', 'There was an error logging out. Please try again.')
   } finally {
     isLoggingOut.value = false
   }
@@ -794,21 +904,36 @@ const cancelLogout = () => {
   showLogoutModal.value = false
 }
 
-const showSuccessToast = (message: string) => {
-  toastMessage.value = message
+const showSuccessToast = (title: string, message?: string) => {
+  toastType.value = 'success'
+  toastTitle.value = title
+  toastMessage.value = message || ''
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
   }, 3000)
 }
 
-const showErrorToast = (message: string) => {
-  toastMessage.value = message
+const showErrorToast = (title: string, message?: string) => {
+  toastType.value = 'error'
+  toastTitle.value = title
+  toastMessage.value = message || ''
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
   }, 5000)
 }
+
+// Warning toast function (for future use)
+// const showWarningToast = (title: string, message?: string) => {
+//   toastType.value = 'warning'
+//   toastTitle.value = title
+//   toastMessage.value = message || ''
+//   showToast.value = true
+//   setTimeout(() => {
+//     showToast.value = false
+//   }, 4000)
+// }
 
 // Load profile function
 const loadProfile = async () => {
@@ -857,13 +982,13 @@ const handleRemoveImage = async () => {
       await nextTick()
       updateImageUrl(response.user.logo)
 
-      showSuccessToast('Profile image removed successfully')
+      showSuccessToast('Success!', 'Profile image removed successfully')
     } else {
       throw new Error('Remove succeeded but no user data returned')
     }
   } catch (error: any) {
     console.error('Error removing profile image:', error)
-    showErrorToast(error.message || 'Failed to remove profile image')
+    showErrorToast('Remove Failed', error.message || 'Failed to remove profile image')
   } finally {
     isRemoving.value = false
   }

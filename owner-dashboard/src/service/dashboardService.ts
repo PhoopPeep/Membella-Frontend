@@ -22,6 +22,14 @@ export interface Member {
   subscriptionStart: string
   subscriptionEnd: string | null
   createdAt: string
+  paymentHistory?: Array<{
+    id: string
+    amount: number
+    status: string
+    planName: string
+    createdAt: string
+  }>
+  totalSpent?: number
 }
 
 export interface RevenueData {

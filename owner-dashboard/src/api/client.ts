@@ -32,12 +32,12 @@ class ApiClient {
           method: config.method?.toUpperCase(),
           url: config.url,
           baseURL: config.baseURL,
-          hasAuth: !!token
-        });
+          hasAuth: !!token,
+        })
         return config
       },
       (error) => {
-        console.error('Request interceptor error:', error);
+        console.error('Request interceptor error:', error)
         return Promise.reject(error)
       },
     )
@@ -49,8 +49,8 @@ class ApiClient {
           status: response.status,
           url: response.config.url,
           success: response.data?.success,
-          message: response.data?.message
-        });
+          message: response.data?.message,
+        })
         return response
       },
       (error: AxiosError) => {
@@ -58,11 +58,11 @@ class ApiClient {
           status: error.response?.status,
           url: error.config?.url,
           message: error.message,
-          responseData: error.response?.data
-        });
+          responseData: error.response?.data,
+        })
 
         // For Auth endpoints, don't redirect to login
-        const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+        const isAuthEndpoint = error.config?.url?.includes('/api/auth/')
 
         return this.handleError(error, isAuthEndpoint)
       },
@@ -92,16 +92,16 @@ class ApiClient {
         status,
         isAuthEndpoint,
         responseData: respData,
-        shouldRedirect: status === 401 && !isAuthEndpoint
-      });
+        shouldRedirect: status === 401 && !isAuthEndpoint,
+      })
 
       // Handle authentication errors - don't redirect for auth endpoints
       if ((status === 401 || status === 403) && !isAuthEndpoint) {
-        console.log('Authentication error - redirecting to login');
+        console.log('Authentication error - redirecting to login')
         this.handleAuthError()
         errorResponse.message = 'Authentication failed. Please login again.'
       } else if (status === 401 || status === 403) {
-        console.log('Authentication error on auth endpoint - not redirecting');
+        console.log('Authentication error on auth endpoint - not redirecting')
         errorResponse.message = respData?.message || 'Authentication failed'
       }
     } else if (error.code === 'ECONNABORTED') {
@@ -110,18 +110,21 @@ class ApiClient {
       errorResponse.message = 'Network error. Please check your connection and try again.'
     }
 
-    console.log('Final error message:', errorResponse.message);
+    console.log('Final error message:', errorResponse.message)
     return Promise.reject(new Error(errorResponse.message))
   }
 
   private handleAuthError(): void {
-    console.log('Clearing auth data and redirecting to login');
+    console.log('Clearing auth data and redirecting to login')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
 
-    // Use Vue Router instead of window.location
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login'
+    // Don't redirect if we're on auth callback page
+    if (window.location.pathname !== '/login' && !window.location.pathname.includes('/auth/callback')) {
+      // Only redirect if not on auth callback page
+      if (!window.location.pathname.includes('/auth/callback')) {
+        window.location.href = '/login'
+      }
     }
   }
 
@@ -131,8 +134,8 @@ class ApiClient {
       const response = await this.client.get<T>(url, { params })
       return response.data
     } catch (error) {
-      console.error('GET request failed:', error);
-      throw error;
+      console.error('GET request failed:', error)
+      throw error
     }
   }
 
@@ -141,8 +144,8 @@ class ApiClient {
       const response = await this.client.post<T>(url, data)
       return response.data
     } catch (error) {
-      console.error('POST request failed:', error);
-      throw error;
+      console.error('POST request failed:', error)
+      throw error
     }
   }
 
@@ -151,8 +154,8 @@ class ApiClient {
       const response = await this.client.put<T>(url, data)
       return response.data
     } catch (error) {
-      console.error('PUT request failed:', error);
-      throw error;
+      console.error('PUT request failed:', error)
+      throw error
     }
   }
 
@@ -161,8 +164,8 @@ class ApiClient {
       const response = await this.client.delete<T>(url)
       return response.data
     } catch (error) {
-      console.error('DELETE request failed:', error);
-      throw error;
+      console.error('DELETE request failed:', error)
+      throw error
     }
   }
 
@@ -189,8 +192,8 @@ class ApiClient {
 
       return response.data
     } catch (error) {
-      console.error('File upload failed:', error);
-      throw error;
+      console.error('File upload failed:', error)
+      throw error
     }
   }
 }

@@ -11,10 +11,7 @@
             <h2 class="text-2xl font-bold text-white">Subscribe to Plan</h2>
             <p class="text-blue-100">{{ plan.name }} - {{ plan.organization }}</p>
           </div>
-          <button
-            @click="$emit('close')"
-            class="text-white hover:text-gray-200 transition-colors"
-          >
+          <button @click="$emit('close')" class="text-white hover:text-gray-200 transition-colors">
             <FontAwesomeIcon icon="times" class="w-6 h-6" />
           </button>
         </div>
@@ -55,7 +52,7 @@
                 'p-4 border-2 rounded-lg transition-colors',
                 selectedMethod === 'card'
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-gray-200 hover:border-gray-300',
               ]"
             >
               <div class="flex items-center space-x-3">
@@ -73,7 +70,7 @@
                 'p-4 border-2 rounded-lg transition-colors',
                 selectedMethod === 'promptpay'
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-gray-200 hover:border-gray-300',
               ]"
             >
               <div class="flex items-center space-x-3">
@@ -94,9 +91,7 @@
           <!-- Card Form -->
           <form @submit.prevent="processCardPayment" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Cardholder Name
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-2"> Cardholder Name </label>
               <input
                 v-model="cardForm.name"
                 type="text"
@@ -108,9 +103,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Card Number
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-2"> Card Number </label>
               <input
                 v-model="cardForm.number"
                 type="text"
@@ -125,9 +118,7 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Expiry Date
-                </label>
+                <label class="block text-sm font-medium text-gray-700 mb-2"> Expiry Date </label>
                 <input
                   v-model="cardForm.expiry"
                   type="text"
@@ -207,12 +198,16 @@
           </button>
           <button
             @click="processPayment"
-            :disabled="!selectedMethod || isProcessing || (selectedMethod === 'card' && !isCardFormValid)"
+            :disabled="
+              !selectedMethod || isProcessing || (selectedMethod === 'card' && !isCardFormValid)
+            "
             class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div v-if="isProcessing" class="flex items-center justify-center">
               <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {{ selectedMethod === 'promptpay' ? 'Generating QR Code...' : 'Processing Payment...' }}
+              {{
+                selectedMethod === 'promptpay' ? 'Generating QR Code...' : 'Processing Payment...'
+              }}
             </div>
             <span v-else>
               {{ selectedMethod === 'promptpay' ? 'Generate QR Code' : 'Pay Now' }}
@@ -245,7 +240,11 @@ interface Plan {
 // Omise type definitions
 interface OmiseInstance {
   setPublicKey: (key: string) => void
-  createToken: (type: string, data: CardData, callback: (statusCode: number, response: TokenResponse) => void) => void
+  createToken: (
+    type: string,
+    data: CardData,
+    callback: (statusCode: number, response: TokenResponse) => void,
+  ) => void
 }
 
 interface CardData {
@@ -287,7 +286,7 @@ const cardForm = ref({
   name: '',
   number: '',
   expiry: '',
-  security_code: ''
+  security_code: '',
 })
 
 // Omise instance
@@ -295,10 +294,12 @@ let omise: OmiseInstance | null = null
 
 // Computed for card form validation
 const isCardFormValid = computed(() => {
-  return cardForm.value.name.trim() !== '' &&
-         cardForm.value.number.replace(/\s/g, '').length >= 13 &&
-         cardForm.value.expiry.length === 5 &&
-         cardForm.value.security_code.length >= 3
+  return (
+    cardForm.value.name.trim() !== '' &&
+    cardForm.value.number.replace(/\s/g, '').length >= 13 &&
+    cardForm.value.expiry.length === 5 &&
+    cardForm.value.security_code.length >= 3
+  )
 })
 
 // Initialize Omise
@@ -434,13 +435,13 @@ const processCardPayment = async () => {
       number: cardForm.value.number.replace(/\s/g, ''),
       expiration_month: parseInt(expMonth),
       expiration_year: fullYear,
-      security_code: cardForm.value.security_code
+      security_code: cardForm.value.security_code,
     }
 
     console.log('Card data prepared:', {
       ...cardData,
       number: cardData.number.replace(/\d(?=\d{4})/g, '*'),
-      security_code: '***'
+      security_code: '***',
     })
 
     // Create token using Omise.createToken
@@ -463,7 +464,11 @@ const processCardPayment = async () => {
             resolve()
           } else {
             console.error('Token creation failed:', response)
-            reject(new Error(response.message || 'Card validation failed. Please check your card details.'))
+            reject(
+              new Error(
+                response.message || 'Card validation failed. Please check your card details.',
+              ),
+            )
           }
         } catch (error) {
           console.error('Error in token callback:', error)
@@ -487,8 +492,8 @@ const submitCardPayment = async (token: string) => {
       paymentMethod: 'card',
       paymentSource: token,
       customerData: {
-        name: cardForm.value.name.trim()
-      }
+        name: cardForm.value.name.trim(),
+      },
     }
 
     const result = await paymentApi.createSubscriptionPayment(paymentData)
@@ -501,7 +506,7 @@ const submitCardPayment = async (token: string) => {
         name: '',
         number: '',
         expiry: '',
-        security_code: ''
+        security_code: '',
       }
 
       setTimeout(() => {
@@ -523,7 +528,7 @@ const processPromptPayPayment = async () => {
   try {
     const paymentData: PaymentData = {
       planId: props.plan.id,
-      paymentMethod: 'promptpay'
+      paymentMethod: 'promptpay',
     }
 
     const result = await paymentApi.createSubscriptionPayment(paymentData)
@@ -576,7 +581,7 @@ onUnmounted(() => {
     name: '',
     number: '',
     expiry: '',
-    security_code: ''
+    security_code: '',
   }
 })
 </script>

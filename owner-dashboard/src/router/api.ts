@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
-  timeout: 10000,
+  timeout: 30000, // เพิ่ม timeout เป็น 30 วินาที
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,10 +32,23 @@ api.interceptors.response.use(
 
     // Handle different types of errors
     if (error.response?.status === 401 || error.response?.status === 403) {
+      // Check if this is an auth callback request - don't redirect for auth endpoints
+      const isAuthCallback = error.config?.url?.includes('/auth/callback')
+
+      if (isAuthCallback) {
+        console.warn('Auth callback failed:', error.response?.data?.message || 'Invalid token')
+        return Promise.reject(new Error(error.response?.data?.message || 'Authentication failed'))
+      }
+
       // Token expired or invalid - clear auth and redirect to login
+      console.warn('Authentication failed:', error.response?.data?.message || 'Invalid token')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+
+      // Only redirect if not already on login page and not on auth callback page
+      if (window.location.pathname !== '/login' && !window.location.pathname.includes('/auth/callback')) {
+        window.location.href = '/login'
+      }
       return Promise.reject(new Error('Authentication failed. Please login again.'))
     }
 

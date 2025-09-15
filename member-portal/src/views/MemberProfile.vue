@@ -1,324 +1,423 @@
 <template>
-  <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-      <p class="text-gray-600">Manage your account information and preferences</p>
-    </div>
-
-    <!-- Profile Card -->
-    <div class="bg-white rounded-lg shadow border border-gray-200">
-      <div class="p-6">
-        <!-- Profile Header -->
-        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-200">
-          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <FontAwesomeIcon icon="user" class="w-8 h-8 text-blue-600" />
-          </div>
-          <div class="flex-1">
-            <h2 class="text-xl font-semibold text-gray-900">{{ authStore.user?.fullName }}</h2>
-            <p class="text-gray-600">{{ authStore.user?.email }}</p>
-            <p class="text-sm text-gray-500">
-              Member since {{ formatDate(authStore.user?.createdAt) }}
-            </p>
-          </div>
-          <button @click="toggleEdit" class="member-button">
-            <FontAwesomeIcon :icon="isEditing ? 'save' : 'edit'" class="w-4 h-4 mr-2" />
-            {{ isEditing ? 'Save' : 'Edit' }}
-          </button>
-        </div>
-
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ errorMessage }}</p>
-        </div>
-
-        <!-- Success Message -->
-        <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600">{{ successMessage }}</p>
-        </div>
-
-        <!-- Profile Form -->
-        <form @submit.prevent="handleSave" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Full Name -->
-            <div class="space-y-2">
-              <label for="fullName" class="text-sm font-medium text-gray-700">Full Name</label>
-              <input
-                id="fullName"
-                v-model="profileForm.fullName"
-                type="text"
-                :disabled="!isEditing || isLoading"
-                class="member-input"
-                :class="{ 'bg-gray-50': !isEditing }"
-              />
-            </div>
-
-            <!-- Email -->
-            <div class="space-y-2">
-              <label for="email" class="text-sm font-medium text-gray-700">Email</label>
-              <input
-                id="email"
-                v-model="profileForm.email"
-                type="email"
-                :disabled="!isEditing || isLoading"
-                class="member-input"
-                :class="{ 'bg-gray-50': !isEditing }"
-              />
-            </div>
-
-            <!-- Phone -->
-            <div class="space-y-2">
-              <label for="phone" class="text-sm font-medium text-gray-700">Phone</label>
-              <input
-                id="phone"
-                v-model="profileForm.phone"
-                type="tel"
-                :disabled="!isEditing || isLoading"
-                class="member-input"
-                :class="{ 'bg-gray-50': !isEditing }"
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <!-- Member ID (Read only) -->
-            <div class="space-y-2">
-              <label for="memberId" class="text-sm font-medium text-gray-700">Member ID</label>
-              <input
-                id="memberId"
-                :value="authStore.user?.id"
-                type="text"
-                disabled
-                class="member-input bg-gray-50"
-              />
-            </div>
-          </div>
-
-          <!-- Action Buttons (only shown when editing) -->
-          <div v-if="isEditing" class="flex space-x-3 pt-6 border-t border-gray-200">
-            <button type="submit" :disabled="isLoading" class="member-button">
-              <div v-if="isLoading" class="flex items-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </div>
-              <span v-else>
-                <FontAwesomeIcon icon="save" class="w-4 h-4 mr-2" />
-                Save Changes
-              </span>
-            </button>
-            <button
-              type="button"
-              @click="cancelEdit"
-              :disabled="isLoading"
-              class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Account Settings -->
-    <div class="mt-8 bg-white rounded-lg shadow border border-gray-200">
-      <div class="p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Settings</h3>
-
-        <div class="space-y-4">
-          <!-- Change Password -->
-          <div class="flex items-center justify-between py-3 border-b border-gray-200">
-            <div>
-              <h4 class="text-sm font-medium text-gray-900">Password</h4>
-              <p class="text-sm text-gray-500">Change your account password</p>
-            </div>
-            <button
-              @click="openChangePasswordModal"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              Change Password
-            </button>
-          </div>
-
-          <!-- Logout -->
-          <div class="flex items-center justify-between py-3 border-b border-gray-200">
-            <div>
-              <h4 class="text-sm font-medium text-gray-900">Sign Out</h4>
-              <p class="text-sm text-gray-500">Sign out from your account</p>
-            </div>
-            <button
-              @click="handleLogout"
-              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
-            >
-              <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Change Password Modal -->
+  <div class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20">
+    <!-- Hero Header Section -->
     <div
-      v-if="showChangePasswordModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-      @click.self="closeChangePasswordModal"
+      class="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 px-6 py-16 md:px-8"
     >
-      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-        <div class="mb-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Change Password</h3>
-          <p class="text-sm text-gray-600">Enter your current password and choose a new one</p>
-        </div>
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+      <div
+        class="absolute top-0 right-0 w-64 h-64 bg-secondary-400/20 rounded-full -translate-y-32 translate-x-32"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 w-48 h-48 bg-primary-300/20 rounded-full translate-y-24 -translate-x-24"
+      ></div>
 
-        <!-- Password Change Error -->
-        <div v-if="passwordChangeError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ passwordChangeError }}</p>
-        </div>
-
-        <!-- Password Change Success -->
-        <div v-if="passwordChangeSuccess" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600">{{ passwordChangeSuccess }}</p>
-        </div>
-
-        <form @submit.prevent="handleChangePassword" class="space-y-4">
-          <!-- Current Password -->
-          <div class="space-y-2">
-            <label for="currentPassword" class="text-sm font-medium text-gray-700">Current Password</label>
-            <div class="relative">
-              <input
-                id="currentPassword"
-                v-model="passwordForm.currentPassword"
-                :type="showCurrentPassword ? 'text' : 'password'"
-                :disabled="isChangingPassword"
-                class="member-input pr-10"
-                placeholder="Enter your current password"
-                required
-              />
-              <button
-                type="button"
-                @click="showCurrentPassword = !showCurrentPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                :disabled="isChangingPassword"
-              >
-                <FontAwesomeIcon :icon="showCurrentPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <!-- New Password -->
-          <div class="space-y-2">
-            <label for="newPassword" class="text-sm font-medium text-gray-700">New Password</label>
-            <div class="relative">
-              <input
-                id="newPassword"
-                v-model="passwordForm.newPassword"
-                :type="showNewPassword ? 'text' : 'password'"
-                :disabled="isChangingPassword"
-                class="member-input pr-10"
-                placeholder="Enter your new password"
-                required
-              />
-              <button
-                type="button"
-                @click="showNewPassword = !showNewPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                :disabled="isChangingPassword"
-              >
-                <FontAwesomeIcon :icon="showNewPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Confirm New Password -->
-          <div class="space-y-2">
-            <label for="confirmPassword" class="text-sm font-medium text-gray-700">Confirm New Password</label>
-            <div class="relative">
-              <input
-                id="confirmPassword"
-                v-model="passwordForm.confirmPassword"
-                :type="showConfirmPassword ? 'text' : 'password'"
-                :disabled="isChangingPassword"
-                class="member-input pr-10"
-                :class="{ 'border-red-300': passwordForm.confirmPassword && !passwordsMatch }"
-                placeholder="Confirm your new password"
-                required
-              />
-              <button
-                type="button"
-                @click="showConfirmPassword = !showConfirmPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                :disabled="isChangingPassword"
-              >
-                <FontAwesomeIcon :icon="showConfirmPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
-              </button>
-            </div>
-            <div v-if="passwordForm.confirmPassword && !passwordsMatch" class="text-xs text-red-600">
-              Passwords do not match
-            </div>
-          </div>
-
-          <!-- Password Requirements -->
-          <div class="text-xs text-gray-500 space-y-1">
-            <p>Password must:</p>
-            <ul class="ml-4 space-y-0.5">
-              <li :class="passwordRequirements.length ? 'text-green-600' : 'text-gray-500'">
-                <FontAwesomeIcon :icon="passwordRequirements.length ? 'check' : 'times'" class="w-3 h-3 mr-1" />
-                Be at least 8 characters long
-              </li>
-            </ul>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex space-x-3 pt-4">
-            <button
-              type="button"
-              @click="closeChangePasswordModal"
-              :disabled="isChangingPassword"
-              class="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="isChangingPassword || !isPasswordFormValid"
-              class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div v-if="isChangingPassword" class="flex items-center justify-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Changing...
-              </div>
-              <span v-else>
-                <FontAwesomeIcon icon="key" class="w-4 h-4 mr-2" />
-                Change Password
-              </span>
-            </button>
-          </div>
-        </form>
+      <div class="relative max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
+          My Profile 👤
+        </h1>
+        <p class="text-xl text-white/90 font-medium max-w-2xl mx-auto">
+          Manage your account information and preferences
+        </p>
       </div>
     </div>
 
-    <!-- Logout Confirmation Modal -->
-    <div
-      v-if="showLogoutModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-    >
-      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 relative z-10 pb-12">
+      <!-- Page Header -->
+      <div class="mb-8 mt-8">
         <div class="text-center">
-          <FontAwesomeIcon icon="sign-out-alt" class="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Logout</h3>
-          <p class="text-gray-600 mb-6">Are you sure you want to sign out from your account?</p>
-          <div class="flex space-x-3">
+        </div>
+      </div>
+
+      <!-- Profile Card -->
+      <div class="bg-gradient-to-br from-white to-primary-50/20 rounded-2xl shadow-soft border border-primary-200 overflow-hidden">
+        <div class="p-8">
+          <!-- Profile Header -->
+          <div class="flex items-center space-x-6 mb-8 pb-8 border-b border-primary-200">
+            <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon="user" class="w-10 h-10 text-white" />
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-primary-700 mb-2">{{ authStore.user?.fullName }}</h2>
+              <p class="text-lg text-primary-600 mb-1">{{ authStore.user?.email }}</p>
+              <p class="text-sm text-primary-500 flex items-center">
+                <FontAwesomeIcon icon="calendar" class="w-4 h-4 mr-2" />
+                Member since {{ formatDate(authStore.user?.createdAt) }}
+              </p>
+            </div>
             <button
-              @click="cancelLogout"
-              class="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+              @click="toggleEdit"
+              class="px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg flex items-center space-x-2"
             >
-              Cancel
+              <FontAwesomeIcon :icon="isEditing ? 'save' : 'edit'" class="w-5 h-5" />
+              <span>{{ isEditing ? 'Save' : 'Edit' }}</span>
             </button>
-            <button
-              @click="confirmLogout"
-              class="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
-            >
-              <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4 mr-2" />
-              Logout
-            </button>
+          </div>
+
+          <!-- Error Message -->
+          <div v-if="errorMessage" class="mb-6 p-4 bg-gradient-to-r from-error-50 to-error-100 border border-error-200 rounded-xl">
+            <div class="flex items-center space-x-3">
+              <FontAwesomeIcon icon="exclamation-triangle" class="w-5 h-5 text-error-600" />
+              <p class="text-sm font-semibold text-error-700">{{ errorMessage }}</p>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div
+            v-if="successMessage"
+            class="mb-6 p-4 bg-gradient-to-r from-success-50 to-success-100 border border-success-200 rounded-xl"
+          >
+            <div class="flex items-center space-x-3">
+              <FontAwesomeIcon icon="check-circle" class="w-5 h-5 text-success-600" />
+              <p class="text-sm font-semibold text-success-700">{{ successMessage }}</p>
+            </div>
+          </div>
+
+          <!-- Profile Form -->
+          <form @submit.prevent="handleSave" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Full Name -->
+              <div class="space-y-3">
+                <label for="fullName" class="text-sm font-semibold text-primary-700 flex items-center">
+                  <FontAwesomeIcon icon="user" class="w-4 h-4 mr-2" />
+                  Full Name
+                </label>
+                <input
+                  id="fullName"
+                  v-model="profileForm.fullName"
+                  type="text"
+                  :disabled="!isEditing || isLoading"
+                  class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  :class="{ 'bg-primary-50': !isEditing, 'bg-white': isEditing }"
+                />
+              </div>
+
+              <!-- Email (Read Only) -->
+              <div class="space-y-3">
+                <label for="email" class="text-sm font-semibold text-primary-700 flex items-center">
+                  <FontAwesomeIcon icon="envelope" class="w-4 h-4 mr-2" />
+                  Email
+                </label>
+                <input
+                  id="email"
+                  :value="authStore.user?.email"
+                  type="email"
+                  disabled
+                  class="w-full px-4 py-3 border border-primary-200 rounded-xl bg-primary-50 text-primary-600 font-mono"
+                />
+                <p class="text-xs text-primary-500 flex items-center">
+                  <FontAwesomeIcon icon="info-circle" class="w-3 h-3 mr-1" />
+                  Email cannot be changed for security reasons
+                </p>
+              </div>
+
+
+              <!-- Member ID (Read only) -->
+              <div class="space-y-3">
+                <label for="memberId" class="text-sm font-semibold text-primary-700 flex items-center">
+                  <FontAwesomeIcon icon="id-card" class="w-4 h-4 mr-2" />
+                  Member ID
+                </label>
+                <input
+                  id="memberId"
+                  :value="authStore.user?.id"
+                  type="text"
+                  disabled
+                  class="w-full px-4 py-3 border border-primary-200 rounded-xl bg-primary-50 text-primary-600 font-mono"
+                />
+              </div>
+            </div>
+
+            <!-- Action Buttons (only shown when editing) -->
+            <div v-if="isEditing" class="flex space-x-4 pt-8 border-t border-primary-200">
+              <button
+                type="submit"
+                :disabled="isLoading"
+                class="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div v-if="isLoading" class="flex items-center space-x-3">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </div>
+                <span v-else class="flex items-center space-x-3">
+                  <FontAwesomeIcon icon="save" class="w-5 h-5" />
+                  <span>Save Changes</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                @click="cancelEdit"
+                :disabled="isLoading"
+                class="px-8 py-4 bg-gradient-to-r from-neutral-200 to-neutral-300 text-neutral-700 rounded-xl font-semibold hover:from-neutral-300 hover:to-neutral-400 transition-all duration-200 shadow-lg flex items-center space-x-3"
+              >
+                <FontAwesomeIcon icon="times" class="w-5 h-5" />
+                <span>Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Account Settings -->
+      <div class="mt-8 bg-gradient-to-br from-white to-secondary-50/20 rounded-2xl shadow-soft border border-secondary-200 overflow-hidden">
+        <div class="p-8">
+          <div class="flex items-center space-x-3 mb-8">
+            <div class="w-10 h-10 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon="cog" class="w-5 h-5 text-white" />
+            </div>
+            <h3 class="text-2xl font-bold text-secondary-700">Account Settings</h3>
+          </div>
+
+          <div class="space-y-6">
+            <!-- Change Password -->
+            <div class="flex items-center justify-between p-6 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl border border-primary-200">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
+                  <FontAwesomeIcon icon="key" class="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 class="text-lg font-semibold text-primary-700">Password</h4>
+                  <p class="text-sm text-primary-600">Change your account password</p>
+                </div>
+              </div>
+              <button
+                @click="openChangePasswordModal"
+                class="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg flex items-center space-x-2"
+              >
+                <FontAwesomeIcon icon="edit" class="w-4 h-4" />
+                <span>Change Password</span>
+              </button>
+            </div>
+
+            <!-- Logout -->
+            <div class="flex items-center justify-between p-6 bg-gradient-to-r from-error-50 to-error-100 rounded-xl border border-error-200">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-error-500 to-error-600 rounded-xl flex items-center justify-center">
+                  <FontAwesomeIcon icon="sign-out-alt" class="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 class="text-lg font-semibold text-error-700">Sign Out</h4>
+                  <p class="text-sm text-error-600">Sign out from your account</p>
+                </div>
+              </div>
+              <button
+                @click="handleLogout"
+                class="px-6 py-3 bg-gradient-to-r from-error-500 to-error-600 text-white rounded-xl font-semibold hover:from-error-600 hover:to-error-700 transition-all duration-200 shadow-lg flex items-center space-x-2"
+              >
+                <FontAwesomeIcon icon="sign-out-alt" class="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Modal -->
+      <div
+        v-if="showChangePasswordModal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        @click.self="closeChangePasswordModal"
+      >
+        <div class="relative top-20 mx-auto p-8 border w-11/12 max-w-md shadow-2xl rounded-2xl bg-white">
+          <div class="mb-8">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon="key" class="w-5 h-5 text-white" />
+              </div>
+              <h3 class="text-2xl font-bold text-primary-700">Change Password</h3>
+            </div>
+            <p class="text-primary-600">Enter your current password and choose a new one</p>
+          </div>
+
+          <!-- Password Change Error -->
+          <div
+            v-if="passwordChangeError"
+            class="mb-6 p-4 bg-gradient-to-r from-error-50 to-error-100 border border-error-200 rounded-xl"
+          >
+            <div class="flex items-center space-x-3">
+              <FontAwesomeIcon icon="exclamation-triangle" class="w-5 h-5 text-error-600" />
+              <p class="text-sm font-semibold text-error-700">{{ passwordChangeError }}</p>
+            </div>
+          </div>
+
+          <!-- Password Change Success -->
+          <div
+            v-if="passwordChangeSuccess"
+            class="mb-6 p-4 bg-gradient-to-r from-success-50 to-success-100 border border-success-200 rounded-xl"
+          >
+            <div class="flex items-center space-x-3">
+              <FontAwesomeIcon icon="check-circle" class="w-5 h-5 text-success-600" />
+              <p class="text-sm font-semibold text-success-700">{{ passwordChangeSuccess }}</p>
+            </div>
+          </div>
+
+          <form @submit.prevent="handleChangePassword" class="space-y-6">
+            <!-- Current Password -->
+            <div class="space-y-3">
+              <label for="currentPassword" class="text-sm font-semibold text-primary-700 flex items-center">
+                <FontAwesomeIcon icon="lock" class="w-4 h-4 mr-2" />
+                Current Password
+              </label>
+              <div class="relative">
+                <input
+                  id="currentPassword"
+                  v-model="passwordForm.currentPassword"
+                  :type="showCurrentPassword ? 'text' : 'password'"
+                  :disabled="isChangingPassword"
+                  class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 pr-12"
+                  placeholder="Enter your current password"
+                  required
+                />
+                <button
+                  type="button"
+                  @click="showCurrentPassword = !showCurrentPassword"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-primary-400 hover:text-primary-600"
+                  :disabled="isChangingPassword"
+                >
+                  <FontAwesomeIcon
+                    :icon="showCurrentPassword ? 'eye-slash' : 'eye'"
+                    class="w-5 h-5"
+                  />
+                </button>
+              </div>
+            </div>
+
+            <!-- New Password -->
+            <div class="space-y-3">
+              <label for="newPassword" class="text-sm font-semibold text-primary-700 flex items-center">
+                <FontAwesomeIcon icon="key" class="w-4 h-4 mr-2" />
+                New Password
+              </label>
+              <div class="relative">
+                <input
+                  id="newPassword"
+                  v-model="passwordForm.newPassword"
+                  :type="showNewPassword ? 'text' : 'password'"
+                  :disabled="isChangingPassword"
+                  class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 pr-12"
+                  placeholder="Enter your new password"
+                  required
+                />
+                <button
+                  type="button"
+                  @click="showNewPassword = !showNewPassword"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-primary-400 hover:text-primary-600"
+                  :disabled="isChangingPassword"
+                >
+                  <FontAwesomeIcon :icon="showNewPassword ? 'eye-slash' : 'eye'" class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="space-y-3">
+              <label for="confirmPassword" class="text-sm font-semibold text-primary-700 flex items-center">
+                <FontAwesomeIcon icon="check-double" class="w-4 h-4 mr-2" />
+                Confirm New Password
+              </label>
+              <div class="relative">
+                <input
+                  id="confirmPassword"
+                  v-model="passwordForm.confirmPassword"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  :disabled="isChangingPassword"
+                  class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 pr-12"
+                  :class="passwordForm.confirmPassword && !passwordsMatch ? 'border-error-300 focus:ring-error-500' : 'border-primary-200'"
+                  placeholder="Confirm your new password"
+                  required
+                />
+                <button
+                  type="button"
+                  @click="showConfirmPassword = !showConfirmPassword"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-primary-400 hover:text-primary-600"
+                  :disabled="isChangingPassword"
+                >
+                  <FontAwesomeIcon
+                    :icon="showConfirmPassword ? 'eye-slash' : 'eye'"
+                    class="w-5 h-5"
+                  />
+                </button>
+              </div>
+              <div
+                v-if="passwordForm.confirmPassword && !passwordsMatch"
+                class="text-sm text-error-600 flex items-center space-x-2"
+              >
+                <FontAwesomeIcon icon="exclamation-circle" class="w-4 h-4" />
+                <span>Passwords do not match</span>
+              </div>
+            </div>
+
+            <!-- Password Requirements -->
+            <div class="p-4 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl border border-primary-200">
+              <p class="text-sm font-semibold text-primary-700 mb-3">Password Requirements:</p>
+              <ul class="space-y-2">
+                <li class="flex items-center space-x-3" :class="passwordRequirements.length ? 'text-success-600' : 'text-primary-600'">
+                  <FontAwesomeIcon
+                    :icon="passwordRequirements.length ? 'check-circle' : 'circle'"
+                    class="w-4 h-4"
+                  />
+                  <span class="text-sm">Be at least 8 characters long</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-4 pt-6">
+              <button
+                type="button"
+                @click="closeChangePasswordModal"
+                :disabled="isChangingPassword"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-neutral-200 to-neutral-300 text-neutral-700 rounded-xl font-semibold hover:from-neutral-300 hover:to-neutral-400 transition-all duration-200 shadow-lg disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                :disabled="isChangingPassword || !isPasswordFormValid"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div v-if="isChangingPassword" class="flex items-center justify-center space-x-3">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Changing...</span>
+                </div>
+                <span v-else class="flex items-center justify-center space-x-3">
+                  <FontAwesomeIcon icon="key" class="w-5 h-5" />
+                  <span>Change Password</span>
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Logout Confirmation Modal -->
+      <div
+        v-if="showLogoutModal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      >
+        <div class="relative top-20 mx-auto p-8 border w-11/12 max-w-md shadow-2xl rounded-2xl bg-white">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-error-500 to-error-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <FontAwesomeIcon icon="sign-out-alt" class="w-8 h-8 text-white" />
+            </div>
+            <h3 class="text-2xl font-bold text-error-700 mb-3">Confirm Logout</h3>
+            <p class="text-error-600 mb-8">Are you sure you want to sign out from your account?</p>
+            <div class="flex space-x-4">
+              <button
+                @click="cancelLogout"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-neutral-200 to-neutral-300 text-neutral-700 rounded-xl font-semibold hover:from-neutral-300 hover:to-neutral-400 transition-all duration-200 shadow-lg"
+              >
+                Cancel
+              </button>
+              <button
+                @click="confirmLogout"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-error-500 to-error-600 text-white rounded-xl font-semibold hover:from-error-600 hover:to-error-700 transition-all duration-200 shadow-lg flex items-center justify-center space-x-3"
+              >
+                <FontAwesomeIcon icon="sign-out-alt" class="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -352,8 +451,6 @@ const showConfirmPassword = ref(false)
 
 const profileForm = reactive({
   fullName: '',
-  email: '',
-  phone: '',
 })
 
 const passwordForm = reactive({
@@ -364,13 +461,11 @@ const passwordForm = reactive({
 
 const originalForm = reactive({
   fullName: '',
-  email: '',
-  phone: '',
 })
 
 // Password validation computed properties
 const passwordRequirements = computed(() => ({
-  length: passwordForm.newPassword.length >= 8
+  length: passwordForm.newPassword.length >= 8,
 }))
 
 const passwordsMatch = computed(() => {
@@ -378,25 +473,23 @@ const passwordsMatch = computed(() => {
 })
 
 const isPasswordFormValid = computed(() => {
-  return passwordForm.currentPassword &&
-         passwordForm.newPassword &&
-         passwordForm.confirmPassword &&
-         passwordRequirements.value.length &&
-         passwordsMatch.value &&
-         passwordForm.currentPassword !== passwordForm.newPassword
+  return (
+    passwordForm.currentPassword &&
+    passwordForm.newPassword &&
+    passwordForm.confirmPassword &&
+    passwordRequirements.value.length &&
+    passwordsMatch.value &&
+    passwordForm.currentPassword !== passwordForm.newPassword
+  )
 })
 
 const initializeForm = () => {
   const user = authStore.user
   if (user) {
     profileForm.fullName = user.fullName || ''
-    profileForm.email = user.email || ''
-    profileForm.phone = user.phone || ''
 
     // Save original values
     originalForm.fullName = profileForm.fullName
-    originalForm.email = profileForm.email
-    originalForm.phone = profileForm.phone
   }
 }
 
@@ -420,10 +513,6 @@ const handleSave = async () => {
       return
     }
 
-    if (!profileForm.email.trim()) {
-      errorMessage.value = 'Email is required'
-      return
-    }
 
     // Call API to update profile
     console.log('Updating profile:', profileForm)
@@ -435,8 +524,6 @@ const handleSave = async () => {
     const updatedUser = {
       ...authStore.user!,
       fullName: profileForm.fullName.trim(),
-      email: profileForm.email.trim(),
-      phone: profileForm.phone.trim() || undefined,
     }
     authStore.updateUser(updatedUser)
 
@@ -445,8 +532,6 @@ const handleSave = async () => {
 
     // Update original form values
     originalForm.fullName = profileForm.fullName
-    originalForm.email = profileForm.email
-    originalForm.phone = profileForm.phone
   } catch (error: unknown) {
     if (error instanceof Error) {
       errorMessage.value = error.message
@@ -461,8 +546,6 @@ const handleSave = async () => {
 const cancelEdit = () => {
   // Restore original values
   profileForm.fullName = originalForm.fullName
-  profileForm.email = originalForm.email
-  profileForm.phone = originalForm.phone
 
   isEditing.value = false
   errorMessage.value = ''
@@ -518,7 +601,7 @@ const handleChangePassword = async () => {
 
     const result = await memberApi.changePassword(
       passwordForm.currentPassword,
-      passwordForm.newPassword
+      passwordForm.newPassword,
     )
 
     if (result.success) {
@@ -531,7 +614,6 @@ const handleChangePassword = async () => {
     } else {
       passwordChangeError.value = result.message || 'Failed to change password'
     }
-
   } catch (error: unknown) {
     console.error('Password change error:', error)
 
@@ -583,43 +665,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Member-specific styles */
-.member-button {
-  background-color: #2563eb;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  transition: background-color 0.15s ease-in-out;
-  border: none;
-  cursor: pointer;
-}
-
-.member-button:hover:not(:disabled) {
-  background-color: #1d4ed8;
-}
-
-.member-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.member-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  outline: none;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.member-input:focus {
-  border-color: transparent;
-  box-shadow: 0 0 0 2px #3b82f6;
-}
-
-.member-input:disabled {
-  background-color: #f9fafb;
-  cursor: not-allowed;
-}
-</style>

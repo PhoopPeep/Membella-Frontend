@@ -2,9 +2,11 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
   >
-    <div class="relative mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white">
+    <div
+      class="relative top-20 mx-auto p-8 border w-11/12 max-w-md shadow-2xl rounded-2xl bg-white"
+    >
       <div class="mt-3">
         <!-- Icon -->
         <div
@@ -140,5 +142,11 @@ const confirm = () => {
 
 const cancel = () => {
   emit('cancel')
+}
+</script>
+
+<script lang="ts">
+export default {
+  name: 'ConfirmationModal',
 }
 </script>

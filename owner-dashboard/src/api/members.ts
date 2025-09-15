@@ -55,8 +55,10 @@ export const membersApi = {
   },
 
   // Delete member (cancel all subscriptions)
-  deleteMember: async (memberId: string): Promise<{ success: boolean; message: string; cancelledSubscriptions: number }> => {
+  deleteMember: async (
+    memberId: string,
+  ): Promise<{ success: boolean; message: string; cancelledSubscriptions: number }> => {
     const response = await apiClient.delete(`/members/members/${memberId}`)
     return response.data
-  }
+  },
 }

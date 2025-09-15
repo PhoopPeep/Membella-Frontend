@@ -1,76 +1,94 @@
 <template>
-  <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+  <div
+    class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-primary-200 overflow-hidden mx-4 sm:mx-6 lg:mx-8"
+  >
     <!-- Table Header -->
-    <div v-if="title || $slots.header" class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <div
+      v-if="title || $slots.header"
+      class="px-6 py-6 border-b border-primary-100 bg-gradient-to-r from-primary-50/50 to-secondary-50/30"
+    >
       <div class="flex items-center justify-between">
         <div>
-          <h3 v-if="title" class="text-lg font-semibold text-gray-900">{{ title }}</h3>
-          <p v-if="subtitle" class="text-sm text-gray-600 mt-1">{{ subtitle }}</p>
+          <h3 v-if="title" class="text-xl font-bold text-neutral-800">{{ title }}</h3>
+          <p v-if="subtitle" class="text-sm text-neutral-600 mt-1 font-medium">{{ subtitle }}</p>
         </div>
         <slot name="header-actions"></slot>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <span class="ml-2 text-gray-600">{{ loadingText }}</span>
+    <div v-if="loading" class="flex items-center justify-center py-16">
+      <div class="text-center">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-500 mx-auto mb-4"
+        ></div>
+        <span class="text-neutral-600 font-medium">{{ loadingText }}</span>
+      </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="p-6 text-center">
-      <FontAwesomeIcon icon="exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
-      <h3 class="text-lg font-medium text-red-800 mb-2">{{ errorTitle }}</h3>
-      <p class="text-red-600 mb-4">{{ error }}</p>
+    <div v-else-if="error" class="p-8 text-center">
+      <div class="w-16 h-16 bg-error-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <FontAwesomeIcon icon="exclamation-circle" class="w-8 h-8 text-error-600" />
+      </div>
+      <h3 class="text-xl font-bold text-error-800 mb-3">{{ errorTitle }}</h3>
+      <p class="text-error-600 mb-6 font-medium">{{ error }}</p>
       <button
         v-if="showRetry"
         @click="$emit('retry')"
-        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+        class="bg-gradient-to-r from-error-500 to-error-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-error-600 hover:to-error-700 transition-all duration-200 shadow-medium"
       >
         Try Again
       </button>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!data || data.length === 0" class="p-6 text-center">
-      <FontAwesomeIcon :icon="emptyIcon" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 class="text-lg font-medium text-gray-900 mb-2">{{ emptyTitle }}</h3>
-      <p class="text-gray-500 mb-4">{{ emptyMessage }}</p>
+    <div v-else-if="!data || data.length === 0" class="p-8 text-center">
+      <div
+        class="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-soft"
+      >
+        <FontAwesomeIcon :icon="emptyIcon" class="w-10 h-10 text-white" />
+      </div>
+      <h3 class="text-xl font-bold text-neutral-800 mb-3">{{ emptyTitle }}</h3>
+      <p class="text-neutral-600 mb-6 font-medium">{{ emptyMessage }}</p>
       <slot name="empty-actions"></slot>
     </div>
 
     <!-- Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
+    <div v-else class="overflow-x-auto p-4 sm:p-6">
+      <table class="min-w-full divide-y divide-primary-100">
         <!-- Table Head -->
-        <thead class="bg-gray-50">
+        <thead class="bg-gradient-to-r from-primary-50/50 to-secondary-50/30">
           <tr>
             <th
               v-for="column in columns"
               :key="column.key"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              class="px-8 py-6 text-left text-sm font-bold text-primary-700 uppercase tracking-wider"
               :class="getHeaderClass(column)"
             >
               {{ column.title }}
             </th>
-            <th v-if="showActions" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th
+              v-if="showActions"
+              class="px-8 py-6 text-right text-sm font-bold text-primary-700 uppercase tracking-wider"
+            >
               Actions
             </th>
           </tr>
         </thead>
 
         <!-- Table Body -->
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-primary-100">
           <tr
             v-for="(item, index) in data"
             :key="getRowKey(item, index)"
-            class="hover:bg-gray-50 transition-colors cursor-pointer"
+            class="hover:bg-primary-50/50 transition-all duration-200 cursor-pointer group"
             @click="handleRowClick(item)"
           >
             <td
               v-for="column in columns"
               :key="column.key"
-              class="px-6 py-4 whitespace-nowrap"
+              class="px-8 py-6 whitespace-nowrap"
               :class="getCellClass(column)"
             >
               <!-- Custom Column Slot -->
@@ -83,37 +101,46 @@
               ></slot>
 
               <!-- Default Column Rendering -->
-              <div v-else>
+              <div v-else class="space-y-1">
                 <!-- Date -->
-                <span v-if="column.type === 'date'" class="text-sm text-gray-900">
+                <div v-if="column.type === 'date'" class="text-sm font-semibold text-primary-700">
                   {{ formatDate(getValue(item, column.key)) }}
-                </span>
+                </div>
 
                 <!-- Currency -->
-                <span v-else-if="column.type === 'currency'" class="text-sm font-medium text-gray-900">
+                <div
+                  v-else-if="column.type === 'currency'"
+                  class="text-base font-bold text-primary-600"
+                >
                   {{ formatCurrency(getValue(item, column.key)) }}
-                </span>
+                </div>
 
                 <!-- Number -->
-                <span v-else-if="column.type === 'number'" class="text-sm font-medium text-gray-900">
+                <div
+                  v-else-if="column.type === 'number'"
+                  class="text-base font-bold text-primary-700"
+                >
                   {{ formatNumber(getValue(item, column.key)) }}
-                </span>
+                </div>
 
                 <!-- Default Text -->
-                <span v-else class="text-sm text-gray-900">
+                <div v-else class="text-sm font-medium text-neutral-800 leading-relaxed">
                   {{ formatValue(item, column) }}
-                </span>
+                </div>
               </div>
             </td>
 
             <!-- Actions Column -->
-            <td v-if="showActions" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td
+              v-if="showActions"
+              class="px-8 py-6 whitespace-nowrap text-right text-sm font-medium"
+            >
               <slot name="actions" :item="item" :index="index">
                 <!-- Default Actions -->
                 <div class="flex items-center justify-end space-x-2">
                   <button
                     @click.stop="$emit('view', item)"
-                    class="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50 transition-colors"
+                    class="text-primary-600 hover:text-primary-800 p-2 rounded-xl hover:bg-primary-100 transition-all duration-200 group-hover:scale-110"
                     title="View Details"
                   >
                     <FontAwesomeIcon icon="eye" class="w-4 h-4" />
@@ -171,7 +198,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyTitle: 'No Data',
   emptyMessage: 'No data available',
   emptyIcon: 'inbox',
-  clickable: true
+  clickable: true,
 })
 
 const emit = defineEmits<{
@@ -187,12 +214,15 @@ const getRowKey = (item: TableRecord, index: number): string | number => {
 }
 
 const getValue = (item: TableRecord, key: string): TableValue => {
-  return key.split('.').reduce((obj, k) => {
-    if (obj && typeof obj === 'object' && k in obj) {
-      return ((obj as unknown) as Record<string, TableValue>)[k]
-    }
-    return undefined
-  }, item as unknown as TableValue)
+  return key.split('.').reduce(
+    (obj, k) => {
+      if (obj && typeof obj === 'object' && k in obj) {
+        return (obj as unknown as Record<string, TableValue>)[k]
+      }
+      return undefined
+    },
+    item as unknown as TableValue,
+  )
 }
 
 const formatValue = (item: TableRecord, column: Column): string => {
@@ -213,7 +243,7 @@ const formatDate = (value: TableValue): string => {
     return date.toLocaleDateString('en-TH', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   } catch {
     return '-'

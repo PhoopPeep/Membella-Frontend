@@ -38,19 +38,41 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
   try {
     console.log('Sending registration request:', { ...userData, password: '[REDACTED]' })
 
-    const response = await api.post('/api/auth/register', {
-      org_name: userData.org_name.trim(),
-      email: userData.email.trim().toLowerCase(),
-      password: userData.password,
-      description: userData.description?.trim() || undefined,
-      contact_info: userData.contact_info?.trim() || undefined,
-      logo: userData.logo || undefined,
-    })
+    const response = await api.post(
+      '/api/auth/register',
+      {
+        org_name: userData.org_name.trim(),
+        email: userData.email.trim().toLowerCase(),
+        password: userData.password,
+        description: userData.description?.trim() || undefined,
+        contact_info: userData.contact_info?.trim() || undefined,
+        logo: userData.logo || undefined,
+      },
+      {
+        timeout: 30000, // ตั้ง timeout เฉพาะสำหรับ request นี้
+      },
+    )
 
     console.log('Registration response:', response.data)
     return response.data
   } catch (error: unknown) {
     console.error('Registration service error:', error)
+
+    // Handle timeout errors specifically
+    if (
+      error instanceof Error &&
+      (error.message.includes('timeout') || error.message.includes('ECONNABORTED'))
+    ) {
+      return {
+        success: false,
+        message:
+          "Registration is taking longer than expected. Please check your email (including spam folder) for a verification link. If you don't receive it within 5 minutes, please try again.",
+        requiresVerification: true,
+        rateLimited: false,
+        emailError: false,
+      }
+    }
+
     if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
       return {
         success: false,
@@ -78,7 +100,7 @@ export const registerUser = async (userData: RegisterData): Promise<AuthResponse
       requiresVerification: false,
       rateLimited:
         error instanceof Error &&
-        (error.message.includes('rate limit') || error.message.includes('Too many')),
+        (error.message?.includes('rate limit') || error.message?.includes('Too many')),
       emailError:
         error instanceof Error &&
         error.message.includes('email') &&
@@ -124,7 +146,7 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
         (error.message.includes('verify') || error.message.includes('confirmation')),
       rateLimited:
         error instanceof Error &&
-        (error.message.includes('rate limit') || error.message.includes('Too many')),
+        (error.message?.includes('rate limit') || error.message?.includes('Too many')),
     }
   }
 }
@@ -157,7 +179,7 @@ export const resendVerification = async (email: string): Promise<AuthResponse> =
       message: error instanceof Error ? error.message : 'Failed to resend verification email.',
       rateLimited:
         error instanceof Error &&
-        (error.message.includes('rate limit') || error.message.includes('Too many')),
+        (error.message?.includes('rate limit') || error.message?.includes('Too many')),
     }
   }
 }
@@ -271,7 +293,7 @@ export const forgotPassword = async (email: string): Promise<AuthResponse> => {
       message: error instanceof Error ? error.message : 'Failed to send password reset email.',
       rateLimited:
         error instanceof Error &&
-        (error.message.includes('rate limit') || error.message.includes('Too many')),
+        (error.message?.includes('rate limit') || error.message?.includes('Too many')),
     }
   }
 }
@@ -296,6 +318,11 @@ export const resetPassword = async (
       throw new Error('Password must be at least 8 characters long')
     }
 
+    console.log('🔧 Sending reset password request with:', {
+      access_token: accessToken ? 'Present' : 'Missing',
+      password: password ? 'Present' : 'Missing'
+    })
+
     const response = await api.post('/api/auth/reset-password', {
       access_token: accessToken,
       password: password,
@@ -311,7 +338,7 @@ export const resetPassword = async (
       message: error instanceof Error ? error.message : 'Failed to reset password.',
       rateLimited:
         error instanceof Error &&
-        (error.message.includes('rate limit') || error.message.includes('Too many')),
+        (error.message?.includes('rate limit') || error.message?.includes('Too many')),
     }
   }
 }

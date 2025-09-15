@@ -1,139 +1,189 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20 p-4"
   >
-    <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
-      <div class="p-6 space-y-1">
-        <h2 class="text-2xl font-bold text-center">Member Login</h2>
-        <p class="text-center text-gray-600">Access your subscription and benefits</p>
-      </div>
-      <div class="p-6 pt-0">
-        <!-- Error Message -->
-        <div v-if="showErrorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ currentErrorMessage }}</p>
-          <div class="mt-2">
-            <small class="text-xs text-red-500">
-              This message will disappear in {{ errorCountdown }} seconds
-            </small>
+    <div
+      class="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-200 shadow-strong"
+    >
+      <div class="p-8 space-y-2">
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-medium"
+          >
+            <span class="text-white font-bold text-2xl">M</span>
           </div>
+          <h2 class="text-3xl font-bold text-neutral-800">Member Login</h2>
+          <p class="text-neutral-600 font-medium mt-2">Access your subscription and benefits</p>
         </div>
-
-        <!-- Success Message -->
-        <div
-          v-if="showSuccessMessage"
-          class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md"
-        >
-          <p class="text-sm text-green-600">{{ currentSuccessMessage }}</p>
-        </div>
-
-        <!-- Rate Limited Message -->
-        <div
-          v-if="showRateLimited"
-          class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md"
-        >
-          <div class="flex items-center">
-            <FontAwesomeIcon icon="clock" class="w-5 h-5 text-yellow-600 mr-2" />
-            <div>
-              <h3 class="text-sm font-medium text-yellow-800">Too Many Attempts</h3>
-              <p class="text-sm text-yellow-600 mt-1">Please wait before trying again.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Email Verification Required -->
-        <div
-          v-if="showVerificationRequired"
-          class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
-        >
-          <div class="flex items-start">
-            <FontAwesomeIcon
-              icon="envelope"
-              class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
-            />
-            <div class="flex-1">
-              <h3 class="text-sm font-medium text-blue-800">Email Verification Required</h3>
-              <p class="text-sm text-blue-600 mt-1">
-                Please verify your email address before signing in. Check your inbox for a
-                verification link.
-              </p>
-              <div class="mt-2 text-xs text-blue-600 space-y-1">
-                <p>
-                  • Check your <strong>spam/junk folder</strong> if you don't see it in your inbox
-                </p>
-                <p>• Look for an email from <code>noreply@mail.supabase.io</code></p>
-                <p>• The email may take a few minutes to arrive</p>
-                <p>• Click the verification link to activate your account</p>
+        <div class="px-8 pb-8">
+          <!-- Error Message -->
+          <div
+            v-if="showErrorMessage"
+            class="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl"
+          >
+            <div class="flex items-start">
+              <div
+                class="w-8 h-8 bg-error-100 rounded-xl flex items-center justify-center mr-3 flex-shrink-0"
+              >
+                <FontAwesomeIcon icon="exclamation-triangle" class="w-4 h-4 text-error-600" />
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-error-800">{{ currentErrorMessage }}</p>
+                <div class="mt-2">
+                  <small class="text-xs text-error-600 font-medium">
+                    This message will disappear in {{ errorCountdown }} seconds
+                  </small>
+                </div>
               </div>
             </div>
           </div>
-          <div class="mt-3 flex flex-col sm:flex-row gap-2">
-            <button
-              @click="handleResendVerification"
-              :disabled="isResending || resendCooldown > 0"
-              class="text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50 disabled:no-underline"
-            >
-              {{
-                isResending
-                  ? 'Sending...'
-                  : resendCooldown > 0
-                    ? `Resend in ${resendCooldown}s`
-                    : 'Resend verification email'
-              }}
-            </button>
-          </div>
-        </div>
 
-        <!-- Login Form -->
-        <form @submit.prevent="handleLogin" class="space-y-4">
-          <div class="space-y-2">
-            <label for="email" class="text-sm font-medium leading-none">Email</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              v-model="email"
-              required
-              :disabled="isLoading"
-              autocomplete="email"
-              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          <div class="space-y-2">
-            <label for="password" class="text-sm font-medium leading-none">Password</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              v-model="password"
-              required
-              :disabled="isLoading"
-              autocomplete="current-password"
-              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          <!-- Login Button -->
-          <button
-            type="submit"
-            :disabled="isLoading"
-            class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          <!-- Success Message -->
+          <div
+            v-if="showSuccessMessage"
+            class="mb-6 p-4 bg-success-50 border border-success-200 rounded-xl"
           >
-            {{ isLoading ? 'Logging In...' : 'Log In' }}
-          </button>
-        </form>
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-success-100 rounded-xl flex items-center justify-center mr-3">
+                <FontAwesomeIcon icon="check-circle" class="w-4 h-4 text-success-600" />
+              </div>
+              <p class="text-sm font-semibold text-success-800">{{ currentSuccessMessage }}</p>
+            </div>
+          </div>
 
-        <!-- Forgot Password Link -->
-        <div class="mt-4 text-center text-sm">
-          <router-link to="/forgot-password" class="text-blue-600 hover:underline">
-            Forgot your password?
-          </router-link>
-        </div>
+          <!-- Rate Limited Message -->
+          <div
+            v-if="showRateLimited"
+            class="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-xl"
+          >
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-warning-100 rounded-xl flex items-center justify-center mr-3">
+                <FontAwesomeIcon icon="clock" class="w-4 h-4 text-warning-600" />
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-warning-800">Too Many Attempts</h3>
+                <p class="text-sm text-warning-700 mt-1 font-medium">
+                  Please wait before trying again.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div class="mt-4 text-center text-sm">
-          Don't have an account?
-          <router-link to="/register" class="text-blue-600 hover:underline ml-1">
-            Create account
-          </router-link>
+          <!-- Email Verification Required -->
+          <div
+            v-if="showVerificationRequired"
+            class="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-xl"
+          >
+            <div class="flex items-start">
+              <div
+                class="w-8 h-8 bg-primary-100 rounded-xl flex items-center justify-center mr-3 mt-0.5 flex-shrink-0"
+              >
+                <FontAwesomeIcon icon="envelope" class="w-4 h-4 text-primary-600" />
+              </div>
+              <div class="flex-1">
+                <h3 class="text-sm font-semibold text-primary-800">Email Verification Required</h3>
+                <p class="text-sm text-primary-700 mt-1 font-medium">
+                  Please verify your email address before signing in. Check your inbox for a
+                  verification link.
+                </p>
+                <div class="mt-3 text-xs text-primary-600 space-y-1 font-medium">
+                  <p>
+                    • Check your <strong>spam/junk folder</strong> if you don't see it in your inbox
+                  </p>
+                  <p>
+                    • Look for an email from
+                    <code class="bg-primary-100 px-1 rounded">noreply@mail.supabase.io</code>
+                  </p>
+                  <p>• The email may take a few minutes to arrive</p>
+                  <p>• Click the verification link to activate your account</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button
+                @click="handleResendVerification"
+                :disabled="isResending || resendCooldown > 0"
+                class="text-sm text-primary-600 hover:text-primary-700 font-semibold underline disabled:opacity-50 disabled:no-underline transition-colors"
+              >
+                {{
+                  isResending
+                    ? 'Sending...'
+                    : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend verification email'
+                }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Login Form -->
+          <form @submit.prevent="handleLogin" class="space-y-6">
+            <div class="space-y-3">
+              <label for="email" class="text-sm font-semibold text-neutral-700 leading-none"
+                >Email</label
+              >
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                v-model="email"
+                required
+                :disabled="isLoading"
+                autocomplete="email"
+                class="flex h-12 w-full rounded-xl border border-primary-200 bg-white/80 px-4 py-3 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+              />
+            </div>
+            <div class="space-y-3">
+              <label for="password" class="text-sm font-semibold text-neutral-700 leading-none"
+                >Password</label
+              >
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                v-model="password"
+                required
+                :disabled="isLoading"
+                autocomplete="current-password"
+                class="flex h-12 w-full rounded-xl border border-primary-200 bg-white/80 px-4 py-3 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+              />
+            </div>
+
+            <!-- Login Button -->
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="w-full h-12 px-6 py-3 bg-gradient-primary text-white text-sm font-semibold rounded-xl hover:bg-gradient-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-medium hover:shadow-glow"
+            >
+              <div v-if="isLoading" class="flex items-center justify-center">
+                <div
+                  class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"
+                ></div>
+                Logging In...
+              </div>
+              <span v-else>Log In</span>
+            </button>
+          </form>
+
+          <!-- Forgot Password Link -->
+          <div class="mt-6 text-center text-sm">
+            <router-link
+              to="/forgot-password"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline transition-colors"
+            >
+              Forgot your password?
+            </router-link>
+          </div>
+
+          <div class="mt-4 text-center text-sm">
+            <span class="text-neutral-600 font-medium">Don't have an account?</span>
+            <router-link
+              to="/register"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline ml-1 transition-colors"
+            >
+              Create account
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -245,6 +295,9 @@ const displayError = (message: string) => {
   showErrorMessage.value = true
   errorCountdown.value = 15
 
+  // Clear form fields when there's an error
+  clearForm()
+
   errorCountdownTimer = window.setInterval(() => {
     errorCountdown.value--
     if (errorCountdown.value <= 0) {
@@ -259,6 +312,12 @@ const displayError = (message: string) => {
   nextTick(() => {
     console.log('DOM updated with error message')
   })
+}
+
+// Clear form fields
+const clearForm = () => {
+  email.value = ''
+  password.value = ''
 }
 
 // Clear all error timers and reset error state

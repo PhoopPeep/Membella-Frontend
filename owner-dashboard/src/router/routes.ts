@@ -24,6 +24,18 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/components/auth/ForgotPassword.vue'),
+    meta: { requiresAuth: false, redirectIfAuth: true },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/components/auth/ResetPassword.vue'),
+    meta: { requiresAuth: false, redirectIfAuth: false },
+  },
+  {
     path: '/dashboard',
     name: 'dashboard',
     component: () => import('@/views/dashboard/Dashboard.vue'),

@@ -21,7 +21,7 @@ api.interceptors.request.use(
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
       data: config.data,
-      headers: config.headers
+      headers: config.headers,
     })
 
     const token = localStorage.getItem('member_token')
@@ -34,7 +34,7 @@ api.interceptors.request.use(
   (error) => {
     console.error('Member API Request Error:', error)
     return Promise.reject(error)
-  }
+  },
 )
 
 // Helper function to safely handle unknown errors
@@ -48,21 +48,24 @@ const handleApiError = (error: unknown): Error => {
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
-      }
+        baseURL: error.config?.baseURL,
+      },
     })
 
     // Handle Axios-specific errors
     if (error.response?.data) {
-      const message = typeof error.response.data === 'object' &&
-                    error.response.data !== null &&
-                    'message' in error.response.data
-                    ? String(error.response.data.message)
-                    : 'Request failed'
+      const message =
+        typeof error.response.data === 'object' &&
+        error.response.data !== null &&
+        'message' in error.response.data
+          ? String(error.response.data.message)
+          : 'Request failed'
       return new Error(message)
     } else if (error.request) {
       console.error('Network error - no response received:', error.request)
-      return new Error('Network error: Unable to connect to server. Please check your internet connection.')
+      return new Error(
+        'Network error: Unable to connect to server. Please check your internet connection.',
+      )
     } else {
       return new Error('Request failed: ' + error.message)
     }
@@ -80,7 +83,7 @@ api.interceptors.response.use(
       status: response.status,
       statusText: response.statusText,
       data: response.data,
-      url: response.config.url
+      url: response.config.url,
     })
     return response
   },
@@ -91,19 +94,31 @@ api.interceptors.response.use(
       statusText: axios.isAxiosError(error) ? error.response?.statusText : undefined,
       data: axios.isAxiosError(error) ? error.response?.data : undefined,
       url: axios.isAxiosError(error) ? error.config?.url : undefined,
-      fullError: error
+      fullError: error,
     })
 
     // Handle 401 unauthorized
     if (axios.isAxiosError(error) && error.response?.status === 401) {
+      // Check if this is an auth callback request - don't redirect for auth endpoints
+      const isAuthCallback = error.config?.url?.includes('/auth/callback')
+
+      if (isAuthCallback) {
+        console.log('Member auth callback failed:', error.response?.data?.message || 'Invalid token')
+        return Promise.reject(new Error(error.response?.data?.message || 'Authentication failed'))
+      }
+
       console.log('Unauthorized - clearing tokens and redirecting to login')
       localStorage.removeItem('member_token')
       localStorage.removeItem('member_user')
-      window.location.href = '/login'
+
+      // Don't redirect if we're on auth callback page
+      if (!window.location.pathname.includes('/auth/callback')) {
+        window.location.href = '/login'
+      }
     }
 
     return Promise.reject(error)
-  }
+  },
 )
 
 export const memberApi = {
@@ -114,7 +129,7 @@ export const memberApi = {
         fullName: userData.fullName,
         email: userData.email,
         hasPassword: !!userData.password,
-        phone: userData.phone || 'not provided'
+        phone: userData.phone || 'not provided',
       })
 
       const response = await api.post('/api/member/auth/register', userData)
@@ -124,11 +139,12 @@ export const memberApi = {
 
       if (axios.isAxiosError(error) && error.response?.data) {
         console.error('Backend error response:', error.response.data)
-        const message = typeof error.response.data === 'object' &&
-                       error.response.data !== null &&
-                       'message' in error.response.data
-                       ? String(error.response.data.message)
-                       : 'Registration failed'
+        const message =
+          typeof error.response.data === 'object' &&
+          error.response.data !== null &&
+          'message' in error.response.data
+            ? String(error.response.data.message)
+            : 'Registration failed'
         throw new Error(message)
       }
 
@@ -257,7 +273,7 @@ export const memberApi = {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          url: error.config?.url
+          url: error.config?.url,
         })
 
         if (error.response?.status === 404) {
@@ -318,7 +334,7 @@ export const memberApi = {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          url: error.config?.url
+          url: error.config?.url,
         })
 
         if (error.response?.status === 404) {
@@ -327,7 +343,8 @@ export const memberApi = {
           const message = error.response.data?.message || 'Invalid plan ID provided.'
           throw new Error(message)
         } else if (error.response?.status === 500) {
-          const message = error.response.data?.message || 'Server error while fetching plan details.'
+          const message =
+            error.response.data?.message || 'Server error while fetching plan details.'
           throw new Error(message)
         } else if (error.code === 'ECONNREFUSED') {
           throw new Error('Unable to connect to server. Please check if the backend is running.')
@@ -343,14 +360,14 @@ export const memberApi = {
   // Change Password
   async changePassword(currentPassword: string, newPassword: string) {
     try {
-      console.log('Attempting member password change');
+      console.log('Attempting member password change')
 
       if (!currentPassword || !newPassword) {
-        throw new Error('Current password and new password are required');
+        throw new Error('Current password and new password are required')
       }
 
       if (newPassword.length < 8) {
-        throw new Error('New password must be at least 8 characters long');
+        throw new Error('New password must be at least 8 characters long')
       }
 
       const response = await api.put('/api/member/auth/change-password', {
@@ -360,8 +377,8 @@ export const memberApi = {
 
       console.log('Password change response:', {
         success: response.data.success,
-        message: response.data.message
-      });
+        message: response.data.message,
+      })
 
       return response.data
     } catch (error: unknown) {
@@ -369,11 +386,12 @@ export const memberApi = {
 
       if (axios.isAxiosError(error) && error.response?.data) {
         console.error('Backend error response:', error.response.data)
-        const message = typeof error.response.data === 'object' &&
-                       error.response.data !== null &&
-                       'message' in error.response.data
-                       ? String(error.response.data.message)
-                       : 'Password change failed'
+        const message =
+          typeof error.response.data === 'object' &&
+          error.response.data !== null &&
+          'message' in error.response.data
+            ? String(error.response.data.message)
+            : 'Password change failed'
         throw new Error(message)
       }
 
@@ -384,34 +402,35 @@ export const memberApi = {
   // Forgot Password
   async forgotPassword(email: string) {
     try {
-      console.log('Sending member forgot password request for:', email);
+      console.log('Sending member forgot password request for:', email)
 
       // Client-side validation
       if (!email?.trim()) {
-        throw new Error('Email is required');
+        throw new Error('Email is required')
       }
 
       // Email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email.trim())) {
-        throw new Error('Please enter a valid email address');
+        throw new Error('Please enter a valid email address')
       }
 
       const response = await api.post('/api/member/auth/forgot-password', {
         email: email.trim().toLowerCase(),
-      });
+      })
 
-      console.log('Forgot password response:', response.data);
-      return response.data;
+      console.log('Forgot password response:', response.data)
+      return response.data
     } catch (error: unknown) {
-      console.error('Member forgot password service error:', error);
+      console.error('Member forgot password service error:', error)
 
       if (error instanceof Error && error.message.includes('Email rate limit exceeded')) {
         return {
           success: false,
-          message: 'Too many password reset attempts. Please wait at least 60 seconds and try again.',
+          message:
+            'Too many password reset attempts. Please wait at least 60 seconds and try again.',
           rateLimited: true,
-        };
+        }
       }
 
       return {
@@ -420,37 +439,37 @@ export const memberApi = {
         rateLimited:
           error instanceof Error &&
           (error.message.includes('rate limit') || error.message.includes('Too many')),
-      };
+      }
     }
   },
 
   // Reset Password
   async resetPassword(accessToken: string, password: string) {
     try {
-      console.log('Sending member reset password request');
+      console.log('Sending member reset password request')
 
       // Client-side validation
       if (!accessToken?.trim()) {
-        throw new Error('Invalid reset link');
+        throw new Error('Invalid reset link')
       }
 
       if (!password?.trim()) {
-        throw new Error('Password is required');
+        throw new Error('Password is required')
       }
 
       if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
+        throw new Error('Password must be at least 8 characters long')
       }
 
       const response = await api.post('/api/member/auth/reset-password', {
         access_token: accessToken,
         password: password,
-      });
+      })
 
-      console.log('Reset password response:', response.data);
-      return response.data;
+      console.log('Reset password response:', response.data)
+      return response.data
     } catch (error: unknown) {
-      console.error('Member reset password service error:', error);
+      console.error('Member reset password service error:', error)
 
       return {
         success: false,
@@ -458,27 +477,27 @@ export const memberApi = {
         rateLimited:
           error instanceof Error &&
           (error.message.includes('rate limit') || error.message.includes('Too many')),
-      };
+      }
     }
   },
 
   // Verify Reset Token
   async verifyResetToken(accessToken: string) {
     try {
-      console.log('Verifying member reset token');
+      console.log('Verifying member reset token')
 
       if (!accessToken?.trim()) {
-        throw new Error('Access token is required');
+        throw new Error('Access token is required')
       }
 
       const response = await api.post('/api/member/auth/verify-reset-token', {
         access_token: accessToken,
-      });
+      })
 
-      console.log('Verify reset token response:', response.data);
-      return response.data;
+      console.log('Verify reset token response:', response.data)
+      return response.data
     } catch (error: unknown) {
-      console.error('Member verify reset token service error:', error);
+      console.error('Member verify reset token service error:', error)
 
       return {
         success: false,
@@ -486,7 +505,7 @@ export const memberApi = {
         rateLimited:
           error instanceof Error &&
           (error.message.includes('rate limit') || error.message.includes('Too many')),
-      };
+      }
     }
   },
 }

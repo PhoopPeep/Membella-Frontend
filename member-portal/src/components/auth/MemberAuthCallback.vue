@@ -19,15 +19,24 @@
           </div>
           <h2 class="text-xl font-semibold text-green-600">Email Verified!</h2>
           <p class="text-gray-600">
-            Your member account has been successfully verified. You're being redirected to the
-            homepage...
+            Your member account has been successfully verified.
           </p>
           <div class="mt-4">
+            <div class="text-center">
+              <p class="text-green-600 font-semibold mb-4">
+                Your account is now ready to use!
+              </p>
+              <p class="text-gray-600 text-sm mb-6">
+                Please log in to access your member portal and start using Membella.
+              </p>
+            </div>
+
             <button
-              @click="redirectToHomepage"
-              class="w-full h-10 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              @click="goToLogin"
+              class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center justify-center"
             >
-              Go to Homepage
+              <FontAwesomeIcon icon="sign-in-alt" class="w-4 h-4 mr-2" />
+              Go to Login
             </button>
           </div>
         </div>
@@ -41,17 +50,8 @@
           <h2 class="text-xl font-semibold text-red-600">Verification Failed</h2>
           <div class="text-center">
             <p class="text-gray-600 mb-2">{{ currentErrorMessage }}</p>
-            <small class="text-xs text-red-500">
-              This message will disappear in {{ errorCountdown }} seconds
-            </small>
           </div>
           <div class="space-y-2">
-            <button
-              @click="redirectToLogin"
-              class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-              Back to Login
-            </button>
             <button
               @click="retryVerification"
               v-if="canRetry"
@@ -67,10 +67,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { memberApi } from '../../api/member'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
 const route = useRoute()
@@ -84,62 +85,22 @@ const canRetry = ref(false)
 // Error display state
 const showErrorMessage = ref(false)
 const currentErrorMessage = ref('')
-const errorCountdown = ref(15)
 
-// Timer management - using number instead of NodeJS.Timeout for browser compatibility
-let errorTimer: number | null = null
-let errorCountdownTimer: number | null = null
-
-// Robust error display function that GUARANTEES 15 seconds
+// Error display function
 const displayError = (message: string) => {
-  console.log('Member Auth Callback Error - Displaying for 15 seconds:', message)
-
-  // Clear any existing error timers first
-  clearErrorTimers()
+  console.log('Member Auth Callback Error:', message)
 
   // Set error message and show it
   currentErrorMessage.value = message
   showErrorMessage.value = true
   canRetry.value = true
-  errorCountdown.value = 15
-
-  // Start countdown timer (updates every second)
-  errorCountdownTimer = window.setInterval(() => {
-    errorCountdown.value--
-    console.log('Member Auth Error countdown:', errorCountdown.value)
-
-    if (errorCountdown.value <= 0) {
-      clearErrorTimers()
-    }
-  }, 1000)
-
-  // Main timer to clear error after exactly 15 seconds
-  errorTimer = window.setTimeout(() => {
-    console.log('Clearing member auth error after 15 seconds')
-    clearErrorTimers()
-  }, 15000)
-
-  // Force Vue to update the DOM
-  nextTick(() => {
-    console.log('DOM updated with member auth error message')
-  })
 }
 
-// Clear all error timers and reset error state
-const clearErrorTimers = () => {
-  if (errorTimer) {
-    window.clearTimeout(errorTimer)
-    errorTimer = null
-  }
-  if (errorCountdownTimer) {
-    window.clearInterval(errorCountdownTimer)
-    errorCountdownTimer = null
-  }
-
+// Clear error state
+const clearErrorState = () => {
   showErrorMessage.value = false
   currentErrorMessage.value = ''
   canRetry.value = false
-  errorCountdown.value = 15
 }
 
 const processAuthCallback = async () => {
@@ -149,53 +110,47 @@ const processAuthCallback = async () => {
     console.log('Route query:', route.query)
     console.log('Window location search:', window.location.search)
     console.log('Window location hash:', window.location.hash)
+    console.log('Initial state:', {
+      isProcessing: isProcessing.value,
+      success: success.value,
+      showErrorMessage: showErrorMessage.value
+    })
 
-    // Check if we have URL parameters for auth
+    // Prevent any redirects during auth callback processing
+    console.log('Member auth callback page - preventing redirects')
+
+    // Check if we have URL parameters for auth (both query and hash)
     const urlParams = new URLSearchParams(window.location.search)
-    const accessToken = urlParams.get('access_token')
-    const refreshToken = urlParams.get('refresh_token')
-    const type = urlParams.get('type')
-
-    // Also check hash parameters (Supabase sometimes uses hash)
     const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const hashAccessToken = hashParams.get('access_token')
-    const hashRefreshToken = hashParams.get('refresh_token')
-    const hashType = hashParams.get('type')
 
-    console.log('Member URL tokens found (search params):', {
+    // Get tokens from query parameters first, then hash parameters
+    const accessToken = urlParams.get('access_token') || hashParams.get('access_token')
+    const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token')
+    const type = urlParams.get('type') || hashParams.get('type')
+
+    console.log('Member URL tokens found:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
       type,
+      fromQuery: !!urlParams.get('access_token'),
+      fromHash: !!hashParams.get('access_token'),
       accessToken: accessToken ? accessToken.substring(0, 20) + '...' : null,
-      refreshToken: refreshToken ? refreshToken.substring(0, 20) + '...' : null
+      refreshToken: refreshToken ? refreshToken.substring(0, 20) + '...' : null,
     })
 
-    console.log('Member URL tokens found (hash params):', {
-      hasAccessToken: !!hashAccessToken,
-      hasRefreshToken: !!hashRefreshToken,
-      type: hashType,
-      accessToken: hashAccessToken ? hashAccessToken.substring(0, 20) + '...' : null,
-      refreshToken: hashRefreshToken ? hashRefreshToken.substring(0, 20) + '...' : null
-    })
-
-    // Use tokens from either search params or hash params
-    const finalAccessToken = accessToken || hashAccessToken
-    const finalRefreshToken = refreshToken || hashRefreshToken
-    const finalType = type || hashType
-
-    console.log('Final tokens to use:', {
-      hasAccessToken: !!finalAccessToken,
-      hasRefreshToken: !!finalRefreshToken,
-      type: finalType
-    })
-
-    if (finalAccessToken && finalRefreshToken) {
+    if (accessToken && refreshToken) {
       // This is a URL-based callback (email verification link)
       console.log('Processing member email verification callback')
 
       try {
         console.log('Calling member backend auth callback...')
-        const response = await memberApi.handleAuthCallback(finalAccessToken, finalRefreshToken)
+        console.log('Request data:', {
+          access_token: accessToken ? accessToken.substring(0, 20) + '...' : 'Missing',
+          refresh_token: refreshToken ? refreshToken.substring(0, 20) + '...' : 'Missing',
+          type: type || 'signup'
+        })
+
+        const response = await memberApi.handleAuthCallback(accessToken, refreshToken)
 
         console.log('Member backend callback successful:', response)
 
@@ -203,21 +158,29 @@ const processAuthCallback = async () => {
           // Store auth data
           authStore.setAuth(response.token, response.user)
           success.value = true
-
-          // Redirect to homepage after a short delay
-          setTimeout(() => {
-            redirectToHomepage()
-          }, 2000)
+          console.log('✅ Member email verification successful!')
+          // ไม่ auto redirect ให้ user กดปุ่มเอง
         } else {
           console.error('Member backend response missing required data:', response)
-          throw new Error('Backend did not return member authentication data')
+          displayError('Backend did not return member authentication data')
+          return
         }
       } catch (backendError) {
         console.error('Member backend callback failed:', backendError)
-        throw new Error('Member email verification failed on backend')
+        displayError('Member email verification failed on backend')
+        return
       }
     } else {
-      // No tokens found in URL
+      // No tokens found in URL - check if user is already verified
+      console.log('No tokens found in URL parameters - checking if user is already verified')
+
+      // Check if user is already verified and authenticated
+      if (authStore.isAuthenticated) {
+        console.log('✅ Member is already verified and authenticated')
+        success.value = true
+        return
+      }
+
       console.log('No tokens found in URL parameters')
       console.log('This usually means:')
       console.log('1. The email verification link is not properly formatted')
@@ -225,10 +188,19 @@ const processAuthCallback = async () => {
       console.log('3. The verification link has expired or been used already')
 
       // Show more helpful error message
-      throw new Error('Email verification link is invalid or expired. Please try registering again or contact support.')
+      displayError(
+        'Email verification link is invalid or expired. Please try registering again or contact support.',
+      )
+      return
     }
   } catch (err) {
     console.error('Member auth callback error:', err)
+    console.error('Error details:', {
+      message: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      success: success.value,
+      isProcessing: isProcessing.value
+    })
     const errorMessage = err instanceof Error ? err.message : 'Member authentication failed'
     displayError(errorMessage)
   } finally {
@@ -236,22 +208,21 @@ const processAuthCallback = async () => {
   }
 }
 
-const redirectToLogin = () => {
-  router.push('/login')
-}
-
-const redirectToHomepage = () => {
-  router.push('/homepage')
-}
+// Redirect functions removed - user will stay on this page
 
 const retryVerification = () => {
   isProcessing.value = true
   success.value = false
 
-  // Clear error timers when retrying
-  clearErrorTimers()
+  // Clear error state when retrying
+  clearErrorState()
 
   processAuthCallback()
+}
+
+const goToLogin = () => {
+  console.log('Redirecting to member login page...')
+  router.push('/login')
 }
 
 onMounted(() => {
@@ -262,7 +233,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  console.log('Cleaning up member auth callback timers')
-  clearErrorTimers()
+  console.log('Cleaning up member auth callback')
+  clearErrorState()
 })
 </script>

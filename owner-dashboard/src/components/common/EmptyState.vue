@@ -1,17 +1,20 @@
 <template>
-  <div class="text-center" :class="containerClass">
+  <div
+    class="text-center bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-soft border border-primary-200"
+    :class="containerClass"
+  >
     <!-- Icon -->
     <div
-      class="mx-auto rounded-full flex items-center justify-center mb-4"
+      class="mx-auto rounded-2xl flex items-center justify-center mb-6 shadow-soft"
       :class="[
         iconContainerClass,
-        size === 'sm' ? 'w-10 h-10' : size === 'lg' ? 'w-16 h-16' : 'w-12 h-12',
+        size === 'sm' ? 'w-12 h-12' : size === 'lg' ? 'w-20 h-20' : 'w-16 h-16',
       ]"
     >
       <slot name="icon">
         <FontAwesomeIcon
           :icon="icon"
-          :class="[iconClass, size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-8 h-8' : 'w-6 h-6']"
+          :class="[iconClass, size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-10 h-10' : 'w-8 h-8']"
         />
       </slot>
     </div>
@@ -20,8 +23,8 @@
     <h3
       :class="[
         titleClass,
-        size === 'sm' ? 'text-base' : size === 'lg' ? 'text-xl' : 'text-lg',
-        'font-medium text-gray-900 mb-2',
+        size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-2xl' : 'text-xl',
+        'font-bold text-neutral-800 mb-3',
       ]"
     >
       <slot name="title">{{ title }}</slot>
@@ -30,20 +33,24 @@
     <!-- Description -->
     <p
       v-if="description || $slots.description"
-      :class="[descriptionClass, size === 'sm' ? 'text-xs' : 'text-sm', 'text-gray-500 mb-4']"
+      :class="[
+        descriptionClass,
+        size === 'sm' ? 'text-sm' : 'text-base',
+        'text-neutral-600 mb-6 font-medium',
+      ]"
     >
       <slot name="description">{{ description }}</slot>
     </p>
 
     <!-- Actions -->
-    <div v-if="$slots.actions || primaryAction" class="space-y-2">
+    <div v-if="$slots.actions || primaryAction" class="space-y-3">
       <slot name="actions">
         <!-- Primary Action -->
         <button
           v-if="primaryAction"
           @click="handlePrimaryAction"
           :disabled="primaryAction.disabled"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+          class="inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-primary text-white hover:bg-gradient-secondary h-11 px-6 shadow-medium hover:shadow-glow"
         >
           <FontAwesomeIcon
             v-if="primaryAction.icon"
@@ -58,7 +65,7 @@
           <button
             @click="handleSecondaryAction"
             :disabled="secondaryAction.disabled"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 py-2"
+            class="inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary-200 bg-white/80 hover:bg-primary-50 text-neutral-700 hover:text-primary-700 h-11 px-6"
           >
             <FontAwesomeIcon
               v-if="secondaryAction.icon"
@@ -104,8 +111,8 @@ const props = withDefaults(defineProps<Props>(), {
   icon: 'database',
   size: 'md',
   containerClass: 'py-12',
-  iconContainerClass: 'bg-gray-100',
-  iconClass: 'text-gray-400',
+  iconContainerClass: 'bg-gradient-primary',
+  iconClass: 'text-white',
   titleClass: '',
   descriptionClass: '',
 })

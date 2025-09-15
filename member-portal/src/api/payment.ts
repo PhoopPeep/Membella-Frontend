@@ -23,7 +23,7 @@ api.interceptors.request.use(
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
-      hasAuth: !!token
+      hasAuth: !!token,
     })
 
     return config
@@ -31,7 +31,7 @@ api.interceptors.request.use(
   (error) => {
     console.error('Payment API Request Error:', error)
     return Promise.reject(error)
-  }
+  },
 )
 
 // Response interceptor
@@ -40,7 +40,7 @@ api.interceptors.response.use(
     console.log('Payment API Response Success:', {
       status: response.status,
       url: response.config.url,
-      success: response.data?.success
+      success: response.data?.success,
     })
     return response
   },
@@ -49,7 +49,7 @@ api.interceptors.response.use(
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,
-      url: error.config?.url
+      url: error.config?.url,
     })
 
     if (error.response?.status === 401) {
@@ -58,7 +58,7 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export interface PaymentData {
@@ -142,8 +142,8 @@ const handleApiError = (error: unknown): Error => {
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
-      }
+        baseURL: error.config?.baseURL,
+      },
     })
 
     // Handle specific HTTP status codes
@@ -166,7 +166,9 @@ const handleApiError = (error: unknown): Error => {
     } else if (error.response?.data?.message) {
       return new Error(error.response.data.message)
     } else if (error.request) {
-      return new Error('Network error: Unable to connect to server. Please check your internet connection.')
+      return new Error(
+        'Network error: Unable to connect to server. Please check your internet connection.',
+      )
     } else {
       return new Error('Request failed: ' + error.message)
     }
@@ -220,7 +222,7 @@ export const paymentApi = {
         planId: paymentData.planId,
         paymentMethod: paymentData.paymentMethod,
         hasPaymentSource: !!paymentData.paymentSource,
-        customerData: paymentData.customerData
+        customerData: paymentData.customerData,
       })
 
       // Validate required fields
@@ -228,7 +230,10 @@ export const paymentApi = {
         throw new Error('Plan ID is required')
       }
 
-      if (!paymentData.paymentMethod || !['card', 'promptpay'].includes(paymentData.paymentMethod)) {
+      if (
+        !paymentData.paymentMethod ||
+        !['card', 'promptpay'].includes(paymentData.paymentMethod)
+      ) {
         throw new Error('Valid payment method is required')
       }
 
@@ -275,7 +280,7 @@ export const paymentApi = {
   // Poll payment status (for PromptPay)
   async pollPaymentStatus(paymentId: string, maxAttempts = 60): Promise<PaymentStatus> {
     try {
-      console.log(`Starting payment status polling for: ${paymentId}`);
+      console.log(`Starting payment status polling for: ${paymentId}`)
 
       if (!paymentId || paymentId.trim() === '') {
         throw new Error('Payment ID is required')
@@ -283,7 +288,7 @@ export const paymentApi = {
 
       const response = await api.get(`/api/payments/poll/${paymentId.trim()}`, {
         params: { maxAttempts },
-        timeout: (maxAttempts * 3 + 30) * 1000 // Dynamic timeout based on max attempts
+        timeout: (maxAttempts * 3 + 30) * 1000, // Dynamic timeout based on max attempts
       })
 
       if (response.data.success && response.data.data) {
@@ -305,11 +310,7 @@ export const paymentApi = {
   },
 
   // Get payment history
-  async getPaymentHistory(options?: {
-    limit?: number
-    offset?: number
-    status?: string
-  }): Promise<{
+  async getPaymentHistory(options?: { limit?: number; offset?: number; status?: string }): Promise<{
     data: PaymentHistory[]
     pagination: {
       total: number
@@ -337,8 +338,8 @@ export const paymentApi = {
             total: data.length,
             limit: options?.limit || 50,
             offset: options?.offset || 0,
-            hasMore: false
-          }
+            hasMore: false,
+          },
         }
       } else {
         throw new Error(response.data.message || 'Failed to get payment history')
@@ -369,7 +370,9 @@ export const paymentApi = {
             reject(new Error(`Payment ${status.status}`))
           } else if (attempts >= maxAttempts) {
             console.log('Polling timeout reached')
-            reject(new Error('Payment verification timeout. Please check your payment status manually.'))
+            reject(
+              new Error('Payment verification timeout. Please check your payment status manually.'),
+            )
           } else {
             // Continue polling after 3 seconds
             console.log(`Payment still ${status.status}, continuing to poll...`)
@@ -396,7 +399,11 @@ export const paymentApi = {
   validatePaymentData(paymentData: PaymentData): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 
-    if (!paymentData.planId || typeof paymentData.planId !== 'string' || paymentData.planId.trim() === '') {
+    if (
+      !paymentData.planId ||
+      typeof paymentData.planId !== 'string' ||
+      paymentData.planId.trim() === ''
+    ) {
       errors.push('Plan ID is required')
     }
 
@@ -405,20 +412,28 @@ export const paymentApi = {
     }
 
     if (paymentData.paymentMethod === 'card') {
-      if (!paymentData.paymentSource || typeof paymentData.paymentSource !== 'string' || paymentData.paymentSource.trim() === '') {
+      if (
+        !paymentData.paymentSource ||
+        typeof paymentData.paymentSource !== 'string' ||
+        paymentData.paymentSource.trim() === ''
+      ) {
         errors.push('Payment source token is required for card payments')
       } else if (!paymentData.paymentSource.startsWith('tokn_')) {
         errors.push('Invalid payment token format')
       }
 
-      if (paymentData.customerData?.name && (typeof paymentData.customerData.name !== 'string' || paymentData.customerData.name.trim() === '')) {
+      if (
+        paymentData.customerData?.name &&
+        (typeof paymentData.customerData.name !== 'string' ||
+          paymentData.customerData.name.trim() === '')
+      ) {
         errors.push('Valid cardholder name is required')
       }
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     }
-  }
+  },
 }

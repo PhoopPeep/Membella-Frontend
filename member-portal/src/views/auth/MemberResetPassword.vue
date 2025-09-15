@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20 p-4"
   >
     <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
       <div class="p-6 space-y-1">
@@ -96,7 +96,9 @@
             </div>
 
             <div class="space-y-2">
-              <label for="confirmPassword" class="text-sm font-medium leading-none">Confirm New Password</label>
+              <label for="confirmPassword" class="text-sm font-medium leading-none"
+                >Confirm New Password</label
+              >
               <div class="relative">
                 <input
                   id="confirmPassword"
@@ -114,7 +116,10 @@
                   class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                   :disabled="isLoading"
                 >
-                  <FontAwesomeIcon :icon="showConfirmPassword ? 'eye-slash' : 'eye'" class="w-4 h-4" />
+                  <FontAwesomeIcon
+                    :icon="showConfirmPassword ? 'eye-slash' : 'eye'"
+                    class="w-4 h-4"
+                  />
                 </button>
               </div>
               <div v-if="confirmPassword && !passwordsMatch" class="text-xs text-red-600">
@@ -127,7 +132,10 @@
               <p>Password must:</p>
               <ul class="ml-4 space-y-0.5">
                 <li :class="passwordRequirements.length ? 'text-green-600' : 'text-gray-500'">
-                  <FontAwesomeIcon :icon="passwordRequirements.length ? 'check' : 'times'" class="w-3 h-3 mr-1" />
+                  <FontAwesomeIcon
+                    :icon="passwordRequirements.length ? 'check' : 'times'"
+                    class="w-3 h-3 mr-1"
+                  />
                   Be at least 8 characters long
                 </li>
               </ul>
@@ -217,7 +225,7 @@ const accessToken = ref('')
 
 // Computed properties
 const passwordRequirements = computed(() => ({
-  length: password.value.length >= 8
+  length: password.value.length >= 8,
 }))
 
 const passwordsMatch = computed(() => {
@@ -225,10 +233,12 @@ const passwordsMatch = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  return password.value &&
-         confirmPassword.value &&
-         passwordRequirements.value.length &&
-         passwordsMatch.value
+  return (
+    password.value &&
+    confirmPassword.value &&
+    passwordRequirements.value.length &&
+    passwordsMatch.value
+  )
 })
 
 // Error display function (15 seconds)
@@ -302,27 +312,93 @@ const displaySuccess = (message: string) => {
 
 // Extract token from URL
 const extractTokenFromUrl = () => {
+  // Check URL hash first (Supabase sends tokens in hash)
+  const hash = window.location.hash
+  if (hash) {
+    const hashParams = new URLSearchParams(hash.substring(1)) // Remove # from hash
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+
+    console.log('URL hash params:', {
+      access_token: accessToken ? 'Present' : 'Missing',
+      refresh_token: refreshToken ? 'Present' : 'Missing',
+      type: hashParams.get('type'),
+    })
+
+    if (accessToken) {
+      console.log('Found access token in URL hash')
+      return accessToken
+    }
+  }
+
+  // Check URL search params as fallback
   const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('access_token') || urlParams.get('token')
+  const accessToken = urlParams.get('access_token') || urlParams.get('token')
+  if (accessToken) {
+    console.log('Found access token in URL search params')
+    return accessToken
+  }
+
+  // Check if token is in the URL path (some email clients might modify URLs)
+  const pathMatch = window.location.pathname.match(/\/reset-password\/([^\/\?]+)/)
+  if (pathMatch) {
+    console.log('Found access token in URL path')
+    return pathMatch[1]
+  }
+
+  console.log('No access token found in URL')
+  return null
 }
 
 // Verify token
 const verifyToken = async () => {
   try {
-    console.log('Verifying member reset token...')
+    console.log('🔧 Verifying member reset token...')
 
+    // Check if this is an email verification link (type=signup) or password reset link
+    // Check both hash and search params for type
+    let type = null
+
+    // Check hash first (Supabase password reset uses hash)
+    const hash = window.location.hash
+    if (hash) {
+      const hashParams = new URLSearchParams(hash.substring(1))
+      type = hashParams.get('type')
+    }
+
+    // Check search params as fallback
+    if (!type) {
+      const urlParams = new URLSearchParams(window.location.search)
+      type = urlParams.get('type')
+    }
+
+    console.log('🔧 URL type parameter:', type)
+    console.log('🔧 Hash params:', hash ? Object.fromEntries(new URLSearchParams(hash.substring(1)).entries()) : 'None')
+    console.log('🔧 Search params:', Object.fromEntries(new URLSearchParams(window.location.search).entries()))
+
+    // If this is an email verification link, redirect to auth callback
+    if (type === 'signup') {
+      console.log('🔧 This is an email verification link, redirecting to auth callback')
+      window.location.href = `/auth/callback${window.location.search}${window.location.hash}`
+      return
+    }
+
+    // This is a password reset link, verify the token
+    console.log('🔧 This is a password reset link, verifying token...')
     const result = await memberApi.verifyResetToken(accessToken.value)
 
-    console.log('Token verification result:', result)
+    console.log('🔧 Token verification result:', result)
 
     if (result.success) {
       isValidToken.value = true
       userInfo.value = result.user || { email: '', fullName: '' }
+      console.log('✅ Token verified successfully for:', result.user?.email)
     } else {
       isValidToken.value = false
+      console.error('❌ Token verification failed:', result.message)
     }
   } catch (error) {
-    console.error('Token verification error:', error)
+    console.error('❌ Token verification error:', error)
     isValidToken.value = false
   } finally {
     isVerifying.value = false
@@ -383,6 +459,26 @@ onMounted(async () => {
 
   if (!accessToken.value) {
     console.error('No access token found in URL')
+    console.log('URL details:', {
+      href: window.location.href,
+      hash: window.location.hash,
+      search: window.location.search,
+      pathname: window.location.pathname,
+    })
+
+    // Check if this is a password recovery flow
+    const hash = window.location.hash
+    if (hash) {
+      const hashParams = new URLSearchParams(hash.substring(1))
+      const type = hashParams.get('type')
+      console.log('URL type parameter:', type)
+
+      if (type === 'recovery') {
+        console.log('This appears to be a password recovery flow but no access token found')
+        // You might want to show a different message here
+      }
+    }
+
     isValidToken.value = false
     isVerifying.value = false
     return

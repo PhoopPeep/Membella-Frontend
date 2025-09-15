@@ -1,100 +1,145 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20 p-4"
   >
-    <div class="w-full max-w-md bg-white rounded-lg border shadow-sm">
-      <div class="p-6 space-y-1">
-        <h2 class="text-2xl font-bold text-center">Forgot Password</h2>
-        <p class="text-center text-gray-600">
-          Enter your email address and we'll send you a link to reset your password
-        </p>
-      </div>
-      <div class="p-6 pt-0">
+    <div
+      class="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-200 shadow-strong"
+    >
+      <div class="p-8 space-y-2">
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-medium"
+          >
+            <span class="text-white font-bold text-2xl">M</span>
+          </div>
+          <h2 class="text-3xl font-bold text-neutral-800">Forgot Password</h2>
+          <p class="text-neutral-600 font-medium mt-2">
+            Enter your email address and we'll send you a link to reset your password
+          </p>
+        </div>
+        <div class="px-8 pb-8">
         <!-- Error Message -->
-        <div v-if="showErrorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ currentErrorMessage }}</p>
-          <div class="mt-2">
-            <small class="text-xs text-red-500">
-              This message will disappear in {{ errorCountdown }} seconds
-            </small>
+        <div
+          v-if="showErrorMessage"
+          class="mb-6 p-4 bg-gradient-to-r from-error-50 to-error-100 border border-error-200 rounded-xl"
+        >
+          <div class="flex items-start">
+            <div
+              class="w-8 h-8 bg-error-100 rounded-xl flex items-center justify-center mr-3 flex-shrink-0"
+            >
+              <FontAwesomeIcon icon="exclamation-triangle" class="w-4 h-4 text-error-600" />
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-error-800">{{ currentErrorMessage }}</p>
+              <div class="mt-2">
+                <small class="text-xs text-error-600 font-medium">
+                  This message will disappear in {{ errorCountdown }} seconds
+                </small>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Success Message -->
         <div
           v-if="showSuccessMessage"
-          class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md"
+          class="mb-6 p-4 bg-gradient-to-r from-success-50 to-success-100 border border-success-200 rounded-xl"
         >
-          <p class="text-sm text-green-600">{{ currentSuccessMessage }}</p>
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-success-100 rounded-xl flex items-center justify-center mr-3">
+              <FontAwesomeIcon icon="check-circle" class="w-4 h-4 text-success-600" />
+            </div>
+            <p class="text-sm font-semibold text-success-800">{{ currentSuccessMessage }}</p>
+          </div>
         </div>
 
         <!-- Rate Limited Message -->
         <div
           v-if="showRateLimited"
-          class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md"
+          class="mb-6 p-4 bg-gradient-to-r from-warning-50 to-warning-100 border border-warning-200 rounded-xl"
         >
           <div class="flex items-center">
-            <FontAwesomeIcon icon="clock" class="w-5 h-5 text-yellow-600 mr-2" />
+            <div class="w-8 h-8 bg-warning-100 rounded-xl flex items-center justify-center mr-3">
+              <FontAwesomeIcon icon="clock" class="w-4 h-4 text-warning-600" />
+            </div>
             <div>
-              <h3 class="text-sm font-medium text-yellow-800">Too Many Attempts</h3>
-              <p class="text-sm text-yellow-600 mt-1">Please wait before trying again.</p>
+              <h3 class="text-sm font-semibold text-warning-800">Too Many Attempts</h3>
+              <p class="text-sm text-warning-700 mt-1 font-medium">Please wait before trying again.</p>
             </div>
           </div>
         </div>
 
         <!-- Reset Form -->
-        <form v-if="!emailSent" @submit.prevent="handleForgotPassword" class="space-y-4">
-          <div class="space-y-2">
-            <label for="email" class="text-sm font-medium leading-none">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email address"
-              v-model="email"
-              required
-              :disabled="isLoading"
-              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
-            />
+        <form v-if="!emailSent" @submit.prevent="handleForgotPassword" class="space-y-6">
+          <div class="space-y-3">
+            <label for="email" class="text-sm font-semibold text-neutral-700 leading-none"
+              >📧 Email Address</label
+            >
+            <div class="relative">
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email address"
+                v-model="email"
+                required
+                :disabled="isLoading"
+                autocomplete="email"
+                class="w-full h-12 px-5 py-4 text-base bg-white/90 border-2 border-primary-200 rounded-2xl placeholder:text-neutral-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
+              />
+              <div class="absolute inset-y-0 right-0 flex items-center pr-4">
+                <FontAwesomeIcon icon="envelope" class="w-5 h-5 text-neutral-400" />
+              </div>
+            </div>
           </div>
+
           <button
             type="submit"
-            class="w-full h-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="isLoading"
+            class="w-full h-12 px-6 py-3 bg-gradient-primary text-white text-sm font-semibold rounded-xl hover:bg-gradient-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-medium hover:shadow-glow"
           >
-            {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
+            <div v-if="isLoading" class="flex items-center justify-center">
+              <div
+                class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"
+              ></div>
+              Sending...
+            </div>
+            <span v-else class="flex items-center justify-center">
+              <FontAwesomeIcon icon="paper-plane" class="w-4 h-4 mr-2" />
+              Send Reset Link
+            </span>
           </button>
         </form>
 
         <!-- Success State -->
-        <div v-if="emailSent" class="text-center space-y-4">
+        <div v-if="emailSent" class="text-center space-y-6">
           <div
-            class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            class="w-20 h-20 bg-gradient-to-r from-success-100 to-success-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg"
           >
-            <FontAwesomeIcon icon="check-circle" class="w-6 h-6 text-green-600" />
+            <FontAwesomeIcon icon="check-circle" class="w-10 h-10 text-success-600" />
           </div>
-          <h3 class="text-lg font-medium text-green-600">Check Your Email</h3>
-          <p class="text-sm text-gray-600">
+          <h3 class="text-2xl font-bold text-success-600 mb-2">Check Your Email</h3>
+          <p class="text-base text-neutral-600 font-medium">
             If an account with this email exists, you will receive a password reset link at
-            <strong>{{ email }}</strong>
+            <strong class="text-primary-600">{{ email }}</strong>
           </p>
-          <div class="text-xs text-gray-500 space-y-1">
-            <p>• Check your spam/junk folder if needed</p>
-            <p>• Look for email from <code>noreply@mail.supabase.io</code></p>
-            <p>• The email may take a few minutes to arrive</p>
-            <p>• The reset link will expire in 1 hour</p>
+          <div class="bg-primary-50 border border-primary-200 rounded-xl p-4 text-sm text-primary-700 space-y-2">
+            <p class="font-semibold">📧 What to do next:</p>
+            <div class="space-y-1 text-left">
+              <p>• Check your <strong>spam/junk folder</strong> if needed</p>
+              <p>• Look for email from <code class="bg-primary-100 px-1 rounded">noreply@mail.supabase.io</code></p>
+              <p>• The email may take a few minutes to arrive</p>
+              <p>• The reset link will expire in 1 hour</p>
+            </div>
           </div>
-          <button
-            @click="tryAgain"
-            class="w-full h-10 px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-          >
-            Try Different Email
-          </button>
         </div>
 
         <!-- Back to Login -->
-        <div class="mt-4 text-center text-sm">
-          Remember your password?
-          <router-link to="/login" class="text-blue-600 hover:underline ml-1">
+        <div class="mt-6 text-center text-sm">
+          <span class="text-neutral-600 font-medium">Remember your password?</span>
+          <router-link
+            to="/login"
+            class="text-primary-600 hover:text-primary-700 font-semibold underline ml-1 transition-colors"
+          >
             Back to login
           </router-link>
         </div>
@@ -140,6 +185,9 @@ const displayError = (message: string) => {
   showErrorMessage.value = true
   errorCountdown.value = 15
 
+  // Clear form fields when there's an error
+  clearForm()
+
   // Start countdown timer (updates every second)
   errorCountdownTimer = setInterval(() => {
     errorCountdown.value--
@@ -160,6 +208,11 @@ const displayError = (message: string) => {
   nextTick(() => {
     console.log('DOM updated with error message')
   })
+}
+
+// Clear form fields
+const clearForm = () => {
+  email.value = ''
 }
 
 // Clear all error timers and reset error state

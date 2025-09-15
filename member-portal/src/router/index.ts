@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const MemberHomepage = () => import('@/views/MemberHomepage.vue')
+const OrganizationDetails = () => import('@/views/OrganizationDetails.vue')
 const MySubscription = () => import('@/views/MySubscription.vue')
 const PaymentHistory = () => import('@/views/PaymentHistory.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
@@ -24,6 +25,14 @@ const router = createRouter({
       component: MemberHomepage,
       meta: {
         requiresAuth: false, // Allow guests to view homepage
+      },
+    },
+    {
+      path: '/organization/:id',
+      name: 'organization-details',
+      component: OrganizationDetails,
+      meta: {
+        requiresAuth: false, // Allow guests to view organization details
       },
     },
     {

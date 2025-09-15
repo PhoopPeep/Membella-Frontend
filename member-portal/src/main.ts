@@ -43,7 +43,7 @@ import {
   faExclamationTriangle,
   faEyeSlash,
   faKey,
-  faLock
+  faLock,
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
@@ -83,7 +83,7 @@ library.add(
   faExclamationTriangle,
   faEyeSlash,
   faKey,
-  faLock
+  faLock,
 )
 
 const app = createApp(App)
