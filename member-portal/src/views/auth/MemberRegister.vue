@@ -18,9 +18,6 @@
     <div class="relative w-full max-w-md bg-white rounded-2xl border border-primary-200 shadow-2xl overflow-hidden">
       <!-- Header -->
       <div class="bg-gradient-to-r from-primary-50 to-secondary-50 p-8 text-center">
-        <div class="w-16 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <FontAwesomeIcon icon="user-plus" class="w-8 h-8 text-white" />
-        </div>
         <h2 class="text-3xl font-bold text-primary-700 mb-2">Create Member Account</h2>
         <p class="text-primary-600">Join us to access exclusive plans and benefits</p>
       </div>

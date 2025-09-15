@@ -3,6 +3,8 @@
     id="app"
     class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20"
   >
+    <!-- Global Notification Container -->
+    <NotificationContainer />
     <div v-if="isInitializing" class="min-h-screen flex items-center justify-center">
       <div class="text-center animate-fade-in">
         <div class="relative">
@@ -50,6 +52,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import MemberNavigation from './components/layout/MemberNavigation.vue'
+import NotificationContainer from './components/NotificationContainer.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()

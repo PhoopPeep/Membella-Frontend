@@ -23,7 +23,6 @@
               </span>
             </div>
             <h1 class="text-4xl font-bold text-white mb-4">{{ organization?.orgName }}</h1>
-            <p class="text-xl text-white/90 mb-8">{{ organization?.email }}</p>
             <div class="flex flex-wrap justify-center gap-4">
             </div>
           </div>
@@ -659,6 +658,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useAuthStore } from '../stores/auth'
 import { memberApi } from '../api/member'
+// Payment API will be used in the future for actual payment processing
 
 // Types
 interface Organization {
@@ -834,13 +834,22 @@ const subscribeToPlan = async (plan: Plan) => {
   try {
     subscribing.value = plan.id
 
-    // For now, show a message that subscription functionality is not implemented
-    // In a real application, you would call the subscription API here
-    alert(
-      'Subscription functionality is not yet implemented. Please contact the organization directly.',
-    )
+    // Redirect to payment page with plan information
+    router.push({
+      name: 'payment',
+      query: {
+        planId: plan.id,
+        planName: plan.name,
+        price: plan.price.toString(),
+        duration: plan.duration.toString(),
+        organization: plan.organization,
+        organizationId: organizationId.value
+      }
+    })
+
     closePlanModal()
   } catch (err) {
+    console.error('Failed to initiate subscription:', err)
     alert(err instanceof Error ? err.message : 'Failed to subscribe to plan')
   } finally {
     subscribing.value = null

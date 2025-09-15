@@ -17,11 +17,19 @@ export interface Member {
   email: string
   fullName?: string
   phone?: string
-  planId: string
+  planId?: string
   status: 'active' | 'inactive' | 'cancelled'
   subscriptionStart: string
   subscriptionEnd: string | null
   createdAt: string
+  subscriptions?: Array<{
+    id: string
+    planName: string
+    status: string
+    startDate: string
+    endDate: string | null
+    price: number
+  }>
   paymentHistory?: Array<{
     id: string
     amount: number

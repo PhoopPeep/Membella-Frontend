@@ -5,6 +5,7 @@ const MemberHomepage = () => import('@/views/MemberHomepage.vue')
 const OrganizationDetails = () => import('@/views/OrganizationDetails.vue')
 const MySubscription = () => import('@/views/MySubscription.vue')
 const PaymentHistory = () => import('@/views/PaymentHistory.vue')
+const Payment = () => import('@/views/Payment.vue')
 const MemberProfile = () => import('@/views/MemberProfile.vue')
 const MemberLogin = () => import('@/views/auth/MemberLogin.vue')
 const MemberRegister = () => import('@/views/auth/MemberRegister.vue')
@@ -95,6 +96,14 @@ const router = createRouter({
       path: '/payments',
       name: 'payment-history',
       component: PaymentHistory,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/payment',
+      name: 'payment',
+      component: Payment,
       meta: {
         requiresAuth: true,
       },

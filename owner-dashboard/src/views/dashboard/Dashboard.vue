@@ -64,15 +64,15 @@
 
       <!-- Dashboard Content -->
       <div v-else class="space-y-8 pb-8">
-        <!-- Empty State for No Members -->
+        <!-- Empty State for No Plans -->
         <div
-          v-if="totalMembers === 0 && totalRevenue === 0"
+          v-if="activePlans === 0"
           class="bg-white/80 backdrop-blur-sm rounded-3xl border border-primary-200 shadow-xl p-12"
         >
           <div class="text-center max-w-lg mx-auto">
             <h2 class="text-2xl font-black text-primary-700 mb-4">Welcome to your Dashboard! 🚀</h2>
             <p class="text-base text-primary-600 mb-8 font-medium">
-              You haven't had any members yet. Create your first plan and start attracting members
+              You haven't created any plans yet. Create your first plan and start attracting members
               to see your analytics here.
             </p>
             <router-link
@@ -113,8 +113,38 @@
             />
           </div>
 
-          <!-- Charts Section -->
-          <div class="grid gap-8 lg:grid-cols-3">
+          <!-- No Members State (when plans exist but no members) -->
+          <div
+            v-if="totalMembers === 0 && totalRevenue === 0 && activePlans > 0"
+            class="bg-white/80 backdrop-blur-sm rounded-3xl border border-primary-200 shadow-xl p-12"
+          >
+            <div class="text-center max-w-lg mx-auto">
+              <h2 class="text-2xl font-black text-primary-700 mb-4">Great! You have {{ activePlans }} plan(s) 🎉</h2>
+              <p class="text-base text-primary-600 mb-8 font-medium">
+                Your plans are ready! Now you need to attract members to see analytics and revenue data here.
+                Share your plans with potential members to get started.
+              </p>
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <router-link
+                  to="/plans"
+                  class="inline-flex items-center justify-center bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-3 rounded-xl font-semibold text-base hover:from-primary-700 hover:to-primary-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <FontAwesomeIcon icon="eye" class="w-5 h-5 mr-3" />
+                  View Your Plans
+                </router-link>
+                <router-link
+                  to="/plans/create"
+                  class="inline-flex items-center justify-center bg-gradient-to-r from-secondary-500 to-accent-500 text-white px-6 py-3 rounded-xl font-semibold text-base hover:from-secondary-700 hover:to-accent-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <FontAwesomeIcon icon="plus" class="w-5 h-5 mr-3" />
+                  Create More Plans
+                </router-link>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Section (only show when there are members or revenue) -->
+          <div v-if="totalMembers > 0 || totalRevenue > 0" class="grid gap-8 lg:grid-cols-3">
             <!-- Revenue Chart -->
             <Card
               title="📈 Revenue Trend"
@@ -186,7 +216,7 @@
             </Card>
           </div>
 
-          <!-- Recent Members Section -->
+          <!-- Recent Members Section (only show when there are members) -->
           <div v-if="members.length > 0">
             <Card
               title="🆕 Recent Members"
@@ -219,9 +249,21 @@
                   <div class="text-right space-y-2">
                     <div class="flex justify-end">
                       <span
-                        class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-success-100 to-success-200 text-success-800 shadow-md"
+                        class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold shadow-md"
+                        :class="{
+                          'bg-gradient-to-r from-success-100 to-success-200 text-success-800': member.status === 'active',
+                          'bg-gradient-to-r from-error-100 to-error-200 text-error-800': member.status === 'cancelled',
+                          'bg-gradient-to-r from-warning-100 to-warning-200 text-warning-800': member.status === 'inactive'
+                        }"
                       >
-                        <div class="w-2 h-2 bg-success-500 rounded-full mr-2 animate-pulse"></div>
+                        <div
+                          class="w-2 h-2 rounded-full mr-2"
+                          :class="{
+                            'bg-success-500 animate-pulse': member.status === 'active',
+                            'bg-error-500': member.status === 'cancelled',
+                            'bg-warning-500': member.status === 'inactive'
+                          }"
+                        ></div>
                         {{ member.status }}
                       </span>
                     </div>
@@ -248,15 +290,14 @@ import type { Member } from '../../service/dashboardService'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { Chart } from 'chart.js'
 
-// Import reusable components
+// Define component name
+defineOptions({
+  name: 'DashboardView',
+})
 
-const PageHeader = defineAsyncComponent(() => import('../../components/common/PageHeader.vue'))
+// Import reusable components
 const Card = defineAsyncComponent(() => import('../../components/common/Card.vue'))
 const StatCard = defineAsyncComponent(() => import('../../components/common/StatCard.vue'))
-const EmptyState = defineAsyncComponent(() => import('../../components/common/EmptyState.vue'))
-const LoadingSpinner = defineAsyncComponent(
-  () => import('../../components/common/LoadingSpinner.vue'),
-)
 
 const router = useRouter()
 
