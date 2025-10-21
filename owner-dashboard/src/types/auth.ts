@@ -32,5 +32,6 @@ export interface AuthResponse {
   user?: User
   requiresVerification?: boolean
   rateLimited?: boolean
+  emailError?: boolean
   supabaseSession?: Session
 }

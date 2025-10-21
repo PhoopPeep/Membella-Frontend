@@ -1,7 +1,47 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/20">
-    <!-- Notification Container -->
-    <NotificationContainer />
+    <!-- Authentication Status -->
+    <div v-if="isDevelopment" class="bg-yellow-100 border-l-4 border-yellow-500 p-4 m-4">
+      <div class="flex">
+        <div class="ml-3">
+          <p class="text-sm text-yellow-700">
+            <strong>Authentication Info:</strong> Check console for authentication details
+          </p>
+          <div class="mt-2 space-x-2">
+            <button @click="debugAuthentication" class="px-3 py-1 bg-yellow-600 text-white rounded text-xs">
+              Debug Auth
+            </button>
+            <button @click="testPaymentAPI" class="px-3 py-1 bg-blue-600 text-white rounded text-xs">
+              Test API
+            </button>
+            <button @click="testLoginFlow" class="px-3 py-1 bg-green-600 text-white rounded text-xs">
+              Test Login
+            </button>
+            <button @click="checkAuthentication" class="px-3 py-1 bg-purple-600 text-white rounded text-xs">
+              Check Auth
+            </button>
+            <button @click="testCompletePaymentFlow" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs">
+              Test Complete Flow
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authentication Error Display -->
+    <div v-if="error && error.includes('Authentication')" class="bg-red-100 border-l-4 border-red-500 p-4 m-4">
+      <div class="flex">
+        <div class="ml-3">
+          <p class="text-sm text-red-700">
+            <strong>Authentication Error:</strong> {{ error }}
+          </p>
+          <button @click="router.push('/login')" class="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs">
+            Go to Login
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Hero Header Section -->
     <div
       class="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 px-6 py-16 md:px-8"
@@ -167,8 +207,7 @@
                   type="text"
                   placeholder="John Doe"
                   class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                  :value="cardData.name"
-                  @input="updateCardData('name', $event.target.value)"
+                  v-model="cardData.name"
                 />
               </div>
             </div>
@@ -179,8 +218,7 @@
                 <select
                   id="expiryMonth"
                   class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                  :value="cardData.expiration_month"
-                  @change="updateCardData('expiration_month', $event.target.value)"
+                  v-model="cardData.expiration_month"
                 >
                   <option value="">Month</option>
                   <option v-for="month in 12" :key="month" :value="month.toString().padStart(2, '0')">
@@ -193,8 +231,7 @@
                 <select
                   id="expiryYear"
                   class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                  :value="cardData.expiration_year"
-                  @change="updateCardData('expiration_year', $event.target.value)"
+                  v-model="cardData.expiration_year"
                 >
                   <option value="">Year</option>
                   <option v-for="year in 10" :key="year" :value="(new Date().getFullYear() + year).toString()">
@@ -209,8 +246,7 @@
                   type="text"
                   placeholder="123"
                   class="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                  :value="cardData.security_code"
-                  @input="updateCardData('security_code', $event.target.value)"
+                  v-model="cardData.security_code"
                   maxlength="4"
                 />
               </div>
@@ -286,10 +322,15 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { paymentApi, type PaymentData } from '../api/payment'
-import { getOmiseService, type OmiseCardData } from '../services/omiseService'
-import NotificationContainer from '../components/NotificationContainer.vue'
+import { paymentApi } from '../api/payment'
+import { getOmiseService } from '../services/omiseService'
 import notificationService from '../services/notificationService'
+import type { PaymentData } from '../types/payment'
+import type { OmiseCardData } from '../types/omise'
+
+defineOptions({
+  name: 'PaymentPage'
+})
 
 // Composables
 const route = useRoute()
@@ -300,7 +341,7 @@ const loading = ref(false)
 const error = ref('')
 const selectedMethod = ref<'card' | 'promptpay' | null>(null)
 const processing = ref(false)
-const omiseService = ref<any>(null)
+const omiseService = ref<ReturnType<typeof getOmiseService> | null>(null)
 
 // Plan data from query params
 const planId = ref('')
@@ -323,16 +364,82 @@ const cardData = ref<OmiseCardData>({
 const promptPayQRCode = ref('')
 const promptPaySourceId = ref('')
 const paymentId = ref('')
-const pollingInterval = ref<any>(null)
+const pollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 // Computed
-const amountInSatang = computed(() => Math.round(price.value * 100))
 const formattedPrice = computed(() => price.value.toLocaleString())
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - Vite env variables
+const isDevelopment = computed(() => import.meta.env.DEV)
 
 // Methods
+const checkAuthentication = () => {
+  const token = localStorage.getItem('member_token')
+  const user = localStorage.getItem('member_user')
+
+  console.log('Authentication check:', {
+    hasToken: !!token,
+    hasUser: !!user,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : 'None',
+    userData: user ? JSON.parse(user) : null
+  })
+
+  if (!token || !user) {
+    console.error('Authentication failed: Missing token or user data')
+    return false
+  }
+
+  try {
+    const userData = JSON.parse(user)
+
+    // Check token expiration
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const now = Math.floor(Date.now() / 1000)
+
+        if (payload.exp && payload.exp < now) {
+          console.error('Token expired, clearing auth')
+          localStorage.removeItem('member_token')
+          localStorage.removeItem('member_user')
+          return false
+        }
+
+        console.log('Token is valid, expires in:', Math.floor((payload.exp - now) / 3600), 'hours')
+      } catch (tokenError) {
+        console.error('Error decoding token:', tokenError)
+        return false
+      }
+    }
+
+    if (!userData.id || !userData.email || userData.role !== 'member') {
+      console.error('Authentication failed: Invalid user data')
+      return false
+    }
+
+    console.log('Authentication successful:', userData)
+    return true
+  } catch (error) {
+    console.error('Authentication failed: Error parsing user data', error)
+    return false
+  }
+}
+
 const selectPaymentMethod = async (method: 'card' | 'promptpay') => {
   selectedMethod.value = method
   error.value = ''
+
+  // Check authentication before proceeding
+  if (!checkAuthentication()) {
+    error.value = 'Authentication required. Please log in to continue.'
+    console.error('Payment method selection failed: User not authenticated')
+
+    // Redirect to login after a short delay
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+    return
+  }
 
   // Clear previous data
   if (method === 'card') {
@@ -383,20 +490,30 @@ const processPayment = async () => {
 
 const processCardPayment = async () => {
   try {
+    // Check authentication before proceeding
+    const token = localStorage.getItem('member_token')
+    if (!token) {
+      throw new Error('Authentication required. Please log in to continue.')
+    }
+
     // Validate card data
+    if (!omiseService.value) {
+      throw new Error('Payment service not initialized')
+    }
+
     const validation = omiseService.value.validateCardData(cardData.value)
     if (!validation.valid) {
       throw new Error(validation.errors.join(', '))
     }
 
     // Create Omise token
-    const token = await omiseService.value.createCardToken(cardData.value)
+    const omiseToken = await omiseService.value.createCardToken(cardData.value)
 
     // Create payment with token
     const paymentData: PaymentData = {
       planId: planId.value,
       paymentMethod: 'card',
-      paymentSource: token.id,
+      paymentSource: omiseToken.id,
       customerData: {
         name: cardData.value.name,
         email: '', // You might want to get this from user profile
@@ -421,6 +538,14 @@ const processPromptPayPayment = async () => {
     processing.value = true
     error.value = ''
 
+    // Authentication check with detailed logging
+    console.log('=== PromptPay Payment Authentication Check ===')
+
+    // Check authentication locally first
+    if (!checkAuthentication()) {
+      throw new Error('Authentication required. Please log in to continue.')
+    }
+
     // Use backend to create PromptPay payment and get QR code
     console.log('Creating PromptPay payment via backend...')
 
@@ -434,7 +559,10 @@ const processPromptPayPayment = async () => {
       }
     }
 
+    console.log('Payment data being sent:', paymentData)
     const result = await paymentApi.createSubscriptionPayment(paymentData)
+    console.log('Payment API response:', result)
+
     paymentId.value = result.paymentId
 
     if (result.qr_code_url) {
@@ -496,7 +624,7 @@ const startPaymentPolling = (paymentId: string) => {
       const status = await paymentApi.getPaymentStatus(paymentId)
 
       if (status.status === 'successful') {
-        clearInterval(pollingInterval.value)
+        if (pollingInterval.value) clearInterval(pollingInterval.value)
 
         // Show success notification
         notificationService.paymentSuccess(planName.value, price.value, paymentId)
@@ -506,14 +634,14 @@ const startPaymentPolling = (paymentId: string) => {
           router.push('/subscriptions')
         }, 2000)
       } else if (status.status === 'failed' || status.status === 'expired') {
-        clearInterval(pollingInterval.value)
+        if (pollingInterval.value) clearInterval(pollingInterval.value)
 
         // Show error notification
         notificationService.paymentFailed(planName.value, `Payment ${status.status}`)
 
         error.value = `Payment ${status.status}. Please try again.`
       } else if (attempts >= maxAttempts) {
-        clearInterval(pollingInterval.value)
+        if (pollingInterval.value) clearInterval(pollingInterval.value)
 
         // Show timeout notification
         notificationService.paymentFailed(planName.value, 'Payment verification timeout. Please check your payment status manually.')
@@ -523,7 +651,7 @@ const startPaymentPolling = (paymentId: string) => {
     } catch (err) {
       console.error('Error polling payment status:', err)
       if (attempts >= maxAttempts) {
-        clearInterval(pollingInterval.value)
+        if (pollingInterval.value) clearInterval(pollingInterval.value)
 
         // Show error notification
         notificationService.paymentFailed(planName.value, 'Unable to verify payment status. Please check your payment status manually.')
@@ -536,17 +664,186 @@ const startPaymentPolling = (paymentId: string) => {
 
 const formatCardNumber = (event: Event) => {
   const target = event.target as HTMLInputElement
+  if (!omiseService.value) return
+
   const formatted = omiseService.value.formatCardNumber(target.value)
   target.value = formatted
-  cardData.value.number = formatted.replace(/\s/g, '')
-}
-
-const updateCardData = (field: keyof OmiseCardData, value: string) => {
-  cardData.value[field] = value
+  cardData.value.number = formatted.replace(/ /g, '')
 }
 
 const goBack = () => {
   router.go(-1)
+}
+
+// Function to check authentication status
+const debugAuthentication = () => {
+  console.log('=== Authentication Debug Info ===')
+  const token = localStorage.getItem('member_token')
+  const user = localStorage.getItem('member_user')
+
+  console.log('Local Storage:', {
+    hasToken: !!token,
+    hasUser: !!user,
+    tokenLength: token ? token.length : 0,
+    userLength: user ? user.length : 0
+  })
+
+  if (token) {
+    try {
+      // Try to decode the JWT token (without verification)
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      console.log('Token payload:', payload)
+
+      // Check if token is expired
+      const now = Math.floor(Date.now() / 1000)
+      if (payload.exp && payload.exp < now) {
+        console.error('Token is expired!')
+        localStorage.removeItem('member_token')
+        localStorage.removeItem('member_user')
+        return false
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error)
+    }
+  }
+
+  if (user) {
+    try {
+      const userData = JSON.parse(user)
+      console.log('User data:', userData)
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+    }
+  }
+
+  console.log('=== End Debug Info ===')
+  return true
+}
+
+// Function to test payment API directly
+const testPaymentAPI = async () => {
+  console.log('=== Testing Payment API ===')
+
+  try {
+    const token = localStorage.getItem('member_token')
+    if (!token) {
+      console.error('No token found for API test')
+      return false
+    }
+
+    // Test payment methods endpoint
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Vite env variables
+    const methodsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/methods`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    console.log('Payment methods API test:', {
+      status: methodsResponse.status,
+      ok: methodsResponse.ok
+    })
+
+    if (methodsResponse.ok) {
+      const methodsData = await methodsResponse.json()
+      console.log('Payment methods data:', methodsData)
+      return true
+    } else {
+      const errorData = await methodsResponse.json()
+      console.error('Payment API test failed:', errorData)
+      return false
+    }
+  } catch (error) {
+    console.error('Payment API test error:', error)
+    return false
+  }
+}
+
+// Function to test login flow
+const testLoginFlow = async () => {
+  console.log('=== Testing Login Flow ===')
+
+  const token = localStorage.getItem('member_token')
+  const user = localStorage.getItem('member_user')
+
+  console.log('Current auth state:', {
+    hasToken: !!token,
+    hasUser: !!user,
+    tokenLength: token ? token.length : 0,
+    userLength: user ? user.length : 0
+  })
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const now = Math.floor(Date.now() / 1000)
+      const expiresIn = payload.exp - now
+
+      console.log('Token info:', {
+        userId: payload.userId,
+        role: payload.role,
+        email: payload.email,
+        expiresIn: `${Math.floor(expiresIn / 3600)} hours`,
+        isExpired: payload.exp < now
+      })
+    } catch (error) {
+      console.error('Error decoding token:', error)
+    }
+  }
+
+  if (user) {
+    try {
+      const userData = JSON.parse(user)
+      console.log('User data:', userData)
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+    }
+  }
+}
+
+// Function to test complete payment flow
+const testCompletePaymentFlow = async () => {
+  console.log('=== Testing Complete Payment Flow ===')
+
+  // Step 1: Check authentication
+  console.log('Step 1: Checking authentication...')
+  if (!checkAuthentication()) {
+    console.error('❌ Authentication failed')
+    return false
+  }
+  console.log('✅ Authentication passed')
+
+  // Step 2: Test payment API
+  console.log('Step 2: Testing payment API...')
+  const apiTest = await testPaymentAPI()
+  if (!apiTest) {
+    console.error('❌ Payment API test failed')
+    return false
+  }
+  console.log('✅ Payment API test passed')
+
+  // Step 3: Test payment creation (simulation)
+  console.log('Step 3: Testing payment creation...')
+  try {
+    const testPaymentData = {
+      planId: planId.value || 'test-plan',
+      paymentMethod: 'promptpay' as const,
+      customerData: {
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890'
+      }
+    }
+
+    console.log('Test payment data:', testPaymentData)
+    console.log('✅ Payment creation test ready')
+    return true
+  } catch (error) {
+    console.error('❌ Payment creation test failed:', error)
+    return false
+  }
 }
 
 // Lifecycle
@@ -554,11 +851,39 @@ onMounted(async () => {
   try {
     loading.value = true
 
+    // Debug authentication status
+    debugAuthentication()
+
+    // Check authentication first
+    if (!checkAuthentication()) {
+      console.error('User not authenticated, redirecting to login')
+      error.value = 'Authentication required. Please log in to continue.'
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+      return
+    }
+
+    // Verify token is actually stored
+    const token = localStorage.getItem('member_token')
+    const user = localStorage.getItem('member_user')
+    console.log('Payment page auth verification:', {
+      hasToken: !!token,
+      hasUser: !!user,
+      tokenLength: token ? token.length : 0
+    })
+
+    // Show success message if authenticated
+    console.log('✅ User is authenticated and ready for payment')
+
+    // Test payment API
+    await testPaymentAPI()
+
     // Get plan data from query params
     planId.value = route.query.planId as string || ''
     planName.value = route.query.planName as string || ''
-    price.value = parseFloat(route.query.price as string || '0')
-    duration.value = parseInt(route.query.duration as string || '0')
+    price.value = Number.parseFloat(route.query.price as string || '0')
+    duration.value = Number.parseInt(route.query.duration as string || '0')
     organization.value = route.query.organization as string || ''
     organizationId.value = route.query.organizationId as string || ''
 
@@ -569,12 +894,17 @@ onMounted(async () => {
 
     // Initialize Omise service
     try {
+      console.log('Initializing Omise service...')
       const publicKey = await paymentApi.getOmisePublicKey()
+      console.log('Omise public key received:', publicKey ? 'Yes' : 'No')
+
       omiseService.value = getOmiseService(publicKey)
 
       if (!omiseService.value.isOmiseAvailable()) {
         throw new Error('Omise payment gateway is not available')
       }
+
+      console.log('Omise service initialized successfully')
     } catch (err) {
       console.error('Failed to initialize Omise:', err)
       error.value = 'Payment gateway initialization failed. Please try again later.'

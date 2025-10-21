@@ -91,8 +91,9 @@
           <!-- Card Form -->
           <form @submit.prevent="processCardPayment" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"> Cardholder Name </label>
+              <label for="card-name" class="block text-sm font-medium text-gray-700 mb-2"> Cardholder Name </label>
               <input
+                id="card-name"
                 v-model="cardForm.name"
                 type="text"
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -103,8 +104,9 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"> Card Number </label>
+              <label for="card-number" class="block text-sm font-medium text-gray-700 mb-2"> Card Number </label>
               <input
+                id="card-number"
                 v-model="cardForm.number"
                 type="text"
                 maxlength="19"
@@ -118,8 +120,9 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"> Expiry Date </label>
+                <label for="card-expiry" class="block text-sm font-medium text-gray-700 mb-2"> Expiry Date </label>
                 <input
+                  id="card-expiry"
                   v-model="cardForm.expiry"
                   type="text"
                   maxlength="5"
@@ -131,10 +134,11 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="card-cvv" class="block text-sm font-medium text-gray-700 mb-2">
                   Security Code (CVV)
                 </label>
                 <input
+                  id="card-cvv"
                   v-model="cardForm.security_code"
                   type="text"
                   maxlength="4"
@@ -221,7 +225,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { paymentApi, type PaymentData } from '../../api/payment'
+import { paymentApi } from '../../api/payment'
+import type { PaymentData } from '../../types/payment'
 
 interface Plan {
   id: string
@@ -315,7 +320,7 @@ const initializeOmise = async () => {
     console.log('Retrieved Omise public key')
 
     // Initialize Omise instance
-    omise = (window as any).Omise
+    omise = (globalThis as unknown as { Omise: OmiseInstance }).Omise
     if (!omise) {
       throw new Error('Omise script not loaded properly')
     }
@@ -333,7 +338,7 @@ const initializeOmise = async () => {
 const loadOmiseScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if already loaded
-    if ((window as any).Omise) {
+    if ((globalThis as unknown as { Omise?: OmiseInstance }).Omise) {
       resolve()
       return
     }
@@ -363,7 +368,7 @@ const selectPaymentMethod = (method: 'card' | 'promptpay') => {
 // Format card number with spaces
 const formatCardNumber = (event: Event) => {
   const input = event.target as HTMLInputElement
-  let value = input.value.replace(/\s/g, '').replace(/[^0-9]/g, '')
+  let value = input.value.replace(/\s/g, '').replace(/\D/g, '')
 
   // Add spaces every 4 digits
   value = value.replace(/(.{4})/g, '$1 ').trim()
@@ -373,7 +378,7 @@ const formatCardNumber = (event: Event) => {
 // Format expiry date
 const formatExpiry = (event: Event) => {
   const input = event.target as HTMLInputElement
-  let value = input.value.replace(/[^0-9]/g, '')
+  let value = input.value.replace(/\D/g, '')
 
   if (value.length >= 2) {
     value = value.substring(0, 2) + '/' + value.substring(2, 4)
@@ -418,14 +423,14 @@ const processCardPayment = async () => {
 
     // Parse expiry date
     const [expMonth, expYear] = cardForm.value.expiry.split('/')
-    const fullYear = parseInt('20' + expYear)
+    const fullYear = Number.parseInt('20' + expYear)
 
     // Validate expiry date
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth() + 1
 
-    if (fullYear < currentYear || (fullYear === currentYear && parseInt(expMonth) < currentMonth)) {
+    if (fullYear < currentYear || (fullYear === currentYear && Number.parseInt(expMonth) < currentMonth)) {
       throw new Error('Card has expired. Please check the expiry date.')
     }
 
@@ -433,7 +438,7 @@ const processCardPayment = async () => {
     const cardData: CardData = {
       name: cardForm.value.name.trim(),
       number: cardForm.value.number.replace(/\s/g, ''),
-      expiration_month: parseInt(expMonth),
+      expiration_month: Number.parseInt(expMonth),
       expiration_year: fullYear,
       security_code: cardForm.value.security_code,
     }
@@ -485,6 +490,12 @@ const processCardPayment = async () => {
 // Submit card payment to backend
 const submitCardPayment = async (token: string) => {
   try {
+    // Check authentication before proceeding
+    const authToken = localStorage.getItem('member_token')
+    if (!authToken) {
+      throw new Error('Authentication required. Please log in to continue.')
+    }
+
     console.log('Submitting card payment with token')
 
     const paymentData: PaymentData = {
@@ -526,6 +537,12 @@ const submitCardPayment = async (token: string) => {
 // Process PromptPay payment (unchanged)
 const processPromptPayPayment = async () => {
   try {
+    // Check authentication before proceeding
+    const token = localStorage.getItem('member_token')
+    if (!token) {
+      throw new Error('Authentication required. Please log in to continue.')
+    }
+
     const paymentData: PaymentData = {
       planId: props.plan.id,
       paymentMethod: 'promptpay',

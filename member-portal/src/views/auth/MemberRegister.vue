@@ -269,7 +269,7 @@ const displayError = (message: string) => {
   clearForm()
 
   // Start countdown timer (updates every second)
-  errorCountdownTimer = window.setInterval(() => {
+  errorCountdownTimer = globalThis.window.setInterval(() => {
     errorCountdown.value--
     console.log('Error countdown:', errorCountdown.value)
 
@@ -279,7 +279,7 @@ const displayError = (message: string) => {
   }, 1000)
 
   // Main timer to clear error after exactly 15 seconds
-  errorTimer = window.setTimeout(() => {
+  errorTimer = globalThis.window.setTimeout(() => {
     console.log('Clearing error after 15 seconds')
     clearErrorTimers()
   }, 15000)
@@ -302,11 +302,11 @@ const clearForm = () => {
 // Clear all error timers and reset error state
 const clearErrorTimers = () => {
   if (errorTimer) {
-    window.clearTimeout(errorTimer)
+    globalThis.window.clearTimeout(errorTimer)
     errorTimer = null
   }
   if (errorCountdownTimer) {
-    window.clearInterval(errorCountdownTimer)
+    globalThis.window.clearInterval(errorCountdownTimer)
     errorCountdownTimer = null
   }
 
@@ -322,16 +322,79 @@ const displaySuccess = (message: string) => {
 
   // Clear existing success timer
   if (successTimer) {
-    window.clearTimeout(successTimer)
+    globalThis.window.clearTimeout(successTimer)
   }
 
   currentSuccessMessage.value = message
   showSuccessMessage.value = true
 
-  successTimer = window.setTimeout(() => {
+  successTimer = globalThis.window.setTimeout(() => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
   }, 5000) // 5 seconds for success messages
+}
+
+// Helper: Validate registration form
+const validateRegistrationForm = (): string | null => {
+  if (!fullName.value.trim()) {
+    return 'Full name is required'
+  }
+  if (!email.value.trim()) {
+    return 'Email is required'
+  }
+  if (password.value.length < 8) {
+    return 'Password must be at least 8 characters long'
+  }
+  if (password.value !== confirmPassword.value) {
+    return 'Passwords do not match'
+  }
+  // Enhanced email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    return 'Please enter a valid email address'
+  }
+  return null
+}
+
+// Helper: Handle registration response
+const handleRegistrationResponse = (result: {
+  success: boolean;
+  message: string;
+  rateLimited?: boolean;
+  requiresVerification?: boolean
+}) => {
+  if (result.rateLimited) {
+    rateLimited.value = true
+    displayError(result.message)
+  } else if (result.requiresVerification) {
+    requiresVerification.value = true
+    userEmail.value = email.value.trim().toLowerCase()
+    displaySuccess(result.message)
+    startResendCooldown()
+  } else if (result.success) {
+    displaySuccess(result.message)
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+  } else {
+    displayError(result.message)
+  }
+}
+
+// Helper: Handle registration error
+const handleRegistrationError = (error: unknown) => {
+  console.error('Member registration error:', error)
+
+  if (error instanceof Error) {
+    if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+      rateLimited.value = true
+    }
+    displayError(error.message)
+  } else if (typeof error === 'string') {
+    displayError(error)
+  } else {
+    displayError('An error occurred during registration')
+  }
 }
 
 const handleRegister = async () => {
@@ -341,31 +404,9 @@ const handleRegister = async () => {
     showSuccessMessage.value = false
     rateLimited.value = false
 
-    // Validation
-    if (!fullName.value.trim()) {
-      displayError('Full name is required')
-      return
-    }
-
-    if (!email.value.trim()) {
-      displayError('Email is required')
-      return
-    }
-
-    if (password.value.length < 8) {
-      displayError('Password must be at least 8 characters long')
-      return
-    }
-
-    if (password.value !== confirmPassword.value) {
-      displayError('Passwords do not match')
-      return
-    }
-
-    // Enhanced email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.value)) {
-      displayError('Please enter a valid email address')
+    const validationError = validateRegistrationForm()
+    if (validationError) {
+      displayError(validationError)
       return
     }
 
@@ -379,36 +420,9 @@ const handleRegister = async () => {
     })
 
     console.log('Member registration response:', result)
-
-    if (result.rateLimited) {
-      rateLimited.value = true
-      displayError(result.message)
-    } else if (result.requiresVerification) {
-      requiresVerification.value = true
-      userEmail.value = email.value.trim().toLowerCase()
-      displaySuccess(result.message)
-      startResendCooldown()
-    } else if (result.success) {
-      displaySuccess(result.message)
-      // If no verification required, redirect to login
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
-    } else {
-      displayError(result.message)
-    }
+    handleRegistrationResponse(result)
   } catch (error) {
-    console.error('Member registration error:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        rateLimited.value = true
-      }
-      displayError(error.message)
-    } else if (typeof error === 'string') {
-      displayError(error)
-    } else {
-      displayError('An error occurred during registration')
-    }
+    handleRegistrationError(error)
   } finally {
     isLoading.value = false
   }
@@ -448,11 +462,11 @@ const handleResendVerification = async () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 60 // 60 seconds cooldown
-  resendTimer = window.setInterval(() => {
+  resendTimer = globalThis.window.setInterval(() => {
     resendCooldown.value--
     if (resendCooldown.value <= 0) {
       if (resendTimer) {
-        window.clearInterval(resendTimer)
+        globalThis.window.clearInterval(resendTimer)
         resendTimer = null
       }
     }
@@ -467,7 +481,7 @@ const tryDifferentEmail = () => {
   email.value = ''
   userEmail.value = ''
   if (resendTimer) {
-    window.clearInterval(resendTimer)
+    globalThis.window.clearInterval(resendTimer)
     resendTimer = null
     resendCooldown.value = 0
   }
@@ -478,10 +492,10 @@ onUnmounted(() => {
   clearErrorTimers()
 
   if (successTimer) {
-    window.clearTimeout(successTimer)
+    globalThis.window.clearTimeout(successTimer)
   }
   if (resendTimer) {
-    window.clearInterval(resendTimer)
+    globalThis.window.clearInterval(resendTimer)
   }
 })
 </script>

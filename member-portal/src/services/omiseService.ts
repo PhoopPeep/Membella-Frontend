@@ -1,76 +1,30 @@
 // Omise Payment Service
 // This service handles Omise payment gateway integration
 
+import type {
+  OmiseCardData,
+  OmiseTokenResponse,
+  OmiseSourceResponse,
+} from '../types/omise'
+
+interface OmiseInstance {
+  setPublicKey: (key: string) => void
+  createToken: (
+    type: string,
+    data: OmiseCardData,
+    callback: (statusCode: number, response: OmiseTokenResponse) => void
+  ) => void
+  createSource: (
+    type: string,
+    data: { amount: number; currency: string },
+    callback: (statusCode: number, response: OmiseSourceResponse) => void
+  ) => void
+}
+
 declare global {
   interface Window {
-    Omise: any;
+    Omise: OmiseInstance
   }
-}
-
-export interface OmiseCardData {
-  name: string;
-  number: string;
-  expiration_month: string;
-  expiration_year: string;
-  security_code: string;
-}
-
-export interface OmiseTokenResponse {
-  id: string;
-  object: string;
-  livemode: boolean;
-  location: string;
-  used: boolean;
-  card: {
-    id: string;
-    object: string;
-    livemode: boolean;
-    location: string;
-    created: string;
-    deleted: boolean;
-    street1: string | null;
-    street2: string | null;
-    city: string | null;
-    state: string | null;
-    postal_code: string | null;
-    country: string | null;
-    phone_number: string | null;
-    financing: string;
-    bank: string;
-    last_digits: string;
-    brand: string;
-    fingerprint: string;
-    name: string | null;
-    expiration_month: number;
-    expiration_year: number;
-    security_code_check: boolean;
-  };
-  created: string;
-}
-
-export interface OmiseSourceData {
-  type: 'promptpay';
-  amount: number;
-  currency: string;
-}
-
-export interface OmiseSourceResponse {
-  id: string;
-  object: string;
-  livemode: boolean;
-  location: string;
-  type: string;
-  flow: string;
-  amount: number;
-  currency: string;
-  scannable_code: {
-    object: string;
-    type: string;
-    image: {
-      download_uri: string;
-    };
-  };
-  created: string;
 }
 
 export class OmiseService {
@@ -83,8 +37,8 @@ export class OmiseService {
   }
 
   private initializeOmise(): void {
-    if (typeof window !== 'undefined' && window.Omise) {
-      window.Omise.setPublicKey(this.publicKey);
+    if (globalThis.window?.Omise) {
+      globalThis.window.Omise.setPublicKey(this.publicKey);
       this.isInitialized = true;
       console.log('Omise initialized successfully');
     } else {
@@ -101,13 +55,14 @@ export class OmiseService {
     }
 
     return new Promise((resolve, reject) => {
-      window.Omise.createToken('card', cardData, (statusCode: number, response: any) => {
+      globalThis.window.Omise.createToken('card', cardData, (statusCode: number, response: OmiseTokenResponse) => {
         if (statusCode === 200) {
           console.log('Card token created successfully:', response.id);
           resolve(response);
         } else {
           console.error('Failed to create card token:', response);
-          reject(new Error(response.message || 'Failed to create card token'));
+          const errorMsg = (response as { message?: string }).message || 'Failed to create card token';
+          reject(new Error(errorMsg));
         }
       });
     });
@@ -124,10 +79,10 @@ export class OmiseService {
     console.log('Creating PromptPay source with:', { amount, currency });
 
     return new Promise((resolve, reject) => {
-      window.Omise.createSource('promptpay', {
+      globalThis.window.Omise.createSource('promptpay', {
         amount: amount,
         currency: currency
-      }, (statusCode: number, response: any) => {
+      }, (statusCode: number, response: OmiseSourceResponse) => {
         console.log('Omise createSource response:', { statusCode, response });
 
         if (statusCode === 200) {
@@ -153,10 +108,80 @@ export class OmiseService {
           resolve(response);
         } else {
           console.error('Failed to create PromptPay source:', response);
-          reject(new Error(response.message || 'Failed to create PromptPay source'));
+          const errorMsg = (response as { message?: string }).message || 'Failed to create PromptPay source';
+          reject(new Error(errorMsg));
         }
       });
     });
+  }
+
+  /**
+   * Validate cardholder name
+   */
+  private validateCardholderName(name: string): string | null {
+    if (!name || name.trim() === '') {
+      return 'Cardholder name is required';
+    }
+    return null;
+  }
+
+  /**
+   * Validate card number
+   */
+  private validateCardNumber(number: string): string | null {
+    if (!number || number.trim() === '') {
+      return 'Card number is required';
+    }
+    const cleanNumber = number.replace(/\s/g, '');
+    if (cleanNumber.length < 13 || cleanNumber.length > 19) {
+      return 'Invalid card number length';
+    }
+    if (!/^\d+$/.test(cleanNumber)) {
+      return 'Card number must contain only digits';
+    }
+    return null;
+  }
+
+  /**
+   * Validate expiration month
+   */
+  private validateExpirationMonth(month: string): string | null {
+    if (!month || month.trim() === '') {
+      return 'Expiration month is required';
+    }
+    const monthNum = Number.parseInt(month);
+    if (Number.isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+      return 'Invalid expiration month';
+    }
+    return null;
+  }
+
+  /**
+   * Validate expiration year
+   */
+  private validateExpirationYear(year: string): string | null {
+    if (!year || year.trim() === '') {
+      return 'Expiration year is required';
+    }
+    const yearNum = Number.parseInt(year);
+    const currentYear = new Date().getFullYear();
+    if (Number.isNaN(yearNum) || yearNum < currentYear) {
+      return 'Invalid expiration year';
+    }
+    return null;
+  }
+
+  /**
+   * Validate security code (CVV)
+   */
+  private validateSecurityCode(cvv: string): string | null {
+    if (!cvv || cvv.trim() === '') {
+      return 'Security code (CVV) is required';
+    }
+    if (!/^\d{3,4}$/.test(cvv)) {
+      return 'Security code must be 3 or 4 digits';
+    }
+    return null;
   }
 
   /**
@@ -165,50 +190,20 @@ export class OmiseService {
   validateCardData(cardData: OmiseCardData): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!cardData.name || cardData.name.trim() === '') {
-      errors.push('Cardholder name is required');
-    }
+    const nameError = this.validateCardholderName(cardData.name);
+    if (nameError) errors.push(nameError);
 
-    if (!cardData.number || cardData.number.trim() === '') {
-      errors.push('Card number is required');
-    } else {
-      // Basic card number validation (remove spaces and check length)
-      const cleanNumber = cardData.number.replace(/\s/g, '');
-      if (cleanNumber.length < 13 || cleanNumber.length > 19) {
-        errors.push('Invalid card number length');
-      }
-      if (!/^\d+$/.test(cleanNumber)) {
-        errors.push('Card number must contain only digits');
-      }
-    }
+    const numberError = this.validateCardNumber(cardData.number);
+    if (numberError) errors.push(numberError);
 
-    if (!cardData.expiration_month || cardData.expiration_month.trim() === '') {
-      errors.push('Expiration month is required');
-    } else {
-      const month = parseInt(cardData.expiration_month);
-      if (isNaN(month) || month < 1 || month > 12) {
-        errors.push('Invalid expiration month');
-      }
-    }
+    const monthError = this.validateExpirationMonth(cardData.expiration_month);
+    if (monthError) errors.push(monthError);
 
-    if (!cardData.expiration_year || cardData.expiration_year.trim() === '') {
-      errors.push('Expiration year is required');
-    } else {
-      const year = parseInt(cardData.expiration_year);
-      const currentYear = new Date().getFullYear();
-      if (isNaN(year) || year < currentYear) {
-        errors.push('Invalid expiration year');
-      }
-    }
+    const yearError = this.validateExpirationYear(cardData.expiration_year);
+    if (yearError) errors.push(yearError);
 
-    if (!cardData.security_code || cardData.security_code.trim() === '') {
-      errors.push('Security code (CVV) is required');
-    } else {
-      const cvv = cardData.security_code;
-      if (!/^\d{3,4}$/.test(cvv)) {
-        errors.push('Security code must be 3 or 4 digits');
-      }
-    }
+    const cvvError = this.validateSecurityCode(cardData.security_code);
+    if (cvvError) errors.push(cvvError);
 
     return {
       valid: errors.length === 0,
@@ -228,7 +223,7 @@ export class OmiseService {
    * Check if Omise is available
    */
   isOmiseAvailable(): boolean {
-    return typeof window !== 'undefined' && !!window.Omise && this.isInitialized;
+    return globalThis.window !== undefined && !!globalThis.window?.Omise && this.isInitialized;
   }
 
   /**

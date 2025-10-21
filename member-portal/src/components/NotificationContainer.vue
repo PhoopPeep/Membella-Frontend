@@ -24,30 +24,34 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import NotificationPopup from './NotificationPopup.vue'
-import notificationService, { type NotificationCallbacks } from '../services/notificationService'
+import notificationService from '../services/notificationService'
+import type { NotificationOptions, NotificationCallbacks } from '../types/notification'
 
 // Define component name for proper export
 defineOptions({
   name: 'NotificationContainer'
 })
 
+// Define the notification type
+type Notification = NotificationOptions & { id: string; callbacks?: NotificationCallbacks }
+
 const notifications = computed(() => notificationService.getNotifications().value)
 
-const handleConfirm = (notification: any) => {
+const handleConfirm = (notification: Notification) => {
   if (notification.callbacks?.onConfirm) {
     notification.callbacks.onConfirm()
   }
   notificationService.remove(notification.id)
 }
 
-const handleCancel = (notification: any) => {
+const handleCancel = (notification: Notification) => {
   if (notification.callbacks?.onCancel) {
     notification.callbacks.onCancel()
   }
   notificationService.remove(notification.id)
 }
 
-const handleClose = (notification: any) => {
+const handleClose = (notification: Notification) => {
   if (notification.callbacks?.onClose) {
     notification.callbacks.onClose()
   }

@@ -33,7 +33,7 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error('Member API Request Error:', error)
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
 
@@ -112,12 +112,12 @@ api.interceptors.response.use(
       localStorage.removeItem('member_user')
 
       // Don't redirect if we're on auth callback page
-      if (!window.location.pathname.includes('/auth/callback')) {
-        window.location.href = '/login'
+      if (!globalThis.location.pathname.includes('/auth/callback')) {
+        globalThis.location.href = '/login'
       }
     }
 
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
 

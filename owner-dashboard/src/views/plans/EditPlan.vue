@@ -119,7 +119,7 @@
             <div class="space-y-3">
               <label
                 for="name"
-                class="block text-sm font-semibold text-primary-700 flex items-center"
+                class="flex items-center text-sm font-semibold text-primary-700"
               >
                 <FontAwesomeIcon icon="tag" class="w-4 h-4 mr-2 text-primary-600" />
                 Plan Name *
@@ -147,7 +147,7 @@
             <div class="space-y-3">
               <label
                 for="description"
-                class="block text-sm font-semibold text-primary-700 flex items-center"
+                class="flex items-center text-sm font-semibold text-primary-700"
               >
                 <FontAwesomeIcon icon="align-left" class="w-4 h-4 mr-2 text-primary-600" />
                 Description *
@@ -177,7 +177,7 @@
               <div class="space-y-3">
                 <label
                   for="price"
-                  class="block text-sm font-semibold text-primary-700 flex items-center"
+                  class="flex items-center text-sm font-semibold text-primary-700"
                 >
                   <FontAwesomeIcon icon="dollar-sign" class="w-4 h-4 mr-2 text-primary-600" />
                   Price (THB) *
@@ -213,7 +213,7 @@
               <div class="space-y-3">
                 <label
                   for="duration"
-                  class="block text-sm font-semibold text-primary-700 flex items-center"
+                  class="flex items-center text-sm font-semibold text-primary-700"
                 >
                   <FontAwesomeIcon icon="calendar" class="w-4 h-4 mr-2 text-primary-600" />
                   Duration (days) *
@@ -243,13 +243,13 @@
             <!-- Features Selection -->
             <div class="space-y-4">
               <div class="flex items-center justify-between">
-                <label class="block text-sm font-semibold text-primary-700 flex items-center">
+                <span class="flex items-center text-sm font-semibold text-primary-700">
                   <FontAwesomeIcon icon="star" class="w-4 h-4 mr-2 text-primary-600" />
                   Features *
                   <span class="text-xs text-primary-500 font-normal ml-2"
                     >(Select at least one)</span
                   >
-                </label>
+                </span>
                 <span
                   class="text-xs text-primary-600 font-semibold bg-primary-100 px-2 py-1 rounded-full"
                 >
@@ -352,8 +352,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { plansService, type Plan, type UpdatePlanData } from '../../service/plansService'
-import { featuresService, type Feature } from '../../service/featuresService'
+import { plansService } from '../../service/plansService'
+import { featuresService } from '../../service/featuresService'
+import type { Plan, UpdatePlanData } from '../../types/plans'
+import type { Feature } from '../../types/features'
 
 const router = useRouter()
 const route = useRoute()
@@ -416,7 +418,7 @@ const validateDescription = () => {
 const validatePrice = () => {
   priceError.value = ''
   const price = formData.value.price
-  if (price === null || price === undefined || isNaN(price)) {
+  if (price === null || price === undefined || Number.isNaN(price)) {
     priceError.value = 'Price is required'
   } else if (price < 0) {
     priceError.value = 'Price cannot be negative'
@@ -429,7 +431,7 @@ const validatePrice = () => {
 const validateDuration = () => {
   durationError.value = ''
   const duration = formData.value.duration
-  if (duration === null || duration === undefined || isNaN(duration)) {
+  if (duration === null || duration === undefined || Number.isNaN(duration)) {
     durationError.value = 'Duration is required'
   } else if (duration < 1) {
     durationError.value = 'Duration must be at least 1 day'
@@ -473,8 +475,8 @@ const hasChanges = computed(() => {
     formData.value.description !== originalData.value.description ||
     formData.value.price !== originalData.value.price ||
     formData.value.duration !== originalData.value.duration ||
-    JSON.stringify(selectedFeatures.value.sort()) !==
-      JSON.stringify(originalData.value.features?.sort() || [])
+    JSON.stringify([...selectedFeatures.value].sort()) !==
+      JSON.stringify([...(originalData.value.features || [])].sort())
   )
 })
 
@@ -507,9 +509,9 @@ const loadPlan = async () => {
 
     // Store original data for change detection
     originalData.value = { ...formData.value, features: [...planData.features] }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error loading plan:', error)
-    errorMessage.value = error.message || 'Failed to load plan'
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to load plan'
   } finally {
     isLoadingPlan.value = false
   }
@@ -551,9 +553,10 @@ const handleSubmit = async () => {
     setTimeout(() => {
       router.push(`/plans/${planId}`)
     }, 1500)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update plan error:', error)
-    errorMessage.value = error.message || 'Failed to update plan. Please try again.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Failed to update plan. Please try again.'
   } finally {
     isLoading.value = false
   }

@@ -1,38 +1,7 @@
 import api from '../router/api'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-
-export interface RegisterData {
-  org_name: string
-  email: string
-  password: string
-  description?: string
-  contact_info?: string
-  logo?: string
-}
-
-export interface LoginData {
-  email: string
-  password: string
-}
-
-export interface AuthResponse {
-  success: boolean
-  message: string
-  token?: string
-  user?: {
-    owner_id: string
-    org_name: string
-    email: string
-    description?: string
-    contact_info?: string
-    logo?: string
-  }
-  requiresVerification?: boolean
-  rateLimited?: boolean
-  emailError?: boolean
-  supabaseSession?: Session
-}
+import type { RegisterData, LoginData, AuthResponse } from '../types/auth'
 
 export const registerUser = async (userData: RegisterData): Promise<AuthResponse> => {
   try {
@@ -225,7 +194,7 @@ export const checkEmailVerificationStatus = async (): Promise<boolean> => {
       return false
     }
 
-    if (!session || !session.user) {
+    if (!session?.user) {
       return false
     }
 

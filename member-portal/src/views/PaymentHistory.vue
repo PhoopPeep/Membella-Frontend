@@ -139,7 +139,7 @@
         <h3 class="text-2xl font-bold text-error-800 mb-3">Error Loading Payment History</h3>
         <p class="text-error-600 mb-6">{{ error }}</p>
         <button
-          @click="loadPaymentHistory"
+          @click="() => loadPaymentHistory()"
           class="bg-gradient-to-r from-error-500 to-error-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-error-600 hover:to-error-700 transition-all duration-200 shadow-lg"
         >
           <FontAwesomeIcon icon="refresh" class="w-5 h-5 mr-2" />
@@ -738,7 +738,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { paymentApi, type PaymentHistory } from '../api/payment'
+import { paymentApi } from '../api/payment'
+import type { PaymentHistory } from '../types/payment'
 
 const router = useRouter()
 
@@ -757,9 +758,11 @@ const recentlyUpdatedPayments = ref<string[]>([])
 const isOnline = ref(navigator.onLine)
 
 // Notification system
+type NotificationType = 'success' | 'error' | 'info'
+
 interface Notification {
   id: string
-  type: 'success' | 'error' | 'info'
+  type: NotificationType
   title: string
   message: string
 }
@@ -778,7 +781,7 @@ const pagination = ref({
 
 // Timers
 let autoRefreshTimer: number | null = null
-let highlightTimers: Map<string, number> = new Map()
+const highlightTimers: Map<string, number> = new Map()
 
 // Function to determine action button alignment
 const getActionButtonsAlignment = (payment: PaymentHistory) => {
@@ -843,7 +846,7 @@ const loadPaymentHistory = async (resetOffset = false, detectChanges = true) => 
 const detectPaymentChanges = (oldPayments: PaymentHistory[], newPayments: PaymentHistory[]) => {
   const oldPaymentMap = new Map(oldPayments.map((p) => [p.id, p]))
 
-  newPayments.forEach((newPayment) => {
+  for (const newPayment of newPayments) {
     const oldPayment = oldPaymentMap.get(newPayment.id)
 
     if (oldPayment && oldPayment.status !== newPayment.status) {
@@ -854,19 +857,22 @@ const detectPaymentChanges = (oldPayments: PaymentHistory[], newPayments: Paymen
       // Highlight the changed payment
       highlightPaymentUpdate(newPayment.id)
 
+      // Determine notification type based on status
+      let notificationType: NotificationType = 'info'
+      if (newPayment.status === 'successful') {
+        notificationType = 'success'
+      } else if (newPayment.status === 'failed') {
+        notificationType = 'error'
+      }
+
       // Show notification
       addNotification({
-        type:
-          newPayment.status === 'successful'
-            ? 'success'
-            : newPayment.status === 'failed'
-              ? 'error'
-              : 'info',
+        type: notificationType,
         title: `Payment ${formatStatus(newPayment.status)}`,
         message: `${newPayment.planName} payment status updated to ${newPayment.status}`,
       })
     }
-  })
+  }
 }
 
 // Highlight payment update
@@ -882,15 +888,52 @@ const highlightPaymentUpdate = (paymentId: string) => {
   }
 
   // Set new timer to remove highlight after 5 seconds
-  const timer = window.setTimeout(() => {
+  const timer = globalThis.setTimeout(() => {
     const index = recentlyUpdatedPayments.value.indexOf(paymentId)
     if (index > -1) {
       recentlyUpdatedPayments.value.splice(index, 1)
     }
     highlightTimers.delete(paymentId)
-  }, 5000)
+  }, 5000) as unknown as number
 
   highlightTimers.set(paymentId, timer)
+}
+
+// Helper: Get notification type from payment status
+const getNotificationTypeFromStatus = (status: string): NotificationType => {
+  if (status === 'successful') return 'success'
+  if (status === 'failed') return 'error'
+  return 'info'
+}
+
+// Helper: Update payment data in list
+const updatePaymentInList = (paymentIndex: number, status: PaymentHistory) => {
+  payments.value[paymentIndex] = {
+    ...payments.value[paymentIndex],
+    ...status,
+    amount: status.amount,
+    currency: status.currency,
+    paymentMethod: status.paymentMethod,
+    status: status.status,
+    subscription: status.subscription,
+    updatedAt: status.updatedAt,
+  }
+}
+
+// Helper: Handle payment status change notification
+const handlePaymentStatusChange = (paymentId: string, paymentIndex: number, oldStatus: string, newStatus: string) => {
+  highlightPaymentUpdate(paymentId)
+
+  addNotification({
+    type: getNotificationTypeFromStatus(newStatus),
+    title: 'Status Updated',
+    message: `Payment status changed from ${oldStatus} to ${newStatus}`,
+  })
+
+  // If modal is open and showing this payment, update it
+  if (selectedPayment.value && selectedPayment.value.id === paymentId) {
+    selectedPayment.value = { ...payments.value[paymentIndex] }
+  }
 }
 
 // Refresh single payment status
@@ -905,40 +948,14 @@ const refreshSinglePayment = async (paymentId: string) => {
 
     // Find and update the payment in our local list
     const paymentIndex = payments.value.findIndex((p) => p.id === paymentId)
-    if (paymentIndex !== -1) {
-      const oldStatus = payments.value[paymentIndex].status
+    if (paymentIndex === -1) return
 
-      // Update the payment data
-      payments.value[paymentIndex] = {
-        ...payments.value[paymentIndex],
-        ...status,
-        amount: status.amount,
-        currency: status.currency,
-        paymentMethod: status.paymentMethod,
-        status: status.status,
-        subscription: status.subscription,
-        updatedAt: status.updatedAt,
-      }
+    const oldStatus = payments.value[paymentIndex].status
+    updatePaymentInList(paymentIndex, status)
 
-      // Show notification if status changed
-      if (oldStatus !== status.status) {
-        highlightPaymentUpdate(paymentId)
-        addNotification({
-          type:
-            status.status === 'successful'
-              ? 'success'
-              : status.status === 'failed'
-                ? 'error'
-                : 'info',
-          title: 'Status Updated',
-          message: `Payment status changed from ${oldStatus} to ${status.status}`,
-        })
-
-        // If modal is open and showing this payment, update it
-        if (selectedPayment.value && selectedPayment.value.id === paymentId) {
-          selectedPayment.value = { ...payments.value[paymentIndex] }
-        }
-      }
+    // Show notification if status changed
+    if (oldStatus !== status.status) {
+      handlePaymentStatusChange(paymentId, paymentIndex, oldStatus, status.status)
     }
   } catch (err) {
     console.error('Failed to refresh payment status:', err)
@@ -981,7 +998,7 @@ const startAutoRefresh = () => {
     clearInterval(autoRefreshTimer)
   }
 
-  autoRefreshTimer = window.setInterval(async () => {
+  autoRefreshTimer = globalThis.window.setInterval(async () => {
     if (payments.value.length > 0 && isOnline.value) {
       console.log('Auto-refreshing payment history...')
       await loadPaymentHistory(false, true)
@@ -1094,7 +1111,7 @@ const downloadReceipt = async (payment: PaymentHistory) => {
     a.download = `receipt-${payment.id}.txt`
     document.body.appendChild(a)
     a.click()
-    document.body.removeChild(a)
+    a.remove()
     URL.revokeObjectURL(url)
   } catch (err) {
     console.error('Failed to download receipt:', err)
@@ -1211,8 +1228,8 @@ onMounted(() => {
   loadPaymentHistory()
 
   // Add online/offline event listeners
-  window.addEventListener('online', handleOnlineStatus)
-  window.addEventListener('offline', handleOnlineStatus)
+  globalThis.window.addEventListener('online', handleOnlineStatus)
+  globalThis.window.addEventListener('offline', handleOnlineStatus)
 
   // Start auto-refresh by default for pending payments
   const hasPendingPayments = payments.value.some((p) => p.status === 'pending')
@@ -1226,12 +1243,14 @@ onUnmounted(() => {
   stopAutoRefresh()
 
   // Clear all highlight timers
-  highlightTimers.forEach((timer) => clearTimeout(timer))
+  for (const timer of highlightTimers.values()) {
+    clearTimeout(timer)
+  }
   highlightTimers.clear()
 
   // Remove event listeners
-  window.removeEventListener('online', handleOnlineStatus)
-  window.removeEventListener('offline', handleOnlineStatus)
+  globalThis.window.removeEventListener('online', handleOnlineStatus)
+  globalThis.window.removeEventListener('offline', handleOnlineStatus)
 })
 </script>
 

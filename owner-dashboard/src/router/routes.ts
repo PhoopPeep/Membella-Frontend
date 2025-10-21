@@ -97,4 +97,10 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/members/PlanMembers.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/api-keys',
+    name: 'api-keys',
+    component: () => import('@/views/ApiKeysView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]

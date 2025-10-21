@@ -1,4 +1,11 @@
 import axios from 'axios'
+import type {
+  PaymentData,
+  PaymentResult,
+  PaymentStatus,
+  PaymentHistory,
+  PaymentMethod,
+} from '../types/payment'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
@@ -14,23 +21,34 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('member_token')
+    const user = localStorage.getItem('member_user')
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('Payment API Request: Token added to headers')
+    } else {
+      console.warn('Payment API Request: No authentication token found')
     }
 
-    // Log request for debugging
     console.log('Payment API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
       hasAuth: !!token,
+      hasUser: !!user,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'None',
+      userData: user ? JSON.parse(user) : null,
+      headers: {
+        'Authorization': config.headers.Authorization ? 'Present' : 'Missing',
+        'Content-Type': config.headers['Content-Type']
+      }
     })
 
     return config
   },
   (error) => {
     console.error('Payment API Request Error:', error)
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
 
@@ -55,82 +73,21 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('member_token')
       localStorage.removeItem('member_user')
-      window.location.href = '/login'
+      globalThis.location.href = '/login'
+    } else if (error.response?.status === 403) {
+      console.error('Access denied - checking authentication status')
+      const token = localStorage.getItem('member_token')
+      const user = localStorage.getItem('member_user')
+      console.log('Current auth status:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'None',
+        userData: user ? JSON.parse(user) : null
+      })
     }
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
-
-export interface PaymentData {
-  planId: string
-  paymentMethod: 'card' | 'promptpay'
-  paymentSource?: string // Omise token for card payments
-  customerData?: {
-    name?: string
-    email?: string
-    phone?: string
-  }
-}
-
-export interface PaymentResult {
-  success: boolean
-  paymentId: string
-  chargeId: string
-  amount: number
-  currency: string
-  status: string
-  qr_code_url?: string // For PromptPay
-  expires_at?: string // For PromptPay
-}
-
-export interface PaymentStatus {
-  id: string
-  status: 'pending' | 'successful' | 'failed' | 'expired' | 'refunded'
-  amount: number
-  currency: string
-  paymentMethod: string
-  description: string
-  planName: string
-  organization: string
-  subscription?: {
-    id: string
-    status: string
-    startDate: string
-    endDate: string
-    daysRemaining: number | null
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-export interface PaymentHistory {
-  id: string
-  planName: string
-  organization: string
-  amount: number
-  currency: string
-  paymentMethod: string
-  status: string
-  description: string
-  subscription?: {
-    id: string
-    status: string
-    startDate: string
-    endDate: string
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-export interface PaymentMethod {
-  type: 'card' | 'promptpay'
-  name: string
-  description: string
-  icon: string
-  enabled: boolean
-  currencies: string[]
-  processing_time: string
-}
 
 const handleApiError = (error: unknown): Error => {
   if (axios.isAxiosError(error)) {
@@ -218,11 +175,33 @@ export const paymentApi = {
   // Create subscription payment
   async createSubscriptionPayment(paymentData: PaymentData): Promise<PaymentResult> {
     try {
+      // Check authentication before proceeding
+      const token = localStorage.getItem('member_token')
+      const user = localStorage.getItem('member_user')
+
+      console.log('Payment API Authentication Check:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'None',
+        userData: user ? JSON.parse(user) : null
+      })
+
+      if (!token) {
+        console.error('No authentication token found')
+        throw new Error('Authentication required. Please log in to continue.')
+      }
+
+      if (!user) {
+        console.error('No user data found')
+        throw new Error('User data missing. Please log in again.')
+      }
+
       console.log('Creating subscription payment:', {
         planId: paymentData.planId,
         paymentMethod: paymentData.paymentMethod,
         hasPaymentSource: !!paymentData.paymentSource,
         customerData: paymentData.customerData,
+        hasToken: !!token,
       })
 
       // Validate required fields

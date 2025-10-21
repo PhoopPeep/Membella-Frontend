@@ -175,68 +175,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { memberApi } from '../api/member'
-// @ts-expect-error - Vue component import
+import type { Owner } from '../types/organization'
+import type { TableRecord } from '../types/plan'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - Vue 3 SFC
 import SimpleTable from '../components/common/SimpleTable.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-interface Owner {
-  id: string
-  orgName: string
-  email: string
-  description?: string
-  contactInfo?: string
-  logo?: string
-  createdAt: string
-  planCount: number
-  featureCount: number
-  minPrice: number
-  maxPrice: number
-}
-
-interface PlanFeature {
-  id: string
-  name: string
-  description: string
-}
-
-interface Plan {
-  id: string
-  name: string
-  description: string
-  price: number
-  duration: number
-  features: PlanFeature[]
-  organization: string
-  organizationEmail?: string
-  organizationContact?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-type TableRecord = Record<string, string | number | boolean | Date | null | undefined>
-
 const owners = ref<Owner[]>([])
-const ownerPlans = ref<Plan[]>([])
-const selectedOwner = ref<Owner | null>(null)
-const selectedPlan = ref<Plan | null>(null)
-
 const loading = ref(false)
-const loadingPlans = ref(false)
 const error = ref('')
-const plansError = ref('')
-const subscribing = ref<string | null>(null)
-const showOwnerModal = ref(false)
-const showPlanModal = ref(false)
-const showPaymentModal = ref(false)
-const showSuccessModal = ref(false)
-const loadingPlanDetails = ref(false)
-const planDetailsError = ref('')
 
 // Main Table Configuration
 const tableColumns = [
@@ -258,38 +212,6 @@ const tableColumns = [
     key: 'priceRange',
     title: 'Price Range',
     align: 'center' as const,
-  },
-]
-
-// Plans Table Configuration
-const plansTableColumns = [
-  {
-    key: 'name',
-    title: 'Plan Name',
-    width: '250',
-  },
-  {
-    key: 'description',
-    title: 'Description',
-    width: '350',
-  },
-  {
-    key: 'price',
-    title: 'Price & Duration',
-    align: 'center' as const,
-    width: '150',
-  },
-  {
-    key: 'features',
-    title: 'Features Count',
-    align: 'center' as const,
-    width: '120',
-  },
-  {
-    key: 'actions',
-    title: 'Action',
-    align: 'center' as const,
-    width: '150',
   },
 ]
 
@@ -323,139 +245,8 @@ const navigateToOrganizationDetails = async (item: TableRecord): Promise<void> =
   router.push(`/organization/${owner.id}`)
 }
 
-const loadOwnerPlans = async (ownerId: string): Promise<void> => {
-  try {
-    loadingPlans.value = true
-    plansError.value = ''
-
-    console.log('Loading plans for owner:', ownerId)
-
-    // Validate owner ID
-    if (!ownerId || ownerId.trim() === '') {
-      throw new Error('Invalid owner ID')
-    }
-
-    const plans = await memberApi.getOwnerPlans(ownerId.trim())
-    console.log('Owner plans received:', plans)
-
-    // Add organization name to plans, always as a string
-    ownerPlans.value = plans.map((plan) => ({
-      ...plan,
-      organization:
-        selectedOwner.value && selectedOwner.value.orgName ? selectedOwner.value.orgName : '',
-    }))
-  } catch (err) {
-    console.error('Failed to load owner plans:', err)
-    plansError.value = err instanceof Error ? err.message : 'Failed to load plans'
-    ownerPlans.value = []
-  } finally {
-    loadingPlans.value = false
-  }
-}
-
-const retryLoadPlans = (): void => {
-  if (selectedOwner.value) {
-    loadOwnerPlans(selectedOwner.value.id)
-  }
-}
-
-const subscribeToPlan = (plan: Plan): void => {
-  if (!authStore.isAuthenticated) {
-    // Show a more user-friendly message and redirect to login
-    if (
-      confirm('Please sign in first to subscribe to plans. Would you like to go to the login page?')
-    ) {
-      window.location.href = '/login'
-    }
-    return
-  }
-
-  selectedPlan.value = plan
-  showPaymentModal.value = true
-}
-
-const closeOwnerModal = (): void => {
-  showOwnerModal.value = false
-  selectedOwner.value = null
-  ownerPlans.value = []
-  plansError.value = ''
-}
-
-const viewPlanDetails = async (item: TableRecord): Promise<void> => {
-  const plan = item as unknown as Plan
-  selectedPlan.value = plan
-  showPlanModal.value = true
-
-  // Load detailed plan information with features
-  await loadPlanDetails(plan.id)
-}
-
-const loadPlanDetails = async (planId: string): Promise<void> => {
-  try {
-    loadingPlanDetails.value = true
-    planDetailsError.value = ''
-
-    console.log('Loading plan details for:', planId)
-    const planDetails = await memberApi.getPlanDetails(planId)
-    console.log('Plan details received:', planDetails)
-
-    // Update selected plan with detailed information
-    if (selectedPlan.value) {
-      selectedPlan.value = {
-        ...selectedPlan.value,
-        ...planDetails,
-      }
-    }
-  } catch (err) {
-    console.error('Failed to load plan details:', err)
-    planDetailsError.value = err instanceof Error ? err.message : 'Failed to load plan details'
-  } finally {
-    loadingPlanDetails.value = false
-  }
-}
-
-const closePlanModal = (): void => {
-  showPlanModal.value = false
-  selectedPlan.value = null
-  planDetailsError.value = ''
-}
-
-const closePaymentModal = (): void => {
-  showPaymentModal.value = false
-  selectedPlan.value = null
-  subscribing.value = null
-}
-
-const handlePaymentSuccess = (paymentId: string): void => {
-  console.log('Payment successful:', paymentId)
-  closePaymentModal()
-  showSuccessModal.value = true
-}
-
-const closeSuccessModal = (): void => {
-  showSuccessModal.value = false
-  selectedPlan.value = null
-}
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-TH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-// Type assertion helpers for template
+// Type assertion helper for template
 const asOwner = (item: TableRecord): Owner => item as unknown as Owner
-const asPlan = (item: TableRecord): Plan => item as unknown as Plan
-
-// Convert plans to table records
-const plansTableData = computed(() => {
-  return ownerPlans.value.map((plan) => ({
-    ...plan,
-    features: plan.features?.length || 0, // Convert features array to count for table compatibility
-  }))
-})
 
 onMounted(() => {
   loadOwners()

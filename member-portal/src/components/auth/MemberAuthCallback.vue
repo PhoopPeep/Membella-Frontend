@@ -68,13 +68,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useRouter } from 'vue-router'
+import { useAuthStore, type MemberUser } from '../../stores/auth'
 import { memberApi } from '../../api/member'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 // Component state
@@ -103,104 +102,125 @@ const clearErrorState = () => {
   canRetry.value = false
 }
 
+// Extract tokens from URL
+interface MemberAuthTokens {
+  accessToken: string | null
+  refreshToken: string | null
+  type: string | null
+}
+
+const extractMemberTokensFromURL = (): MemberAuthTokens => {
+  const urlParams = new URLSearchParams(globalThis.location.search)
+  const hashParams = new URLSearchParams(globalThis.location.hash.substring(1))
+
+  return {
+    accessToken: urlParams.get('access_token') || hashParams.get('access_token'),
+    refreshToken: urlParams.get('refresh_token') || hashParams.get('refresh_token'),
+    type: urlParams.get('type') || hashParams.get('type')
+  }
+}
+
+// Call member backend auth
+const callMemberBackendAuth = async (
+  accessToken: string,
+  refreshToken: string
+): Promise<MemberAuthResponse> => {
+  console.log('Calling member backend auth callback...')
+
+  const response = await memberApi.handleAuthCallback(accessToken, refreshToken)
+  console.log('Member backend callback successful:', response)
+
+  return response as MemberAuthResponse
+}
+
+// Member backend auth response interface
+interface MemberAuthResponse {
+  success: boolean
+  token: string
+  user: MemberUser
+}
+
+// Validate member backend response
+const validateMemberResponse = (response: MemberAuthResponse): boolean => {
+  if (!response.success || !response.token || !response.user) {
+    console.error('Member backend response missing required data:', response)
+    return false
+  }
+  return true
+}
+
+// Handle member URL-based callback
+const handleMemberURLCallback = async (tokens: MemberAuthTokens) => {
+  const { accessToken, refreshToken } = tokens
+
+  if (!accessToken || !refreshToken) {
+    return false
+  }
+
+  console.log('Processing member email verification callback')
+
+  try {
+    const response = await callMemberBackendAuth(accessToken, refreshToken)
+
+    if (!validateMemberResponse(response)) {
+      displayError('Backend did not return member authentication data')
+      return true
+    }
+
+    // Store auth data and mark success
+    authStore.setAuth(response.token, response.user)
+    success.value = true
+    console.log('Member email verification successful!')
+    return true
+
+  } catch (backendError) {
+    console.error('Member backend callback failed:', backendError)
+    displayError('Member email verification failed on backend')
+    return true
+  }
+}
+
+// Handle member already authenticated
+const handleMemberAlreadyAuth = () => {
+  console.log('No tokens found in URL parameters - checking if user is already verified')
+
+  if (authStore.isAuthenticated) {
+    console.log('Member is already verified and authenticated')
+    success.value = true
+    return
+  }
+
+  console.log('No tokens found in URL parameters')
+  displayError(
+    'Email verification link is invalid or expired. Please try registering again or contact support.'
+  )
+}
+
+// Main member auth callback processing
 const processAuthCallback = async () => {
   try {
     console.log('Starting member auth callback processing')
-    console.log('Current URL:', window.location.href)
-    console.log('Route query:', route.query)
-    console.log('Window location search:', window.location.search)
-    console.log('Window location hash:', window.location.hash)
-    console.log('Initial state:', {
-      isProcessing: isProcessing.value,
-      success: success.value,
-      showErrorMessage: showErrorMessage.value
-    })
+    console.log('Current URL:', globalThis.location.href)
 
-    // Prevent any redirects during auth callback processing
-    console.log('Member auth callback page - preventing redirects')
-
-    // Check if we have URL parameters for auth (both query and hash)
-    const urlParams = new URLSearchParams(window.location.search)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-
-    // Get tokens from query parameters first, then hash parameters
-    const accessToken = urlParams.get('access_token') || hashParams.get('access_token')
-    const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token')
-    const type = urlParams.get('type') || hashParams.get('type')
+    // Extract tokens from URL
+    const tokens = extractMemberTokensFromURL()
 
     console.log('Member URL tokens found:', {
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      type,
-      fromQuery: !!urlParams.get('access_token'),
-      fromHash: !!hashParams.get('access_token'),
-      accessToken: accessToken ? accessToken.substring(0, 20) + '...' : null,
-      refreshToken: refreshToken ? refreshToken.substring(0, 20) + '...' : null,
+      hasAccessToken: !!tokens.accessToken,
+      hasRefreshToken: !!tokens.refreshToken,
+      type: tokens.type
     })
 
-    if (accessToken && refreshToken) {
-      // This is a URL-based callback (email verification link)
-      console.log('Processing member email verification callback')
+    // Try URL-based callback first
+    const handled = await handleMemberURLCallback(tokens)
 
-      try {
-        console.log('Calling member backend auth callback...')
-        console.log('Request data:', {
-          access_token: accessToken ? accessToken.substring(0, 20) + '...' : 'Missing',
-          refresh_token: refreshToken ? refreshToken.substring(0, 20) + '...' : 'Missing',
-          type: type || 'signup'
-        })
-
-        const response = await memberApi.handleAuthCallback(accessToken, refreshToken)
-
-        console.log('Member backend callback successful:', response)
-
-        if (response.success && response.token && response.user) {
-          // Store auth data
-          authStore.setAuth(response.token, response.user)
-          success.value = true
-          console.log('✅ Member email verification successful!')
-          // ไม่ auto redirect ให้ user กดปุ่มเอง
-        } else {
-          console.error('Member backend response missing required data:', response)
-          displayError('Backend did not return member authentication data')
-          return
-        }
-      } catch (backendError) {
-        console.error('Member backend callback failed:', backendError)
-        displayError('Member email verification failed on backend')
-        return
-      }
-    } else {
-      // No tokens found in URL - check if user is already verified
-      console.log('No tokens found in URL parameters - checking if user is already verified')
-
-      // Check if user is already verified and authenticated
-      if (authStore.isAuthenticated) {
-        console.log('✅ Member is already verified and authenticated')
-        success.value = true
-        return
-      }
-
-      console.log('No tokens found in URL parameters')
-      console.log('This usually means:')
-      console.log('1. The email verification link is not properly formatted')
-      console.log('2. Supabase redirect URL is not configured correctly')
-      console.log('3. The verification link has expired or been used already')
-
-      // Show more helpful error message
-      displayError(
-        'Email verification link is invalid or expired. Please try registering again or contact support.',
-      )
-      return
+    if (!handled) {
+      // If no URL tokens, check if already authenticated
+      handleMemberAlreadyAuth()
     }
+
   } catch (err) {
     console.error('Member auth callback error:', err)
-    console.error('Error details:', {
-      message: err instanceof Error ? err.message : 'Unknown error',
-      stack: err instanceof Error ? err.stack : undefined,
-      success: success.value,
-      isProcessing: isProcessing.value
-    })
     const errorMessage = err instanceof Error ? err.message : 'Member authentication failed'
     displayError(errorMessage)
   } finally {

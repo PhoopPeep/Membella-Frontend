@@ -13,7 +13,8 @@
       <!-- Loading overlay -->
       <div v-if="loading" class="relative">
         <div class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-          <LoadingSpinner size="sm" :text="loadingText" color="blue" />
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <span v-if="loadingText" class="ml-2 text-sm text-gray-600">{{ loadingText }}</span>
         </div>
       </div>
 
@@ -69,7 +70,7 @@
                   <!-- Default column rendering -->
                   <span
                     v-if="column.type === 'badge'"
-                    :class="getBadgeClass(getColumnValue(item, column.key))"
+                    :class="getBadgeClass()"
                   >
                     {{ formatValue(getColumnValue(item, column.key), column) }}
                   </span>
@@ -81,24 +82,17 @@
                   </span>
                   <span v-else-if="column.type === 'tags'" class="flex flex-wrap gap-1">
                     <span
-                      v-for="tag in getColumnValue(item, column.key) &&
-                      Array.isArray(getColumnValue(item, column.key))
-                        ? getColumnValue(item, column.key).slice(0, 3)
-                        : []"
+                      v-for="tag in getTagsArray(getColumnValue(item, column.key))"
                       :key="tag"
                       class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
                     >
                       {{ tag }}
                     </span>
                     <span
-                      v-if="
-                        getColumnValue(item, column.key) &&
-                        Array.isArray(getColumnValue(item, column.key)) &&
-                        getColumnValue(item, column.key).length > 3
-                      "
+                      v-if="getTagsArray(getColumnValue(item, column.key)).length > 3"
                       class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
                     >
-                      +{{ getColumnValue(item, column.key).length - 3 }} more
+                      +{{ getTagsArray(getColumnValue(item, column.key)).length - 3 }} more
                     </span>
                   </span>
                   <span v-else>
@@ -129,8 +123,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import LoadingSpinner from './LoadingSpinner.vue'
 
 export interface TableColumn {
   key: string
@@ -143,7 +135,7 @@ export interface TableColumn {
 
 interface Props {
   // Data
-  data: any[]
+  data: Record<string, unknown>[]
   columns: TableColumn[]
 
   // Header
@@ -155,8 +147,8 @@ interface Props {
   loadingText?: string
 
   // Row configuration
-  rowKey?: string | ((item: any, index: number) => string)
-  disabledRows?: any[] | ((item: any) => boolean)
+  rowKey?: string | ((item: Record<string, unknown>, index: number) => string)
+  disabledRows?: Record<string, unknown>[] | ((item: Record<string, unknown>) => boolean)
 
   // Empty state
   emptyTitle?: string
@@ -175,43 +167,48 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Methods
-const getRowKey = (item: any, index: number): string => {
+const getRowKey = (item: Record<string, unknown>, index: number): string => {
   if (typeof props.rowKey === 'function') {
     return props.rowKey(item, index)
   }
-  return item[props.rowKey] || index.toString()
+  return String(item[props.rowKey] || index.toString())
 }
 
-const getColumnValue = (item: any, key: string): any => {
-  return key.split('.').reduce((obj, k) => obj?.[k], item)
+const getColumnValue = (item: Record<string, unknown>, key: string): unknown => {
+  return key.split('.').reduce((obj: unknown, k: string) => {
+    if (obj && typeof obj === 'object' && k in obj) {
+      return (obj as Record<string, unknown>)[k]
+    }
+    return undefined
+  }, item)
 }
 
-const isRowDisabled = (item: any): boolean => {
+const isRowDisabled = (item: Record<string, unknown>): boolean => {
   if (typeof props.disabledRows === 'function') {
     return props.disabledRows(item)
   }
   return Array.isArray(props.disabledRows) && props.disabledRows.includes(item)
 }
 
-const formatValue = (value: any, column: TableColumn): string => {
+const formatValue = (value: unknown, column: TableColumn): string => {
   if (value === null || value === undefined) return '-'
 
-  switch (column.type) {
-    case 'text':
-    default:
-      return String(value)
+  if (column.type === 'text') {
+    return String(value)
   }
+
+  return String(value)
 }
 
-const formatCurrency = (value: number): string => {
+const formatCurrency = (value: unknown): string => {
   if (typeof value !== 'number') return '0.00'
   return value.toLocaleString('en-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-const formatDate = (value: string | Date): string => {
+const formatDate = (value: unknown): string => {
   if (!value) return '-'
   try {
-    const date = new Date(value)
+    const date = new Date(value as string | Date)
     return date.toLocaleDateString('en-TH', {
       year: 'numeric',
       month: 'short',
@@ -222,8 +219,15 @@ const formatDate = (value: string | Date): string => {
   }
 }
 
-const getBadgeClass = (value: any): string => {
+const getBadgeClass = (): string => {
   // Default badge styling - can be customized via props or slots
   return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800'
+}
+
+const getTagsArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.slice(0, 3).map(String)
+  }
+  return []
 }
 </script>

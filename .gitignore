@@ -1,1 +1,7 @@
 ﻿owner-dashboard/.env
+member-portal/.env
+
+logs
+*.log
+npm-debug.log*
+node_modules

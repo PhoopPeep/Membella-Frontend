@@ -1,29 +1,5 @@
 import api from '../router/api'
-
-export interface ProfileUpdateData {
-  org_name?: string
-  email?: string
-  description?: string
-  contact_info?: string
-}
-
-export interface PasswordChangeData {
-  currentPassword: string
-  newPassword: string
-}
-
-export interface ProfileResponse {
-  success?: boolean
-  message: string
-  user?: {
-    owner_id: string
-    org_name: string
-    email: string
-    description?: string
-    contact_info?: string
-    logo?: string
-  }
-}
+import type { ProfileUpdateData, PasswordChangeData, ProfileResponse } from '../types/profile'
 
 export const profileService = {
   // Get current user profile
@@ -46,10 +22,52 @@ export const profileService = {
       } else {
         throw new Error('Invalid profile response format')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Profile fetch error:', error)
       throw error
     }
+  },
+
+  // Helper: Validate organization name
+  validateOrgName(orgName: string): void {
+    if (!orgName.trim()) {
+      throw new Error('Organization name cannot be empty')
+    }
+    if (orgName.trim().length < 2) {
+      throw new Error('Organization name must be at least 2 characters long')
+    }
+    if (orgName.trim().length > 100) {
+      throw new Error('Organization name must be less than 100 characters')
+    }
+  },
+
+  // Helper: Validate email
+  validateEmail(email: string): void {
+    if (!email.trim()) {
+      throw new Error('Email cannot be empty')
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      throw new Error('Please enter a valid email address')
+    }
+  },
+
+  // Helper: Validate description
+  validateDescription(description: string): void {
+    if (description.trim().length > 500) {
+      throw new Error('Description must be less than 500 characters')
+    }
+  },
+
+  // Helper: Build update data
+  buildUpdateData(data: ProfileUpdateData): ProfileUpdateData {
+    const updateData: ProfileUpdateData = {}
+    if (data.org_name !== undefined) updateData.org_name = data.org_name.trim()
+    if (data.email !== undefined) updateData.email = data.email.trim().toLowerCase()
+    if (data.description !== undefined)
+      updateData.description = data.description.trim() || undefined
+    if (data.contact_info !== undefined) updateData.contact_info = data.contact_info
+    return updateData
   },
 
   // Update user profile
@@ -59,43 +77,24 @@ export const profileService = {
 
       // Client-side validation
       if (data.org_name !== undefined) {
-        if (!data.org_name.trim()) {
-          throw new Error('Organization name cannot be empty')
-        }
-        if (data.org_name.trim().length < 2) {
-          throw new Error('Organization name must be at least 2 characters long')
-        }
-        if (data.org_name.trim().length > 100) {
-          throw new Error('Organization name must be less than 100 characters')
-        }
+        this.validateOrgName(data.org_name)
       }
 
       if (data.email !== undefined) {
-        if (!data.email.trim()) {
-          throw new Error('Email cannot be empty')
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(data.email.trim())) {
-          throw new Error('Please enter a valid email address')
-        }
+        this.validateEmail(data.email)
       }
 
-      if (data.description !== undefined && data.description.trim().length > 500) {
-        throw new Error('Description must be less than 500 characters')
+      if (data.description !== undefined) {
+        this.validateDescription(data.description)
       }
 
-      const updateData: ProfileUpdateData = {}
-      if (data.org_name !== undefined) updateData.org_name = data.org_name.trim()
-      if (data.email !== undefined) updateData.email = data.email.trim().toLowerCase()
-      if (data.description !== undefined)
-        updateData.description = data.description.trim() || undefined
-      if (data.contact_info !== undefined) updateData.contact_info = data.contact_info
+      const updateData = this.buildUpdateData(data)
 
       const response = await api.put('/api/auth/profile', updateData)
       console.log('📥 ProfileService: Profile update response:', response.data)
 
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Profile update error:', error)
       throw error
     }
@@ -117,14 +116,6 @@ export const profileService = {
         throw new Error('New password must be at least 8 characters long')
       }
 
-      // // Password strength validation
-      // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
-      // if (!passwordRegex.test(data.newPassword)) {
-      //   throw new Error(
-      //     'New password must contain at least one uppercase letter, one lowercase letter, and one number',
-      //   )
-      // }
-
       const response = await api.put('/api/auth/change-password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
@@ -132,10 +123,30 @@ export const profileService = {
 
       console.log('ProfileService: Password change response:', response.data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Password change error:', error)
       throw error
     }
+  },
+
+  // Helper: Handle upload errors
+  handleUploadError(error: unknown): never {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes('413') || errorMessage.includes('too large')) {
+      throw new Error('File is too large. Please choose a file smaller than 5MB')
+    }
+    if (errorMessage.includes('timeout')) {
+      throw new Error('Upload timeout. Please check your connection and try again')
+    }
+    if (errorMessage.includes('network')) {
+      throw new Error('Network error. Please check your connection and try again')
+    }
+    if (errorMessage.includes('Upload failed')) {
+      throw new Error('Upload failed. Please try again')
+    }
+
+    throw error instanceof Error ? error : new Error(String(error))
   },
 
   // Upload profile image to Supabase Storage
@@ -147,21 +158,14 @@ export const profileService = {
         type: file.type,
       })
 
-      // Client-side validation
+      // Validate file
       if (!file) {
         throw new Error('No file selected')
       }
 
-      // File size validation (5MB limit)
-      const maxSize = 5 * 1024 * 1024 // 5MB
-      if (file.size > maxSize) {
-        throw new Error('File size must be less than 5MB')
-      }
-
-      // File type validation
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        throw new Error('File must be an image (JPEG, PNG, GIF, or WebP)')
+      const validation = this.validateImageFile(file)
+      if (!validation.valid) {
+        throw new Error(validation.error)
       }
 
       // Create FormData for file upload
@@ -193,24 +197,9 @@ export const profileService = {
       }
 
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Image upload error:', error)
-
-      // Handle specific file upload errors
-      if (error.message?.includes('413') || error.message?.includes('too large')) {
-        throw new Error('File is too large. Please choose a file smaller than 5MB')
-      }
-      if (error.message?.includes('timeout')) {
-        throw new Error('Upload timeout. Please check your connection and try again')
-      }
-      if (error.message?.includes('network')) {
-        throw new Error('Network error. Please check your connection and try again')
-      }
-      if (error.message?.includes('Upload failed')) {
-        throw new Error('Upload failed. Please try again')
-      }
-
-      throw error
+      return this.handleUploadError(error)
     }
   },
 
@@ -227,7 +216,7 @@ export const profileService = {
       }
 
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Image removal error:', error)
       throw error
     }
@@ -308,7 +297,7 @@ export const profileService = {
       console.log('ProfileService: Refreshed profile data:', response.data)
 
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ProfileService: Profile refresh error:', error)
       throw error
     }

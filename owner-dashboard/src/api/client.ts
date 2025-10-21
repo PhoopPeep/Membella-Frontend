@@ -1,13 +1,13 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
-import type { ApiResponse, ErrorResponse } from '@/types/common'
+import type { ErrorResponse } from '@/types/common'
 
 class ApiClient {
-  private client: AxiosInstance
-  private baseURL: string
+  private readonly client: AxiosInstance
+  private readonly baseURL: string
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    this.baseURL = import.meta.env.VITE_API_URL
 
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -36,7 +36,7 @@ class ApiClient {
         })
         return config
       },
-      (error) => {
+      (error: Error) => {
         console.error('Request interceptor error:', error)
         return Promise.reject(error)
       },
@@ -120,10 +120,13 @@ class ApiClient {
     localStorage.removeItem('user')
 
     // Don't redirect if we're on auth callback page
-    if (window.location.pathname !== '/login' && !window.location.pathname.includes('/auth/callback')) {
+    if (
+      globalThis.location.pathname !== '/login' &&
+      !globalThis.location.pathname.includes('/auth/callback')
+    ) {
       // Only redirect if not on auth callback page
-      if (!window.location.pathname.includes('/auth/callback')) {
-        window.location.href = '/login'
+      if (!globalThis.location.pathname.includes('/auth/callback')) {
+        globalThis.location.href = '/login'
       }
     }
   }
@@ -165,6 +168,16 @@ class ApiClient {
       return response.data
     } catch (error) {
       console.error('DELETE request failed:', error)
+      throw error
+    }
+  }
+
+  async patch<T = unknown>(url: string, data?: unknown): Promise<T> {
+    try {
+      const response = await this.client.patch<T>(url, data)
+      return response.data
+    } catch (error) {
+      console.error('PATCH request failed:', error)
       throw error
     }
   }

@@ -20,9 +20,9 @@ export interface VerificationUpdate {
 class VerificationService {
   private ws: WebSocket | null = null
   private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
-  private reconnectDelay = 1000
-  private subscribers: Map<string, (status: VerificationStatus) => void> = new Map()
+  private readonly maxReconnectAttempts = 5
+  private readonly reconnectDelay = 1000
+  private readonly subscribers: Map<string, (status: VerificationStatus) => void> = new Map()
   private currentUserId: string | null = null
 
   constructor() {
@@ -291,6 +291,3 @@ class VerificationService {
 
 // Export singleton instance
 export const verificationService = new VerificationService()
-
-// Export types
-export type { VerificationUpdate }

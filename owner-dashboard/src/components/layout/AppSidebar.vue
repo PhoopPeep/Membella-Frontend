@@ -251,11 +251,16 @@ const menuItems = [
     url: '/features',
     icon: 'cog',
   },
+  {
+    title: 'API Keys',
+    url: '/api-keys',
+    icon: 'key',
+  },
 ]
 
 // Methods - move to before watch
-const updateProfileImage = (logoUrl: string | undefined | null) => {
-  const newUrl = logoUrl || ''
+const updateProfileImage = (logoUrl: string | undefined | null = '') => {
+  const newUrl = logoUrl ?? ''
 
   if (newUrl !== profileImageUrl.value) {
     console.log('Sidebar: Updating profile image:', { from: profileImageUrl.value, to: newUrl })

@@ -1,34 +1,11 @@
 import api from '../router/api'
-
-export interface Member {
-  id: string
-  email: string
-  planId: string
-  planName?: string
-  status: 'active' | 'inactive' | 'cancelled'
-  subscriptionStart: string
-  subscriptionEnd: string | null
-  createdAt: string
-}
-
-export interface CreateMemberData {
-  email: string
-  planId: string
-  status?: 'active' | 'inactive'
-  subscriptionEnd?: string
-}
-
-export interface UpdateMemberData {
-  email?: string
-  planId?: string
-  status?: 'active' | 'inactive' | 'cancelled'
-  subscriptionEnd?: string
-}
-
-export interface MemberResponse {
-  message: string
-  member?: Member
-}
+import type {
+  Member,
+  CreateMemberData,
+  UpdateMemberData,
+  MemberResponse,
+  MembersByPlan,
+} from '../types/member'
 
 export const memberService = {
   // Get all members
@@ -97,9 +74,7 @@ export const memberService = {
   },
 
   // Get members by plan
-  async getMembersByPlan(): Promise<
-    Array<{ planId: string; planName: string; memberCount: number }>
-  > {
+  async getMembersByPlan(): Promise<MembersByPlan[]> {
     try {
       const response = await api.get('/api/dashboard/members-by-plan')
       return response.data

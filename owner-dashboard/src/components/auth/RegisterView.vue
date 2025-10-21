@@ -249,6 +249,75 @@ const clearForm = () => {
   contact_info.value = ''
 }
 
+// Helper: Validate registration inputs
+const validateRegistrationInput = () => {
+  if (!org_name.value.trim()) {
+    throw new Error('Organization name is required')
+  }
+
+  if (password.value.length < 8) {
+    throw new Error('Password must be at least 8 characters long')
+  }
+
+  if (password.value !== confirmPassword.value) {
+    throw new Error('Passwords do not match')
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    throw new Error('Please enter a valid email address')
+  }
+}
+
+// Helper: Handle registration response
+const handleRegistrationResponse = (result: {
+  rateLimited?: boolean
+  requiresVerification?: boolean
+  message: string
+}) => {
+  if (result.rateLimited) {
+    rateLimited.value = true
+    errorMessage.value = result.message
+    clearForm()
+  } else if (result.requiresVerification) {
+    requiresVerification.value = true
+    userEmail.value = email.value.trim().toLowerCase()
+    successMessage.value = result.message
+    startResendCooldown()
+  } else {
+    successMessage.value = result.message
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+  }
+}
+
+// Helper: Handle registration error
+const handleRegistrationError = (error: unknown) => {
+  console.error('Registration error:', error)
+
+  if (error instanceof Error) {
+    if (error.message.includes('timeout') || error.message.includes('ECONNABORTED')) {
+      timeoutMessage.value = error.message
+      requiresVerification.value = true
+      userEmail.value = email.value.trim().toLowerCase()
+    } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+      rateLimited.value = true
+      errorMessage.value = error.message
+      clearForm()
+    } else {
+      errorMessage.value = error.message
+      clearForm()
+    }
+  } else if (typeof error === 'string') {
+    errorMessage.value = error
+    clearForm()
+  } else {
+    errorMessage.value = 'An error occurred during registration'
+    clearForm()
+  }
+}
+
 const handleRegister = async () => {
   try {
     isLoading.value = true
@@ -257,24 +326,7 @@ const handleRegister = async () => {
     rateLimited.value = false
     timeoutMessage.value = ''
 
-    // Validate inputs
-    if (!org_name.value.trim()) {
-      throw new Error('Organization name is required')
-    }
-
-    if (password.value.length < 8) {
-      throw new Error('Password must be at least 8 characters long')
-    }
-
-    if (password.value !== confirmPassword.value) {
-      throw new Error('Passwords do not match')
-    }
-
-    // Enhanced email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.value)) {
-      throw new Error('Please enter a valid email address')
-    }
+    validateRegistrationInput()
 
     console.log('Attempting registration for:', email.value)
 
@@ -288,49 +340,9 @@ const handleRegister = async () => {
 
     console.log('Registration response:', result)
 
-    if (result.rateLimited) {
-      rateLimited.value = true
-      errorMessage.value = result.message
-      // Clear form when rate limited
-      clearForm()
-    } else if (result.requiresVerification) {
-      requiresVerification.value = true
-      userEmail.value = email.value.trim().toLowerCase()
-      successMessage.value = result.message
-      startResendCooldown()
-    } else {
-      successMessage.value = result.message
-      // If no verification required, redirect to login
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
-    }
+    handleRegistrationResponse(result)
   } catch (error) {
-    console.error('Registration error:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('timeout') || error.message.includes('ECONNABORTED')) {
-        timeoutMessage.value = error.message
-        requiresVerification.value = true
-        userEmail.value = email.value.trim().toLowerCase()
-      } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        rateLimited.value = true
-        errorMessage.value = error.message
-        // Clear form when rate limited
-        clearForm()
-      } else {
-        errorMessage.value = error.message
-        // Clear form for other errors
-        clearForm()
-      }
-    } else if (typeof error === 'string') {
-      errorMessage.value = error
-      // Clear form for string errors
-      clearForm()
-    } else {
-      errorMessage.value = 'An error occurred during registration'
-      // Clear form for unknown errors
-      clearForm()
-    }
+    handleRegistrationError(error)
   } finally {
     isLoading.value = false
   }

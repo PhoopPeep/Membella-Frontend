@@ -35,6 +35,9 @@
         </main>
       </div>
     </div>
+
+    <!-- Notification Container -->
+    <NotificationContainer />
   </div>
 </template>
 
@@ -43,6 +46,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import AppSidebar from './components/layout/AppSidebar.vue'
+import NotificationContainer from './components/NotificationContainer.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()

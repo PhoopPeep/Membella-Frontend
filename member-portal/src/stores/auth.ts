@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-interface MemberUser {
+export interface MemberUser {
   id: string
   email: string
   fullName: string
@@ -42,8 +42,19 @@ export const useAuthStore = defineStore('memberAuth', () => {
 
     if (savedToken && savedUser) {
       try {
+        // Check if token is expired
+        const payload = JSON.parse(atob(savedToken.split('.')[1]))
+        const now = Math.floor(Date.now() / 1000)
+
+        if (payload.exp && payload.exp < now) {
+          console.log('Token expired, clearing auth')
+          clearAuth()
+          return
+        }
+
         token.value = savedToken
         user.value = JSON.parse(savedUser)
+        console.log('Authentication restored from localStorage')
       } catch (error) {
         console.error('Error parsing saved member data:', error)
         clearAuth()

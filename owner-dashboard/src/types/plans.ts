@@ -14,5 +14,19 @@ export interface CreatePlanData {
   description: string
   price: number
   duration: number
-  features: string[]
+  features?: string[]
+}
+
+export interface UpdatePlanData {
+  name: string
+  description: string
+  price: number
+  duration: number
+  features?: string[]
+}
+
+export interface PlanResponse {
+  success: boolean
+  message: string
+  plan?: Plan
 }

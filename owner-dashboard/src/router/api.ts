@@ -1,7 +1,12 @@
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
+
+interface ErrorResponse {
+  message?: string
+  errors?: Array<{ message: string }>
+}
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 30000, // เพิ่ม timeout เป็น 30 วินาที
   headers: {
     'Content-Type': 'application/json',
@@ -18,9 +23,53 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
+
+// Helper: Handle authentication errors
+const handleAuthError = (error: AxiosError<ErrorResponse>) => {
+  const isAuthCallback = error.config?.url?.includes('/auth/callback')
+
+  if (isAuthCallback) {
+    console.warn('Auth callback failed:', error.response?.data?.message || 'Invalid token')
+    return Promise.reject(new Error(error.response?.data?.message || 'Authentication failed'))
+  }
+
+  // Token expired or invalid - clear auth and redirect to login
+  console.warn('Authentication failed:', error.response?.data?.message || 'Invalid token')
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+
+  // Only redirect if not already on login page and not on auth callback page
+  if (globalThis.window.location.pathname !== '/login' && !globalThis.window.location.pathname.includes('/auth/callback')) {
+    globalThis.window.location.href = '/login'
+  }
+  return Promise.reject(new Error('Authentication failed. Please login again.'))
+}
+
+// Helper: Handle validation errors
+const handleValidationError = (error: AxiosError<ErrorResponse>) => {
+  const errorData = error.response?.data
+  if (errorData?.errors && Array.isArray(errorData.errors)) {
+    const errorMessages = errorData.errors.map((err) => err.message).join(', ')
+    return Promise.reject(new Error(errorMessages))
+  }
+  return Promise.reject(new Error(errorData?.message || 'Validation failed'))
+}
+
+// Helper: Handle network errors
+const handleNetworkError = (error: AxiosError<ErrorResponse>) => {
+  if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+    return Promise.reject(new Error('Request timeout. Please check your connection and try again.'))
+  }
+
+  if (error.code === 'ERR_NETWORK') {
+    return Promise.reject(new Error('Network error. Please check your connection and try again.'))
+  }
+
+  return null
+}
 
 // Error handling
 api.interceptors.response.use(
@@ -30,37 +79,14 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error.response?.data || error.message)
 
-    // Handle different types of errors
+    // Handle authentication errors (401/403)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Check if this is an auth callback request - don't redirect for auth endpoints
-      const isAuthCallback = error.config?.url?.includes('/auth/callback')
-
-      if (isAuthCallback) {
-        console.warn('Auth callback failed:', error.response?.data?.message || 'Invalid token')
-        return Promise.reject(new Error(error.response?.data?.message || 'Authentication failed'))
-      }
-
-      // Token expired or invalid - clear auth and redirect to login
-      console.warn('Authentication failed:', error.response?.data?.message || 'Invalid token')
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-
-      // Only redirect if not already on login page and not on auth callback page
-      if (window.location.pathname !== '/login' && !window.location.pathname.includes('/auth/callback')) {
-        window.location.href = '/login'
-      }
-      return Promise.reject(new Error('Authentication failed. Please login again.'))
+      return handleAuthError(error)
     }
 
     // Handle validation errors (400)
     if (error.response?.status === 400) {
-      const errorData = error.response.data
-      if (errorData.errors && Array.isArray(errorData.errors)) {
-        // Multiple validation errors
-        const errorMessages = errorData.errors.map((err) => err.message).join(', ')
-        return Promise.reject(new Error(errorMessages))
-      }
-      return Promise.reject(new Error(errorData.message || 'Validation failed'))
+      return handleValidationError(error)
     }
 
     // Handle not found errors (404)
@@ -76,9 +102,7 @@ api.interceptors.response.use(
     // Handle rate limiting (429)
     if (error.response?.status === 429) {
       return Promise.reject(
-        new Error(
-          error.response.data.message || 'Too many requests. Please wait before trying again.',
-        ),
+        new Error(error.response.data.message || 'Too many requests. Please wait before trying again.'),
       )
     }
 
@@ -87,15 +111,10 @@ api.interceptors.response.use(
       return Promise.reject(new Error('Server error. Please try again later.'))
     }
 
-    // Network or timeout errors
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      return Promise.reject(
-        new Error('Request timeout. Please check your connection and try again.'),
-      )
-    }
-
-    if (error.code === 'ERR_NETWORK') {
-      return Promise.reject(new Error('Network error. Please check your connection and try again.'))
+    // Handle network errors
+    const networkError = handleNetworkError(error)
+    if (networkError) {
+      return networkError
     }
 
     // Default error

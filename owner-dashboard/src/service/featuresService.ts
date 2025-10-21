@@ -1,34 +1,10 @@
 import api from '../router/api'
-
-export interface Feature {
-  feature_id: string
-  name: string
-  description: string
-  create_at: string
-  update_at: string
-  delete_at?: string | null
-}
-
-export interface CreateFeatureData {
-  name: string
-  description: string
-}
-
-export interface UpdateFeatureData {
-  name: string
-  description: string
-}
-
-export interface FeatureResponse {
-  success: boolean
-  message: string
-  data?: Feature
-}
-
-export interface FeaturesListResponse {
-  success: boolean
-  data: Feature[]
-}
+import type {
+  Feature,
+  CreateFeatureData,
+  UpdateFeatureData,
+  FeatureResponse,
+} from '../types/features'
 
 export const featuresService = {
   // Get all features
@@ -45,9 +21,9 @@ export const featuresService = {
         // Old format compatibility
         return response.data
       } else {
-        throw new Error('Invalid response format')
+        throw new TypeError('Invalid response format')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get features error:', error)
       throw error
     }
@@ -69,7 +45,7 @@ export const featuresService = {
       } else {
         throw new Error('Invalid response format')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get feature error:', error)
       throw error
     }
@@ -101,7 +77,7 @@ export const featuresService = {
 
       console.log('Create feature response:', response.data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Create feature error:', error)
       throw error
     }
@@ -133,7 +109,7 @@ export const featuresService = {
 
       console.log('Update feature response:', response.data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update feature error:', error)
       throw error
     }
@@ -146,7 +122,7 @@ export const featuresService = {
       const response = await api.delete(`/api/features/${id}`)
       console.log('Delete feature response:', response.data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete feature error:', error)
       throw error
     }

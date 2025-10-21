@@ -245,6 +245,7 @@ import { useRouter } from 'vue-router'
 import { login, resendVerification } from '../../service/authService'
 import { useAuthStore } from '../../stores/auth'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import type { User } from '../../types/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -276,6 +277,60 @@ let errorCountdownTimer: NodeJS.Timeout | null = null
 let successTimer: NodeJS.Timeout | null = null
 let resendTimer: NodeJS.Timeout | null = null
 
+// Helper: Validate login inputs
+const validateLoginInput = (): boolean => {
+  if (!email.value.trim() || !password.value.trim()) {
+    displayError('Please enter both email and password')
+    return false
+  }
+  return true
+}
+
+// Helper: Handle successful login response
+const handleSuccessfulLogin = (result: { token?: string; user?: User; message?: string }) => {
+  displaySuccess(result.message || 'Login successful!')
+
+  if (result.token && result.user) {
+    authStore.setAuth(result.token, result.user)
+
+    setTimeout(() => {
+      console.log('Redirecting to dashboard...')
+      router.push('/dashboard')
+    }, 1000)
+  } else {
+    displayError('Login response missing authentication data')
+  }
+}
+
+// Helper: Handle verification required response
+const handleVerificationRequired = (message: string) => {
+  showVerificationRequired.value = true
+  displayError(message)
+  startResendCooldown()
+}
+
+// Helper: Handle rate limited response
+const handleRateLimited = (message: string) => {
+  showRateLimited.value = true
+  displayError(message)
+}
+
+// Helper: Handle login error
+const handleLoginError = (error: unknown) => {
+  console.error('Login error:', error)
+
+  if (error instanceof Error) {
+    if (error.message.includes('verify') || error.message.includes('verification')) {
+      showVerificationRequired.value = true
+    } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+      showRateLimited.value = true
+    }
+    displayError(error.message)
+  } else {
+    displayError('An unknown error occurred during login.')
+  }
+}
+
 // Login handler
 const handleLogin = async (event?: Event) => {
   // Prevent default form submission
@@ -299,8 +354,7 @@ const handleLogin = async (event?: Event) => {
     clearErrorTimers()
     showSuccessMessage.value = false
 
-    if (!email.value.trim() || !password.value.trim()) {
-      displayError('Please enter both email and password')
+    if (!validateLoginInput()) {
       return
     }
 
@@ -314,42 +368,16 @@ const handleLogin = async (event?: Event) => {
     console.log('Login response:', result)
 
     if (result.requiresVerification) {
-      showVerificationRequired.value = true
-      displayError(result.message)
-      startResendCooldown()
+      handleVerificationRequired(result.message)
     } else if (result.rateLimited) {
-      showRateLimited.value = true
-      displayError(result.message)
+      handleRateLimited(result.message)
     } else if (result.success) {
-      displaySuccess(result.message || 'Login successful!')
-
-      // Store auth data if login includes token and user
-      if (result.token && result.user) {
-        authStore.setAuth(result.token, result.user)
-
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          console.log('Redirecting to dashboard...')
-          router.push('/dashboard')
-        }, 1000)
-      } else {
-        displayError('Login response missing authentication data')
-      }
+      handleSuccessfulLogin(result)
     } else {
       displayError(result.message)
     }
   } catch (error) {
-    console.error('Login error:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('verify') || error.message.includes('verification')) {
-        showVerificationRequired.value = true
-      } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        showRateLimited.value = true
-      }
-      displayError(error.message)
-    } else {
-      displayError('An unknown error occurred during login.')
-    }
+    handleLoginError(error)
   } finally {
     isLoading.value = false
     console.log('Login process completed')

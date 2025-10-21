@@ -199,6 +199,17 @@ import { memberApi } from '../../api/member'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// Types
+interface MemberUser {
+  id: string
+  email: string
+  fullName: string
+  phone?: string
+  role: 'member'
+  createdAt?: string
+  updatedAt?: string
+}
+
 // Form state
 const email = ref('')
 const password = ref('')
@@ -223,6 +234,78 @@ let errorCountdownTimer: number | null = null
 let successTimer: number | null = null
 let resendTimer: number | null = null
 
+// Helper: Validate login input
+const validateLoginInput = (): boolean => {
+  if (!email.value.trim() || !password.value.trim()) {
+    displayError('Please enter both email and password')
+    return false
+  }
+  return true
+}
+
+// Helper: Handle verification required response
+const handleVerificationRequired = (message: string) => {
+  showVerificationRequired.value = true
+  displayError(message)
+  startResendCooldown()
+}
+
+// Helper: Handle rate limited response
+const handleRateLimitedResponse = (message: string) => {
+  showRateLimited.value = true
+  displayError(message)
+}
+
+// Helper: Handle successful login
+const handleSuccessfulLogin = (result: { success: boolean; message?: string; token?: string; user?: MemberUser }) => {
+  displaySuccess(result.message || 'Login successful!')
+
+  if (!result.token || !result.user) {
+    displayError('Login response missing authentication data')
+    return
+  }
+
+  console.log('Storing authentication data:', {
+    hasToken: !!result.token,
+    hasUser: !!result.user,
+    tokenPreview: result.token ? `${result.token.substring(0, 20)}...` : 'None',
+    userData: result.user
+  })
+
+  authStore.setAuth(result.token, result.user)
+
+  // Verify token was stored
+  const storedToken = localStorage.getItem('member_token')
+  const storedUser = localStorage.getItem('member_user')
+  console.log('Token storage verification:', {
+    stored: !!storedToken,
+    userStored: !!storedUser
+  })
+
+  // Redirect to browse plans after a short delay
+  setTimeout(() => {
+    router.push('/browse')
+  }, 1000)
+}
+
+// Helper: Handle login error
+const handleLoginError = (error: unknown) => {
+  console.error('Member login error:', error)
+
+  if (!(error instanceof Error)) {
+    displayError('An unknown error occurred during login.')
+    return
+  }
+
+  const errorMsg = error.message
+  if (errorMsg.includes('verify') || errorMsg.includes('verification')) {
+    showVerificationRequired.value = true
+  } else if (errorMsg.includes('rate limit') || errorMsg.includes('Too many')) {
+    showRateLimited.value = true
+  }
+  displayError(errorMsg)
+}
+
 // Login handler
 const handleLogin = async () => {
   if (isLoading.value) {
@@ -231,58 +314,28 @@ const handleLogin = async () => {
 
   try {
     isLoading.value = true
-
-    // Clear any existing messages first
     clearErrorTimers()
     showSuccessMessage.value = false
 
-    if (!email.value.trim() || !password.value.trim()) {
-      displayError('Please enter both email and password')
+    if (!validateLoginInput()) {
       return
     }
 
     console.log('Attempting member login for:', email.value)
-
     const result = await memberApi.login(email.value.trim(), password.value)
-
     console.log('Member login response:', result)
 
     if (result.requiresVerification) {
-      showVerificationRequired.value = true
-      displayError(result.message)
-      startResendCooldown()
+      handleVerificationRequired(result.message)
     } else if (result.rateLimited) {
-      showRateLimited.value = true
-      displayError(result.message)
+      handleRateLimitedResponse(result.message)
     } else if (result.success) {
-      displaySuccess(result.message || 'Login successful!')
-
-      // Store auth data if login includes token and user
-      if (result.token && result.user) {
-        authStore.setAuth(result.token, result.user)
-
-        // Redirect to browse plans after a short delay
-        setTimeout(() => {
-          router.push('/browse')
-        }, 1000)
-      } else {
-        displayError('Login response missing authentication data')
-      }
+      handleSuccessfulLogin(result)
     } else {
       displayError(result.message)
     }
   } catch (error) {
-    console.error('Member login error:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('verify') || error.message.includes('verification')) {
-        showVerificationRequired.value = true
-      } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        showRateLimited.value = true
-      }
-      displayError(error.message)
-    } else {
-      displayError('An unknown error occurred during login.')
-    }
+    handleLoginError(error)
   } finally {
     isLoading.value = false
   }
@@ -298,14 +351,14 @@ const displayError = (message: string) => {
   // Clear form fields when there's an error
   clearForm()
 
-  errorCountdownTimer = window.setInterval(() => {
+  errorCountdownTimer = globalThis.window.setInterval(() => {
     errorCountdown.value--
     if (errorCountdown.value <= 0) {
       clearErrorTimers()
     }
   }, 1000)
 
-  errorTimer = window.setTimeout(() => {
+  errorTimer = globalThis.window.setTimeout(() => {
     clearErrorTimers()
   }, 15000)
 
@@ -323,11 +376,11 @@ const clearForm = () => {
 // Clear all error timers and reset error state
 const clearErrorTimers = () => {
   if (errorTimer) {
-    window.clearTimeout(errorTimer)
+    globalThis.window.clearTimeout(errorTimer)
     errorTimer = null
   }
   if (errorCountdownTimer) {
-    window.clearInterval(errorCountdownTimer)
+    globalThis.window.clearInterval(errorCountdownTimer)
     errorCountdownTimer = null
   }
 
@@ -341,13 +394,13 @@ const clearErrorTimers = () => {
 // Success message display
 const displaySuccess = (message: string) => {
   if (successTimer) {
-    window.clearTimeout(successTimer)
+    globalThis.window.clearTimeout(successTimer)
   }
 
   currentSuccessMessage.value = message
   showSuccessMessage.value = true
 
-  successTimer = window.setTimeout(() => {
+  successTimer = globalThis.window.setTimeout(() => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
   }, 5000)
@@ -391,11 +444,11 @@ const handleResendVerification = async () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 60
-  resendTimer = window.setInterval(() => {
+  resendTimer = globalThis.window.setInterval(() => {
     resendCooldown.value--
     if (resendCooldown.value <= 0) {
       if (resendTimer) {
-        window.clearInterval(resendTimer)
+        globalThis.window.clearInterval(resendTimer)
         resendTimer = null
       }
     }
@@ -405,10 +458,10 @@ const startResendCooldown = () => {
 onUnmounted(() => {
   clearErrorTimers()
   if (successTimer) {
-    window.clearTimeout(successTimer)
+    globalThis.window.clearTimeout(successTimer)
   }
   if (resendTimer) {
-    window.clearInterval(resendTimer)
+    globalThis.window.clearInterval(resendTimer)
   }
 })
 </script>

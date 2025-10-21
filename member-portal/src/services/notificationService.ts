@@ -1,31 +1,12 @@
 import { ref } from 'vue'
-
-export interface NotificationDetails {
-  [key: string]: string | number | boolean
-}
-
-export interface NotificationOptions {
-  type?: 'success' | 'error' | 'warning' | 'info' | 'default'
-  title: string
-  message: string
-  details?: NotificationDetails
-  duration?: number // Auto close duration in ms (0 = no auto close)
-  showConfirm?: boolean
-  showCancel?: boolean
-  confirmText?: string
-  cancelText?: string
-  closeOnOverlay?: boolean
-  closeOnEscape?: boolean
-}
-
-export interface NotificationCallbacks {
-  onConfirm?: () => void
-  onCancel?: () => void
-  onClose?: () => void
-}
+import type {
+  NotificationDetails,
+  NotificationOptions,
+  NotificationCallbacks,
+} from '../types/notification'
 
 class NotificationService {
-  private notifications = ref<Array<NotificationOptions & { id: string; callbacks?: NotificationCallbacks }>>([])
+  private readonly notifications = ref<Array<NotificationOptions & { id: string; callbacks?: NotificationCallbacks }>>([])
   private nextId = 0
 
   // Get reactive notifications array
@@ -152,7 +133,14 @@ class NotificationService {
   paymentSuccess(planName: string, amount: number, paymentId: string, details?: NotificationDetails): string {
     return this.success(
       'Payment Successful! 🎉',
-      `Your subscription to "${planName}" has been activated successfully.`
+      `Your subscription to "${planName}" has been activated successfully.`,
+      {
+        planName,
+        amount: `฿${amount.toFixed(2)}`,
+        paymentId,
+        status: 'Success',
+        ...details
+      }
     )
   }
 
@@ -160,7 +148,13 @@ class NotificationService {
   paymentFailed(planName: string, error: string, details?: NotificationDetails): string {
     return this.error(
       'Payment Failed ❌',
-      `Failed to process payment for "${planName}". ${error}`
+      `Failed to process payment for "${planName}". ${error}`,
+      {
+        planName,
+        error,
+        status: 'Failed',
+        ...details
+      }
     )
   }
 

@@ -254,8 +254,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { plansService, type Plan } from '../../service/plansService'
-import { featuresService, type Feature } from '../../service/featuresService'
+import { plansService } from '../../service/plansService'
+import { featuresService } from '../../service/featuresService'
+import type { Plan } from '../../types/plans'
+import type { Feature } from '../../types/features'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import Toast from '../../components/common/Toast.vue'
 import ErrorModal from '../../components/common/ErrorModal.vue'
@@ -308,7 +310,9 @@ const loadPlan = async () => {
 
 const getPlanFeatures = () => {
   if (!plan.value) return []
-  return features.value.filter((feature) => plan.value!.features.includes(feature.feature_id))
+  return features.value.filter((feature: Feature) =>
+    plan.value!.features.includes(feature.feature_id),
+  )
 }
 
 const formatDate = (dateString: string) => {
@@ -317,6 +321,48 @@ const formatDate = (dateString: string) => {
 
 const confirmDeletePlan = () => {
   showDeleteModal.value = true
+}
+
+// Helper: Handle delete plan error with active members
+const handleActiveMembersError = (errorData: {
+  message?: string
+  details?: string
+  activeMembers?: { name: string; email: string }[]
+}) => {
+  if (errorData?.activeMembers && errorData.activeMembers.length > 0) {
+    showDetailedErrorModal(
+      errorData.message || 'Cannot delete plan',
+      errorData.details || '',
+      errorData.activeMembers,
+    )
+  } else {
+    showErrorToast(errorData?.message || 'Cannot delete plan', errorData?.details || '')
+  }
+}
+
+// Helper: Handle delete plan error response
+const handleDeleteError = (error: unknown) => {
+  console.error('Error deleting plan:', error)
+
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as {
+      response?: {
+        status?: number
+        data?: {
+          message?: string
+          details?: string
+          activeMembers?: { name: string; email: string }[]
+        }
+      }
+    }
+
+    if (axiosError.response?.status === 400 && axiosError.response.data) {
+      handleActiveMembersError(axiosError.response.data)
+      return
+    }
+  }
+
+  showErrorToast('Failed to delete plan', 'Please try again later.')
 }
 
 const handleDeletePlan = async () => {
@@ -330,40 +376,7 @@ const handleDeletePlan = async () => {
     showDeleteModal.value = false
     router.push('/plans')
   } catch (error: unknown) {
-    console.error('Error deleting plan:', error)
-
-    // Handle specific error cases
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as {
-        response?: {
-          status?: number
-          data?: {
-            message?: string
-            details?: string
-            activeMembers?: { name: string; email: string }[]
-          }
-        }
-      }
-
-      if (axiosError.response?.status === 400) {
-        const errorData = axiosError.response.data
-        if (errorData?.activeMembers && errorData.activeMembers.length > 0) {
-          // Show detailed error modal for active members
-          showDetailedErrorModal(
-            errorData.message || 'Cannot delete plan',
-            errorData.details || '',
-            errorData.activeMembers,
-          )
-        } else {
-          // Show simple error toast
-          showErrorToast(errorData?.message || 'Cannot delete plan', errorData?.details || '')
-        }
-      } else {
-        showErrorToast('Failed to delete plan', 'Please try again later.')
-      }
-    } else {
-      showErrorToast('Failed to delete plan', 'Please try again later.')
-    }
+    handleDeleteError(error)
   } finally {
     isDeleting.value = false
   }

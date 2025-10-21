@@ -591,7 +591,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { subscriptionApi, type Subscription, type SubscriptionStats } from '../api/subscription'
+import { subscriptionApi } from '../api/subscription'
+import type { Subscription, SubscriptionStats } from '../types/subscription'
 
 // State
 const loading = ref(false)

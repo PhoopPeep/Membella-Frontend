@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './assets/base.css'
+import { useAuthStore } from './stores/auth'
 
 // FontAwesome setup
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -92,5 +93,9 @@ const pinia = createPinia()
 app.component('FontAwesomeIcon', FontAwesomeIcon)
 app.use(pinia)
 app.use(router)
+
+// Initialize authentication
+const authStore = useAuthStore()
+authStore.initAuth()
 
 app.mount('#app')

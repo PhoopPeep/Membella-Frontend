@@ -1,62 +1,8 @@
 // frontend/src/service/dashboardService.ts
 import api from '../router/api'
-
-export interface Plan {
-  id: string
-  name: string
-  description: string
-  price: number
-  duration: number
-  features: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Member {
-  id: string
-  email: string
-  fullName?: string
-  phone?: string
-  planId?: string
-  status: 'active' | 'inactive' | 'cancelled'
-  subscriptionStart: string
-  subscriptionEnd: string | null
-  createdAt: string
-  subscriptions?: Array<{
-    id: string
-    planName: string
-    status: string
-    startDate: string
-    endDate: string | null
-    price: number
-  }>
-  paymentHistory?: Array<{
-    id: string
-    amount: number
-    status: string
-    planName: string
-    createdAt: string
-  }>
-  totalSpent?: number
-}
-
-export interface RevenueData {
-  month: string
-  revenue: number
-}
-
-export interface DashboardStats {
-  totalRevenue: number
-  totalMembers: number
-  totalPlans: number
-  totalFeatures: number
-  growthPercentage: number
-  activeSubscriptions: number
-  cancelledSubscriptions: number
-  revenueThisMonth: number
-  revenueLastMonth: number
-  newPlansThisMonth: number
-}
+import type { Plan } from '../types/plans'
+import type { Member, MembersByPlan } from '../types/member'
+import type { DashboardStats, RevenueData } from '../types/dashboard'
 
 export const dashboardService = {
   // Get dashboard statistics
@@ -146,9 +92,7 @@ export const dashboardService = {
   },
 
   // Get member distribution by plan
-  async getMembersByPlan(): Promise<
-    Array<{ planId: string; planName: string; memberCount: number }>
-  > {
+  async getMembersByPlan(): Promise<MembersByPlan[]> {
     try {
       console.log('Fetching members by plan...')
       const response = await api.get('/api/dashboard/members-by-plan')

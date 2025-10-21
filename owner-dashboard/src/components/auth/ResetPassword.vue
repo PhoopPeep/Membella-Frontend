@@ -288,65 +288,96 @@ const displaySuccess = (message: string) => {
   }, 5000) // 5 seconds for success messages
 }
 
-// Methods
-const extractTokenFromUrl = () => {
-  console.log('🔧 Extracting token from URL...')
-  console.log('🔧 Full URL:', window.location.href)
-  console.log('🔧 Current hash:', window.location.hash)
-  console.log('🔧 Current search:', window.location.search)
-  console.log('🔧 Current pathname:', window.location.pathname)
+// Helper: Check for Supabase errors in hash
+const checkSupabaseErrors = (hash: string): string | null => {
+  if (!hash) return null
 
-  // Check for Supabase errors first
-  const hash = window.location.hash
-  if (hash) {
-    const hashParams = new URLSearchParams(hash.substring(1))
-    const error = hashParams.get('error')
-    const errorCode = hashParams.get('error_code')
-    const errorDescription = hashParams.get('error_description')
+  const hashParams = new URLSearchParams(hash.substring(1))
+  const error = hashParams.get('error')
+  const errorCode = hashParams.get('error_code')
+  const errorDescription = hashParams.get('error_description')
 
-    if (error) {
-      console.log('🔧 Supabase Error detected:', {
-        error,
-        errorCode,
-        errorDescription: errorDescription ? decodeURIComponent(errorDescription) : 'No description'
-      })
-
-      // Handle specific errors
-      if (errorCode === 'otp_expired') {
-        console.log('🔧 Email link has expired')
-        return 'EXPIRED'
-      } else if (error === 'access_denied') {
-        console.log('🔧 Access denied - invalid link')
-        return 'INVALID'
-      }
-    }
-  }
-
-  // Check URL hash first (Supabase sends tokens in hash for password reset)
-  if (hash) {
-    const hashParams = new URLSearchParams(hash.substring(1)) // Remove # from hash
-    const accessToken = hashParams.get('access_token')
-    const refreshToken = hashParams.get('refresh_token')
-    const type = hashParams.get('type')
-
-    console.log('🔧 Hash params:', {
-      access_token: accessToken ? 'Present' : 'Missing',
-      refresh_token: refreshToken ? 'Present' : 'Missing',
-      type: type || 'Missing'
+  if (error) {
+    console.log('🔧 Supabase Error detected:', {
+      error,
+      errorCode,
+      errorDescription: errorDescription ? decodeURIComponent(errorDescription) : 'No description',
     })
 
-    if (accessToken) {
-      console.log('🔧 Found access token in URL hash')
-      return accessToken
+    if (errorCode === 'otp_expired') {
+      console.log('🔧 Email link has expired')
+      return 'EXPIRED'
+    } else if (error === 'access_denied') {
+      console.log('🔧 Access denied - invalid link')
+      return 'INVALID'
     }
   }
 
-  // Check URL search params as fallback
-  const urlParams = new URLSearchParams(window.location.search)
+  return null
+}
+
+// Helper: Extract token from URL hash
+const extractTokenFromHash = (hash: string): string | null => {
+  if (!hash) return null
+
+  const hashParams = new URLSearchParams(hash.substring(1))
+  const accessToken = hashParams.get('access_token')
+  const refreshToken = hashParams.get('refresh_token')
+  const type = hashParams.get('type')
+
+  console.log('🔧 Hash params:', {
+    access_token: accessToken ? 'Present' : 'Missing',
+    refresh_token: refreshToken ? 'Present' : 'Missing',
+    type: type || 'Missing',
+  })
+
+  if (accessToken) {
+    console.log('🔧 Found access token in URL hash')
+    return accessToken
+  }
+
+  return null
+}
+
+// Helper: Extract token from search params
+const extractTokenFromSearchParams = (): string | null => {
+  const urlParams = new URLSearchParams(globalThis.window.location.search)
   const accessToken = urlParams.get('access_token') || urlParams.get('token')
+
   if (accessToken) {
     console.log('🔧 Found access token in URL search params')
     return accessToken
+  }
+
+  return null
+}
+
+// Methods
+const extractTokenFromUrl = () => {
+  console.log('🔧 Extracting token from URL...')
+  console.log('🔧 Full URL:', globalThis.window.location.href)
+  console.log('🔧 Current hash:', globalThis.window.location.hash)
+  console.log('🔧 Current search:', globalThis.window.location.search)
+  console.log('🔧 Current pathname:', globalThis.window.location.pathname)
+
+  const hash = globalThis.window.location.hash
+
+  // Check for Supabase errors first
+  const errorStatus = checkSupabaseErrors(hash)
+  if (errorStatus) {
+    return errorStatus
+  }
+
+  // Check URL hash for token
+  const tokenFromHash = extractTokenFromHash(hash)
+  if (tokenFromHash) {
+    return tokenFromHash
+  }
+
+  // Check URL search params as fallback
+  const tokenFromSearch = extractTokenFromSearchParams()
+  if (tokenFromSearch) {
+    return tokenFromSearch
   }
 
   console.log('❌ No access token found in URL')
@@ -368,7 +399,7 @@ const verifyToken = async () => {
     let type = null
 
     // Check hash first (Supabase password reset uses hash)
-    const hash = window.location.hash
+    const hash = globalThis.window.location.hash
     if (hash) {
       const hashParams = new URLSearchParams(hash.substring(1))
       type = hashParams.get('type')
@@ -376,18 +407,18 @@ const verifyToken = async () => {
 
     // Check search params as fallback
     if (!type) {
-      const urlParams = new URLSearchParams(window.location.search)
+      const urlParams = new URLSearchParams(globalThis.window.location.search)
       type = urlParams.get('type')
     }
 
     console.log('🔧 URL type parameter:', type)
     console.log('🔧 Hash params:', hash ? Object.fromEntries(new URLSearchParams(hash.substring(1)).entries()) : 'None')
-    console.log('🔧 Search params:', Object.fromEntries(new URLSearchParams(window.location.search).entries()))
+    console.log('🔧 Search params:', Object.fromEntries(new URLSearchParams(globalThis.window.location.search).entries()))
 
     // If this is an email verification link, redirect to auth callback
     if (type === 'signup') {
       console.log('🔧 This is an email verification link, redirecting to auth callback')
-      window.location.href = `/auth/callback${window.location.search}${window.location.hash}`
+      globalThis.window.location.href = `/auth/callback${globalThis.window.location.search}${globalThis.window.location.hash}`
       return
     }
 
@@ -459,10 +490,10 @@ const handleResetPassword = async () => {
 // Lifecycle
 onMounted(async () => {
   console.log('🔧 Reset password component mounted')
-  console.log('🔧 Current URL:', window.location.href)
-  console.log('🔧 Current pathname:', window.location.pathname)
-  console.log('🔧 Current search:', window.location.search)
-  console.log('🔧 Current hash:', window.location.hash)
+  console.log('🔧 Current URL:', globalThis.window.location.href)
+  console.log('🔧 Current pathname:', globalThis.window.location.pathname)
+  console.log('🔧 Current search:', globalThis.window.location.search)
+  console.log('🔧 Current hash:', globalThis.window.location.hash)
 
   // Extract token from URL
   accessToken.value = extractTokenFromUrl()

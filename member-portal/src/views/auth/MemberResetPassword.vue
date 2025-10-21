@@ -216,12 +216,12 @@ const currentSuccessMessage = ref('')
 
 // Timer state
 const errorCountdown = ref(15)
-let errorTimer: NodeJS.Timeout | null = null
-let errorCountdownTimer: NodeJS.Timeout | null = null
-let successTimer: NodeJS.Timeout | null = null
+let errorTimer: number | null = null
+let errorCountdownTimer: number | null = null
+let successTimer: number | null = null
 
 // Access token from URL
-const accessToken = ref('')
+const accessToken = ref<string | null>('')
 
 // Computed properties
 const passwordRequirements = computed(() => ({
@@ -261,13 +261,13 @@ const displayError = (message: string) => {
     if (errorCountdown.value <= 0) {
       clearErrorTimers()
     }
-  }, 1000)
+  }, 1000) as unknown as number
 
   // Main timer to clear error after exactly 15 seconds
   errorTimer = setTimeout(() => {
     console.log('Clearing error after 15 seconds')
     clearErrorTimers()
-  }, 15000)
+  }, 15000) as unknown as number
 
   // Force Vue to update the DOM
   nextTick(() => {
@@ -307,13 +307,13 @@ const displaySuccess = (message: string) => {
   successTimer = setTimeout(() => {
     showSuccessMessage.value = false
     currentSuccessMessage.value = ''
-  }, 5000) // 5 seconds for success messages
+  }, 5000) as unknown as number // 5 seconds for success messages
 }
 
 // Extract token from URL
 const extractTokenFromUrl = () => {
   // Check URL hash first (Supabase sends tokens in hash)
-  const hash = window.location.hash
+  const hash = globalThis.window.location.hash
   if (hash) {
     const hashParams = new URLSearchParams(hash.substring(1)) // Remove # from hash
     const accessToken = hashParams.get('access_token')
@@ -332,7 +332,7 @@ const extractTokenFromUrl = () => {
   }
 
   // Check URL search params as fallback
-  const urlParams = new URLSearchParams(window.location.search)
+  const urlParams = new URLSearchParams(globalThis.window.location.search)
   const accessToken = urlParams.get('access_token') || urlParams.get('token')
   if (accessToken) {
     console.log('Found access token in URL search params')
@@ -340,7 +340,7 @@ const extractTokenFromUrl = () => {
   }
 
   // Check if token is in the URL path (some email clients might modify URLs)
-  const pathMatch = window.location.pathname.match(/\/reset-password\/([^\/\?]+)/)
+  const pathMatch = globalThis.window.location.pathname.match(/\/reset-password\/([^/?]+)/)
   if (pathMatch) {
     console.log('Found access token in URL path')
     return pathMatch[1]
@@ -353,14 +353,14 @@ const extractTokenFromUrl = () => {
 // Verify token
 const verifyToken = async () => {
   try {
-    console.log('🔧 Verifying member reset token...')
+    console.log('Verifying member reset token...')
 
     // Check if this is an email verification link (type=signup) or password reset link
     // Check both hash and search params for type
     let type = null
 
     // Check hash first (Supabase password reset uses hash)
-    const hash = window.location.hash
+    const hash = globalThis.window.location.hash
     if (hash) {
       const hashParams = new URLSearchParams(hash.substring(1))
       type = hashParams.get('type')
@@ -368,37 +368,37 @@ const verifyToken = async () => {
 
     // Check search params as fallback
     if (!type) {
-      const urlParams = new URLSearchParams(window.location.search)
+      const urlParams = new URLSearchParams(globalThis.window.location.search)
       type = urlParams.get('type')
     }
 
-    console.log('🔧 URL type parameter:', type)
-    console.log('🔧 Hash params:', hash ? Object.fromEntries(new URLSearchParams(hash.substring(1)).entries()) : 'None')
-    console.log('🔧 Search params:', Object.fromEntries(new URLSearchParams(window.location.search).entries()))
+    console.log('URL type parameter:', type)
+    console.log('Hash params:', hash ? Object.fromEntries(new URLSearchParams(hash.substring(1)).entries()) : 'None')
+    console.log('Search params:', Object.fromEntries(new URLSearchParams(globalThis.window.location.search).entries()))
 
     // If this is an email verification link, redirect to auth callback
     if (type === 'signup') {
       console.log('🔧 This is an email verification link, redirecting to auth callback')
-      window.location.href = `/auth/callback${window.location.search}${window.location.hash}`
+      globalThis.window.location.href = `/auth/callback${globalThis.window.location.search}${globalThis.window.location.hash}`
       return
     }
 
     // This is a password reset link, verify the token
-    console.log('🔧 This is a password reset link, verifying token...')
-    const result = await memberApi.verifyResetToken(accessToken.value)
+    console.log('This is a password reset link, verifying token...')
+    const result = await memberApi.verifyResetToken(accessToken.value!)
 
-    console.log('🔧 Token verification result:', result)
+    console.log('Token verification result:', result)
 
     if (result.success) {
       isValidToken.value = true
       userInfo.value = result.user || { email: '', fullName: '' }
-      console.log('✅ Token verified successfully for:', result.user?.email)
+      console.log('Token verified successfully for:', result.user?.email)
     } else {
       isValidToken.value = false
-      console.error('❌ Token verification failed:', result.message)
+      console.error('Token verification failed:', result.message)
     }
   } catch (error) {
-    console.error('❌ Token verification error:', error)
+    console.error('Token verification error:', error)
     isValidToken.value = false
   } finally {
     isVerifying.value = false
@@ -426,7 +426,7 @@ const handleResetPassword = async () => {
 
     console.log('Attempting to reset member password...')
 
-    const result = await memberApi.resetPassword(accessToken.value, password.value)
+    const result = await memberApi.resetPassword(accessToken.value!, password.value)
 
     console.log('Reset password response:', result)
 
@@ -451,7 +451,7 @@ const handleResetPassword = async () => {
 // Lifecycle
 onMounted(async () => {
   console.log('Member reset password component mounted')
-  console.log('Current URL:', window.location.href)
+  console.log('Current URL:', globalThis.window.location.href)
 
   // Extract token from URL
   accessToken.value = extractTokenFromUrl()
@@ -460,14 +460,14 @@ onMounted(async () => {
   if (!accessToken.value) {
     console.error('No access token found in URL')
     console.log('URL details:', {
-      href: window.location.href,
-      hash: window.location.hash,
-      search: window.location.search,
-      pathname: window.location.pathname,
+      href: globalThis.window.location.href,
+      hash: globalThis.window.location.hash,
+      search: globalThis.window.location.search,
+      pathname: globalThis.window.location.pathname,
     })
 
     // Check if this is a password recovery flow
-    const hash = window.location.hash
+    const hash = globalThis.window.location.hash
     if (hash) {
       const hashParams = new URLSearchParams(hash.substring(1))
       const type = hashParams.get('type')

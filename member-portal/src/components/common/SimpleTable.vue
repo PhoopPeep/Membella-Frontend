@@ -254,7 +254,7 @@ const formatCurrency = (value: TableValue): string => {
   if (value === null || value === undefined) return '-'
 
   const numValue = typeof value === 'number' ? value : Number(value)
-  if (isNaN(numValue)) return '-'
+  if (Number.isNaN(numValue)) return '-'
 
   return `฿${numValue.toLocaleString()}`
 }
@@ -263,7 +263,7 @@ const formatNumber = (value: TableValue): string => {
   if (value === null || value === undefined) return '-'
 
   const numValue = typeof value === 'number' ? value : Number(value)
-  if (isNaN(numValue)) return '-'
+  if (Number.isNaN(numValue)) return '-'
 
   return numValue.toLocaleString()
 }

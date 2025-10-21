@@ -21,33 +21,34 @@ export const useErrorHandler = () => {
 
   // Computed properties
   const hasErrors = computed(() => errors.value.length > 0)
-  const latestError = computed(() => errors.value[errors.value.length - 1] || null)
+  const latestError = computed(() => errors.value.at(-1) || null)
   const validationErrors = computed(() => errors.value.filter((err) => err.type === 'validation'))
   const networkErrors = computed(() => errors.value.filter((err) => err.type === 'network'))
 
   // Error classification
-  const classifyError = (error: any): ErrorState => {
+  const classifyError = (error: unknown): ErrorState => {
     const now = new Date()
+    const err = error as { code?: string; message?: string }
 
     // Network errors
-    if (error.code === 'ERR_NETWORK' || error.message?.includes('network')) {
+    if (err.code === 'ERR_NETWORK' || err.message?.includes('network')) {
       return {
         hasError: true,
         message: 'Network connection error. Please check your internet connection.',
         type: 'network',
-        code: error.code,
+        code: err.code,
         retryable: true,
         timestamp: now,
       }
     }
 
     // Timeout errors
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
       return {
         hasError: true,
         message: 'Request timeout. Please try again.',
         type: 'network',
-        code: error.code,
+        code: err.code,
         retryable: true,
         timestamp: now,
       }
@@ -55,13 +56,13 @@ export const useErrorHandler = () => {
 
     // Authentication errors
     if (
-      error.message?.includes('Authentication') ||
-      error.message?.includes('login') ||
-      error.message?.includes('unauthorized')
+      err.message?.includes('Authentication') ||
+      err.message?.includes('login') ||
+      err.message?.includes('unauthorized')
     ) {
       return {
         hasError: true,
-        message: error.message,
+        message: err.message,
         type: 'auth',
         code: 401,
         retryable: false,
@@ -71,14 +72,14 @@ export const useErrorHandler = () => {
 
     // Validation errors
     if (
-      error.message?.includes('required') ||
-      error.message?.includes('invalid') ||
-      error.message?.includes('must be') ||
-      error.message?.includes('characters')
+      err.message?.includes('required') ||
+      err.message?.includes('invalid') ||
+      err.message?.includes('must be') ||
+      err.message?.includes('characters')
     ) {
       return {
         hasError: true,
-        message: error.message,
+        message: err.message,
         type: 'validation',
         code: 400,
         retryable: false,
@@ -87,10 +88,10 @@ export const useErrorHandler = () => {
     }
 
     // Rate limiting
-    if (error.message?.includes('rate limit') || error.message?.includes('Too many')) {
+    if (err.message?.includes('rate limit') || err.message?.includes('Too many')) {
       return {
         hasError: true,
-        message: error.message,
+        message: err.message,
         type: 'server',
         code: 429,
         retryable: true,
@@ -99,7 +100,7 @@ export const useErrorHandler = () => {
     }
 
     // Server errors
-    if (error.message?.includes('Server error') || error.message?.includes('Internal server')) {
+    if (err.message?.includes('Server error') || err.message?.includes('Internal server')) {
       return {
         hasError: true,
         message: 'Server error. Please try again later.',
@@ -113,7 +114,7 @@ export const useErrorHandler = () => {
     // Default unknown error
     return {
       hasError: true,
-      message: error.message || 'An unexpected error occurred',
+      message: err.message || 'An unexpected error occurred',
       type: 'unknown',
       retryable: true,
       timestamp: now,
@@ -121,7 +122,7 @@ export const useErrorHandler = () => {
   }
 
   // Methods
-  const handleError = (error: any, context?: string) => {
+  const handleError = (error: unknown, context?: string) => {
     console.error(`Error in ${context || 'unknown context'}:`, error)
 
     const errorState = classifyError(error)
@@ -189,8 +190,6 @@ export const useErrorHandler = () => {
       isLoading.value = true
     }
 
-    let lastError: any = null
-
     for (let attempt = 0; attempt <= retryCount; attempt++) {
       try {
         const result = await asyncFn()
@@ -199,8 +198,6 @@ export const useErrorHandler = () => {
         }
         return result
       } catch (error) {
-        lastError = error
-
         const errorState = classifyError(error)
 
         // Only retry if error is retryable and we have attempts left
@@ -225,7 +222,7 @@ export const useErrorHandler = () => {
   }
 
   // Validation helpers
-  const validateRequired = (value: any, fieldName: string): boolean => {
+  const validateRequired = (value: unknown, fieldName: string): boolean => {
     if (!value || (typeof value === 'string' && !value.trim())) {
       handleError(new Error(`${fieldName} is required`))
       return false

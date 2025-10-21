@@ -1,5 +1,6 @@
 // member-portal/src/api/subscription.ts
 import axios from 'axios'
+import type { Subscription, SubscriptionStats } from '../types/subscription'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
@@ -21,7 +22,7 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
 
@@ -32,61 +33,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('member_token')
       localStorage.removeItem('member_user')
-      window.location.href = '/login'
+      globalThis.location.href = '/login'
     }
-    return Promise.reject(error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   },
 )
-
-export interface Feature {
-  id: string
-  name: string
-  description: string
-}
-
-export interface Payment {
-  id: string
-  amount: number
-  currency: string
-  method: string
-  status: string
-  description: string
-  paidAt: string
-}
-
-export interface Subscription {
-  id: string
-  planId: string
-  planName: string
-  planDescription: string
-  organization: string
-  organizationContact?: string
-  price: number
-  duration: number
-  status: 'active' | 'cancelled' | 'expired'
-  startDate: string
-  endDate: string
-  daysRemaining: number
-  isActive: boolean
-  isExpired: boolean
-  features: Feature[]
-  payment: Payment
-  member?: {
-    name: string
-    email: string
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-export interface SubscriptionStats {
-  totalSubscriptions: number
-  activeSubscriptions: number
-  expiredSubscriptions: number
-  cancelledSubscriptions: number
-  totalSpent: number
-  currency: string
-}
 
 export const subscriptionApi = {
   // Get all member subscriptions

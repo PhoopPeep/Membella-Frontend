@@ -17,3 +17,14 @@ export interface UpdateFeatureData {
   name: string
   description: string
 }
+
+export interface FeatureResponse {
+  success: boolean
+  message: string
+  data?: Feature
+}
+
+export interface FeaturesListResponse {
+  success: boolean
+  data: Feature[]
+}

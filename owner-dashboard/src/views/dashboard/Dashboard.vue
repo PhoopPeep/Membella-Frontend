@@ -285,8 +285,8 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { dashboardService } from '../../service/dashboardService'
-import type { RevenueData, DashboardStats } from '../../type'
-import type { Member } from '../../service/dashboardService'
+import type { RevenueData, DashboardStats } from '../../types/dashboard'
+import type { Member } from '../../types/member'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { Chart } from 'chart.js'
 

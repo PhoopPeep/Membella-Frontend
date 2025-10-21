@@ -179,7 +179,7 @@ const handleInput = (event: Event) => {
 
   // Convert to number for number inputs
   if (props.type === 'number' && value !== '') {
-    value = parseFloat(value)
+    value = Number.parseFloat(value)
   }
 
   emit('update:modelValue', value)

@@ -60,7 +60,7 @@
           <!-- Additional Details -->
           <div v-if="details" class="notification-details">
             <div v-for="(value, key) in details" :key="key" class="detail-item">
-              <span class="detail-label">{{ formatLabel(key) }}:</span>
+              <span class="detail-label">{{ formatLabel(String(key)) }}:</span>
               <span class="detail-value">{{ value }}</span>
             </div>
           </div>
@@ -102,6 +102,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+// Define component name for proper export
+defineOptions({
+  name: 'NotificationPopup'
+})
 
 interface NotificationDetails {
   [key: string]: string | number | boolean
@@ -166,7 +171,7 @@ const formatLabel = (key: string): string => {
     memberName: 'Member Name',
     memberEmail: 'Member Email'
   }
-  return labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+  return labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase())
 }
 
 const close = () => {
@@ -202,9 +207,9 @@ const handleEscape = (event: KeyboardEvent) => {
 
 const startAutoClose = () => {
   if (autoClose.value && props.duration > 0) {
-    timeoutId = window.setTimeout(() => {
+    timeoutId = globalThis.setTimeout(() => {
       close()
-    }, props.duration)
+    }, props.duration) as unknown as number
   }
 }
 

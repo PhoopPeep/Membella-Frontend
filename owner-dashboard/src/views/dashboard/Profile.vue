@@ -153,6 +153,33 @@
           </div>
           <div class="p-6">
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div
+                @click="copyOwnerId"
+                class="bg-secondary-50 rounded-xl p-4 cursor-pointer hover:bg-secondary-100 transition-all duration-200 hover:shadow-md relative group"
+                :title="'Click to copy Owner ID'"
+              >
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center space-x-3">
+                    <FontAwesomeIcon icon="id-card" class="w-5 h-5 text-secondary-600" />
+                    <h5 class="font-semibold text-secondary-700 text-sm">Owner ID</h5>
+                  </div>
+                  <button
+                    @click.stop="copyOwnerId"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-secondary-200 rounded-lg"
+                    :title="'Copy Owner ID'"
+                  >
+                    <FontAwesomeIcon
+                      :icon="justCopied ? 'check' : 'copy'"
+                      :class="justCopied ? 'text-success-500' : 'text-secondary-600'"
+                      class="w-4 h-4 transition-colors duration-200"
+                    />
+                  </button>
+                </div>
+                <p class="text-secondary-600 text-base font-medium font-mono break-all">
+                  {{ authStore.user?.owner_id || 'Not specified' }}
+                </p>
+              </div>
+
               <div class="bg-primary-50 rounded-xl p-4">
                 <div class="flex items-center space-x-3 mb-2">
                   <FontAwesomeIcon icon="building" class="w-5 h-5 text-primary-600" />
@@ -580,6 +607,9 @@ const toastMessage = ref('')
 // Logout confirmation state
 const showLogoutModal = ref(false)
 
+// Copy state
+const justCopied = ref(false)
+
 // Profile form data
 const profileForm = ref({
   organizationName: '',
@@ -922,6 +952,29 @@ const showErrorToast = (title: string, message?: string) => {
   setTimeout(() => {
     showToast.value = false
   }, 5000)
+}
+
+// Copy Owner ID function
+const copyOwnerId = async () => {
+  const ownerId = authStore.user?.owner_id
+  if (!ownerId) {
+    showErrorToast('Copy Failed', 'Owner ID not available')
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(ownerId)
+    justCopied.value = true
+    showSuccessToast('Copied!', 'Owner ID copied to clipboard')
+
+    // Reset icon after 2 seconds
+    setTimeout(() => {
+      justCopied.value = false
+    }, 2000)
+  } catch (error) {
+    console.error('Failed to copy Owner ID:', error)
+    showErrorToast('Copy Failed', 'Failed to copy Owner ID to clipboard')
+  }
 }
 
 // Warning toast function (for future use)

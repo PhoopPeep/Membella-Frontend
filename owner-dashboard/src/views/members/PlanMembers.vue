@@ -415,10 +415,21 @@
               <button
                 @click="confirmDeleteMember"
                 class="inline-flex items-center px-6 py-3 text-sm font-semibold text-error-600 bg-error-50 border-2 border-error-200 rounded-xl hover:bg-error-100 hover:border-error-300 focus:outline-none focus:ring-4 focus:ring-error-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="isDeleting"
+                :disabled="isDeleting || selectedMember?.status === 'active'"
+                :title="
+                  selectedMember?.status === 'active'
+                    ? 'Cannot remove member with active subscription'
+                    : 'Remove member from your plans'
+                "
               >
                 <FontAwesomeIcon icon="trash" class="w-4 h-4 mr-2" />
-                {{ isDeleting ? 'Deleting...' : 'Delete Member' }}
+                {{
+                  isDeleting
+                    ? 'Removing...'
+                    : selectedMember?.status === 'active'
+                      ? 'Cannot Remove (Active)'
+                      : 'Remove Member'
+                }}
               </button>
             </div>
           </div>
@@ -452,15 +463,32 @@
 
             <div class="mb-8">
               <p class="text-primary-700 text-lg">
-                Are you sure you want to delete
+                Are you sure you want to remove
                 <span class="font-bold text-error-700">{{
                   selectedMember?.fullName || selectedMember?.email
-                }}</span
-                >?
+                }}</span>
+                from your plans?
               </p>
               <p class="text-primary-600 mt-3 text-sm">
-                This will permanently remove the member and all their subscription data.
+                This will remove the member from your plans. The member account will remain in the system but their subscription history with you will be deleted.
               </p>
+              <div
+                v-if="selectedMember?.status === 'active'"
+                class="mt-4 p-4 bg-warning-50 border-l-4 border-warning-400 rounded-lg"
+              >
+                <div class="flex items-start">
+                  <FontAwesomeIcon
+                    icon="exclamation-triangle"
+                    class="w-5 h-5 text-warning-600 mt-0.5 mr-3 flex-shrink-0"
+                  />
+                  <div>
+                    <p class="text-warning-800 font-semibold text-sm">Active Subscription</p>
+                    <p class="text-warning-700 text-xs mt-1">
+                      This member has an active subscription and cannot be removed yet.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="flex justify-end space-x-4">
@@ -474,17 +502,55 @@
               <button
                 @click="deleteMember"
                 class="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-error-500 to-error-600 border border-transparent rounded-xl hover:from-error-600 hover:to-error-700 focus:outline-none focus:ring-4 focus:ring-error-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                :disabled="isDeleting"
+                :disabled="isDeleting || selectedMember?.status === 'active'"
               >
                 <FontAwesomeIcon
                   v-if="isDeleting"
                   icon="spinner"
                   class="w-4 h-4 mr-2 animate-spin"
                 />
-                {{ isDeleting ? 'Deleting...' : 'Delete Member' }}
+                {{ isDeleting ? 'Removing...' : 'Remove Member' }}
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Success/Error Toast Notification -->
+    <Transition name="toast">
+      <div
+        v-if="showToast"
+        class="fixed top-8 right-8 z-50 max-w-md bg-white rounded-2xl shadow-2xl border-2 overflow-hidden"
+        :class="{
+          'border-success-500': toastType === 'success',
+          'border-error-500': toastType === 'error',
+        }"
+      >
+        <div class="flex items-start p-6">
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center mr-4"
+            :class="{
+              'bg-success-100': toastType === 'success',
+              'bg-error-100': toastType === 'error',
+            }"
+          >
+            <FontAwesomeIcon
+              :icon="toastType === 'success' ? 'check-circle' : 'exclamation-triangle'"
+              class="w-6 h-6"
+              :class="{
+                'text-success-600': toastType === 'success',
+                'text-error-600': toastType === 'error',
+              }"
+            />
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-bold text-primary-700 mb-1">{{ toastTitle }}</h4>
+            <p class="text-sm text-primary-600">{{ toastMessage }}</p>
+          </div>
+          <button @click="showToast = false" class="ml-4 text-primary-400 hover:text-primary-600">
+            <FontAwesomeIcon icon="times" class="w-5 h-5" />
+          </button>
         </div>
       </div>
     </Transition>
@@ -513,6 +579,12 @@ const showDeleteConfirmModal = ref(false)
 const selectedMember = ref<Member | null>(null)
 const isDeleting = ref(false)
 
+// Toast notification states
+const showToast = ref(false)
+const toastType = ref<'success' | 'error'>('success')
+const toastTitle = ref('')
+const toastMessage = ref('')
+
 // Methods
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -530,7 +602,7 @@ const loadPlanMembers = async () => {
 
     const planId = route.params.planId as string
     const planName = route.query.planName as string
-    const memberCount = parseInt(route.query.memberCount as string) || 0
+    const memberCount = Number.parseInt(route.query.memberCount as string) || 0
 
     selectedPlan.value = { planId, planName, memberCount }
 
@@ -576,6 +648,7 @@ const deleteMember = async () => {
 
   try {
     isDeleting.value = true
+    error.value = ''
 
     // Call delete member API
     await dashboardService.deleteMember(selectedMember.value.id)
@@ -586,13 +659,33 @@ const deleteMember = async () => {
     // Close modals
     showDeleteConfirmModal.value = false
     showMemberDetailsModal.value = false
+
+    const memberName = selectedMember.value.fullName || selectedMember.value.email
     selectedMember.value = null
 
-    // Show success message (you can add a toast notification here)
-    console.log('Member deleted successfully')
-  } catch (err) {
-    console.error('Error deleting member:', err)
-    error.value = 'Failed to delete member'
+    // Show success message
+    console.log('Member removed successfully from owner plans')
+    showSuccessNotification(`${memberName} has been removed from your plans successfully`)
+  } catch (err: any) {
+    console.error('Error removing member:', err)
+
+    // Handle specific error messages
+    if (err.response?.data?.message) {
+      const errorMessage = err.response.data.message
+
+      if (errorMessage.includes('active subscription')) {
+        showErrorNotification(
+          'Cannot Remove Member',
+          'This member has an active subscription. Please wait for the subscription to expire before removing them.'
+        )
+      } else {
+        showErrorNotification('Remove Failed', errorMessage)
+      }
+    } else {
+      showErrorNotification('Remove Failed', 'Failed to remove member from your plans')
+    }
+
+    // Keep modals open to show the error
   } finally {
     isDeleting.value = false
   }
@@ -600,6 +693,27 @@ const deleteMember = async () => {
 
 const goBack = () => {
   router.push('/dashboard')
+}
+
+// Notification functions
+const showSuccessNotification = (message: string, title: string = 'Success') => {
+  toastType.value = 'success'
+  toastTitle.value = title
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const showErrorNotification = (title: string, message: string) => {
+  toastType.value = 'error'
+  toastTitle.value = title
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 5000)
 }
 
 // Lifecycle
@@ -642,6 +756,28 @@ onMounted(() => {
 .modal-enter-to .bg-white,
 .modal-leave-from .bg-white {
   transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Toast notification transition */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.toast-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.toast-enter-to,
+.toast-leave-from {
+  transform: translateX(0);
   opacity: 1;
 }
 </style>

@@ -96,7 +96,7 @@
               class="w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold text-base hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-200 transition-all duration-200 flex items-center justify-center shadow-lg"
             >
               <FontAwesomeIcon icon="sign-in-alt" class="w-5 h-5 mr-2" />
-              Go to Login
+              Go to Dashboard
             </button>
           </div>
         </div>
@@ -143,160 +143,156 @@ const clearErrorState = () => {
   canRetry.value = false
 }
 
+// Extract tokens from URL
+interface AuthTokens {
+  accessToken: string | null
+  refreshToken: string | null
+  type: string | null
+}
+
+const extractTokensFromURL = (): AuthTokens => {
+  const urlParams = new URLSearchParams(globalThis.location.search)
+  const hashParams = new URLSearchParams(globalThis.location.hash.substring(1))
+
+  return {
+    accessToken: urlParams.get('access_token') || hashParams.get('access_token'),
+    refreshToken: urlParams.get('refresh_token') || hashParams.get('refresh_token'),
+    type: urlParams.get('type') || hashParams.get('type')
+  }
+}
+
+// Set session in Supabase
+const setSupabaseSession = async (accessToken: string, refreshToken: string) => {
+  const { data: { session }, error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  })
+
+  if (error) {
+    console.error('Failed to set session:', error)
+    throw new Error('Failed to verify email: ' + error.message)
+  }
+
+  if (!session?.user) {
+    console.error('No valid session created from email verification')
+    throw new Error('No valid session created from email verification')
+  }
+
+  console.log('Session set successfully:', session.user.id)
+  return session
+}
+
+// Call backend auth callback
+const callBackendAuth = async (accessToken: string, refreshToken: string, type: string) => {
+  console.log('Calling backend auth callback...')
+
+  const response = await api.post('/api/auth/callback', {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    type: type || 'signup',
+  })
+
+  console.log('Backend callback successful:', response.data)
+  return response.data
+}
+
+// Validate backend response
+const validateBackendResponse = (responseData: any): boolean => {
+  if (!responseData.success || !responseData.token || !responseData.user) {
+    console.error('Backend response missing required data:', responseData)
+    return false
+  }
+  return true
+}
+
+// Handle URL-based callback
+const handleURLBasedCallback = async (tokens: AuthTokens) => {
+  const { accessToken, refreshToken, type } = tokens
+
+  if (!accessToken || !refreshToken) {
+    return false
+  }
+
+  console.log('Processing email verification callback')
+
+  // Set the session in Supabase
+  await setSupabaseSession(accessToken, refreshToken)
+
+  try {
+    // Call backend
+    const responseData = await callBackendAuth(accessToken, refreshToken, type || 'signup')
+
+    if (!validateBackendResponse(responseData)) {
+      displayError('Backend did not return authentication data')
+      return true
+    }
+
+    // Store auth data and mark success
+    authStore.setAuth(responseData.token, responseData.user)
+    success.value = true
+    console.log('Email verification successful!')
+    return true
+
+  } catch (backendError: any) {
+    console.error('Backend callback failed:', backendError)
+    displayError('Email verification failed. Please try logging in again.')
+    return true
+  }
+}
+
+// Handle existing session check
+const handleExistingSession = async () => {
+  console.log('Checking for existing session...')
+
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (error) {
+    console.error('Session error:', error)
+    displayError('Session error: ' + error.message)
+    return
+  }
+
+  if (!session?.user) {
+    displayError('No valid authentication session found. Please try logging in again.')
+    return
+  }
+
+  // Check if already verified and authenticated
+  if (session.user.email_confirmed_at && authStore.isAuthenticated) {
+    console.log('User is already verified and authenticated')
+    success.value = true
+    return
+  }
+
+  console.log('User session found but not verified or not authenticated')
+  displayError('No verification tokens found. Please use the verification link from your email.')
+}
+
+// Main processing function
 const processAuthCallback = async () => {
   try {
     console.log('Starting auth callback processing')
-    console.log('Current URL:', window.location.href)
-    console.log('Route query:', route.query)
-    console.log('Initial state:', {
-      isProcessing: isProcessing.value,
-      success: success.value,
-      showErrorMessage: showErrorMessage.value
-    })
+    console.log('Current URL:', globalThis.location.href)
 
-    // Prevent any redirects during auth callback processing
-    console.log('Auth callback page - preventing redirects')
-
-    // Check if we have URL parameters for auth (both query and hash)
-    const urlParams = new URLSearchParams(window.location.search)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-
-    // Get tokens from query parameters first, then hash parameters
-    const accessToken = urlParams.get('access_token') || hashParams.get('access_token')
-    const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token')
-    const type = urlParams.get('type') || hashParams.get('type')
+    // Extract tokens from URL
+    const tokens = extractTokensFromURL()
 
     console.log('URL tokens found:', {
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      type,
-      fromQuery: !!urlParams.get('access_token'),
-      fromHash: !!hashParams.get('access_token')
+      hasAccessToken: !!tokens.accessToken,
+      hasRefreshToken: !!tokens.refreshToken,
+      type: tokens.type
     })
 
-    if (accessToken && refreshToken) {
-      // This is a URL-based callback (email verification link)
-      console.log('🔧 Processing email verification callback')
-      console.log('🔧 Access Token:', accessToken ? 'Present' : 'Missing')
-      console.log('🔧 Refresh Token:', refreshToken ? 'Present' : 'Missing')
-      console.log('🔧 Type:', type || 'Not specified')
+    // Try URL-based callback first
+    const handled = await handleURLBasedCallback(tokens)
 
-      // Set the session in Supabase client
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      })
-
-      if (sessionError) {
-        console.error('❌ Failed to set session:', sessionError)
-        throw new Error('Failed to verify email: ' + sessionError.message)
-      }
-
-      if (!session || !session.user) {
-        console.error('❌ No valid session created from email verification')
-        throw new Error('No valid session created from email verification')
-      }
-
-      console.log('✅ Session set successfully:', session.user.id)
-      console.log('✅ Email confirmed:', session.user.email_confirmed_at)
-      console.log('✅ User email:', session.user.email)
-
-      // Call our backend to complete the auth process
-      try {
-        console.log('Calling backend auth callback...')
-        console.log('Request data:', {
-          access_token: accessToken ? accessToken.substring(0, 20) + '...' : 'Missing',
-          refresh_token: refreshToken ? refreshToken.substring(0, 20) + '...' : 'Missing',
-          type: type || 'signup'
-        })
-
-        const response = await api.post('/api/auth/callback', {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          type: type || 'signup',
-        })
-
-        console.log('Backend callback successful:', response.data)
-        console.log('Response status:', response.status)
-
-        console.log('Backend response details:', {
-          success: response.data.success,
-          hasToken: !!response.data.token,
-          hasUser: !!response.data.user,
-          message: response.data.message,
-          userData: response.data.user ? {
-            owner_id: response.data.user.owner_id,
-            org_name: response.data.user.org_name,
-            email: response.data.user.email
-          } : null
-        });
-
-        if (response.data.success && response.data.token && response.data.user) {
-          // Store auth data
-          authStore.setAuth(response.data.token, response.data.user)
-          success.value = true
-          console.log('✅ Email verification successful!')
-          // ไม่ auto redirect ให้ user กดปุ่มเอง
-        } else {
-          console.error('Backend response missing required data:', response.data)
-          displayError('Backend did not return authentication data')
-          return
-        }
-      } catch (backendError) {
-        console.error('Backend callback failed:', backendError)
-        console.log('Backend error details:', {
-          message: backendError.message,
-          response: backendError.response?.data,
-          status: backendError.response?.status
-        })
-
-        // If backend fails, show error message
-        displayError('Email verification failed. Please try logging in again.')
-        return
-      }
-    } else {
-      // Check for existing session (page refresh scenario)
-      console.log('Checking for existing session...')
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-        displayError('Session error: ' + sessionError.message)
-        return
-      }
-
-      if (session && session.user) {
-        console.log('Found existing session but no URL tokens - checking if user is already verified')
-
-        // Check if user is already verified and authenticated
-        if (session.user.email_confirmed_at && authStore.isAuthenticated) {
-          console.log('✅ User is already verified and authenticated')
-          success.value = true
-          return
-        }
-
-        console.log('User session found but not verified or not authenticated')
-        displayError('No verification tokens found. Please use the verification link from your email.')
-        return
-      } else {
-        displayError('No valid authentication session found. Please try logging in again.')
-        return
-      }
+    if (!handled) {
+      // If no URL tokens, check for existing session
+      await handleExistingSession()
     }
+
   } catch (err) {
     console.error('Auth callback error:', err)
-    console.error('Error details:', {
-      message: err instanceof Error ? err.message : 'Unknown error',
-      stack: err instanceof Error ? err.stack : undefined,
-      success: success.value,
-      isProcessing: isProcessing.value
-    })
     const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
     displayError(errorMessage)
   } finally {
